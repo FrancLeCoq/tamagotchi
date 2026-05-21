@@ -57,6 +57,8 @@ const Renderer = {
         this.setStatBar(this.els.statBonheur, pet.bonheur);
         this.setStatBar(this.els.statEnergie, pet.energie);
         this.setStatBar(this.els.statSante, pet.sante);
+        const hygieneEl = document.getElementById('stat-hygiene');
+        if (hygieneEl) this.setStatBar(hygieneEl, pet.hygiene || 50);
     },
 
     setStatBar(el, value) {
@@ -109,18 +111,51 @@ const Renderer = {
 
     updatePoops(pet) {
         const container = this.els.poopContainer;
-        const current = container.children.length;
-        if (current < pet.poops) {
-            for (let i = current; i < pet.poops; i++) {
+        // Clear and rebuild (simpler than diffing)
+        const totalPoops = pet.poops || 0;
+        const totalPipis = pet.pipis || 0;
+        const currentPoops = container.querySelectorAll('.poop').length;
+        const currentPipis = container.querySelectorAll('.pipi').length;
+
+        // Add new poops with flies
+        if (currentPoops < totalPoops) {
+            for (let i = currentPoops; i < totalPoops; i++) {
                 const poop = document.createElement('div');
                 poop.className = 'poop';
-                poop.textContent = '💩';
-                poop.style.left = (15 + Math.random() * 70) + '%';
+                poop.innerHTML = '💩';
+                poop.style.left = (12 + Math.random() * 65) + '%';
+                // Add flies around poop
+                for (let f = 0; f < 2 + Math.floor(Math.random() * 2); f++) {
+                    const fly = document.createElement('span');
+                    fly.className = 'fly';
+                    fly.textContent = '🪰';
+                    fly.style.animationDelay = (Math.random() * 2) + 's';
+                    fly.style.setProperty('--fly-dx', (Math.random() * 30 - 15) + 'px');
+                    fly.style.setProperty('--fly-dy', (Math.random() * 20 - 15) + 'px');
+                    poop.appendChild(fly);
+                }
                 container.appendChild(poop);
             }
-        } else if (current > pet.poops) {
-            while (container.children.length > pet.poops) {
-                container.lastChild.remove();
+        } else if (currentPoops > totalPoops) {
+            const poopEls = container.querySelectorAll('.poop');
+            for (let i = totalPoops; i < currentPoops; i++) {
+                if (poopEls[i]) poopEls[i].remove();
+            }
+        }
+
+        // Add pipi puddles
+        if (currentPipis < totalPipis) {
+            for (let i = currentPipis; i < totalPipis; i++) {
+                const pipi = document.createElement('div');
+                pipi.className = 'pipi';
+                pipi.textContent = '💧';
+                pipi.style.left = (10 + Math.random() * 70) + '%';
+                container.appendChild(pipi);
+            }
+        } else if (currentPipis > totalPipis) {
+            const pipiEls = container.querySelectorAll('.pipi');
+            for (let i = totalPipis; i < currentPipis; i++) {
+                if (pipiEls[i]) pipiEls[i].remove();
             }
         }
     },
@@ -226,6 +261,21 @@ const Renderer = {
         }, 1200);
     },
 
+    showShowerAnimation() {
+        for (let i = 0; i < 15; i++) {
+            setTimeout(() => {
+                const drop = document.createElement('div');
+                drop.className = 'shower-drop';
+                drop.textContent = '💧';
+                drop.style.left = (this.currentPetX - 8 + Math.random() * 16) + '%';
+                drop.style.top = '15%';
+                drop.style.animationDuration = (0.6 + Math.random() * 0.4) + 's';
+                this.els.sceneItems.appendChild(drop);
+                setTimeout(() => drop.remove(), 1200);
+            }, i * 120);
+        }
+    },
+
     // Clouds now handled by Weather.js canvas
     spawnClouds() {},
 
@@ -243,6 +293,7 @@ const Renderer = {
             { emoji: '😊', name: 'Bonheur', val: pet.bonheur },
             { emoji: '⚡', name: 'Énergie', val: pet.energie },
             { emoji: '❤️', name: 'Santé', val: pet.sante },
+            { emoji: '🧼', name: 'Hygiène', val: pet.hygiene || 50 },
         ];
 
         let html = statRows.map(s => `

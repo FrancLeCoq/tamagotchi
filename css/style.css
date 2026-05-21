@@ -576,3 +576,49 @@ html, body {
     from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* ─── Flies around poop ──────────────────────────── */
+.poop { position: relative; }
+.fly {
+    position: absolute; font-size: 10px;
+    animation: flyBuzz 1.2s ease-in-out infinite;
+    pointer-events: none; z-index: 4;
+}
+.fly:nth-child(2) { top: -12px; left: 8px; animation-delay: .3s; }
+.fly:nth-child(3) { top: -8px; left: -10px; animation-delay: .7s; }
+.fly:nth-child(4) { top: -15px; left: 15px; animation-delay: 1s; }
+@keyframes flyBuzz {
+    0%, 100% { transform: translate(0, 0) rotate(0); }
+    25% { transform: translate(var(--fly-dx, 10px), var(--fly-dy, -10px)) rotate(20deg); }
+    50% { transform: translate(calc(var(--fly-dx, 10px) * -0.5), calc(var(--fly-dy, -10px) * 1.5)) rotate(-15deg); }
+    75% { transform: translate(calc(var(--fly-dx, 10px) * 0.8), calc(var(--fly-dy, -10px) * 0.3)) rotate(10deg); }
+}
+
+/* ─── Pipi puddle ────────────────────────────────── */
+.pipi {
+    position: absolute; bottom: 6%; font-size: 18px;
+    animation: pipiAppear .5s ease;
+    z-index: 3; opacity: 0.7;
+    filter: hue-rotate(40deg) saturate(2);
+}
+@keyframes pipiAppear {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 0.7; }
+}
+
+/* ─── Shower drops ───────────────────────────────── */
+.shower-drop {
+    position: absolute; font-size: 16px;
+    animation: showerFall linear forwards;
+    pointer-events: none; z-index: 8;
+    opacity: 0.8;
+}
+@keyframes showerFall {
+    0% { transform: translateY(0) scale(1); opacity: 0.9; }
+    80% { opacity: 0.6; }
+    100% { transform: translateY(200px) scale(0.5); opacity: 0; }
+}
+
+/* ─── Sale mood ──────────────────────────────────── */
+.pet.sale { animation: petSad 1.5s ease-in-out infinite; filter: saturate(0.7) brightness(0.9) !important; }
