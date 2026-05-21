@@ -4,11 +4,11 @@
 
 const Engine = {
     STAGES: [
-        { id: 0, nom: 'Poussin',     emoji: '🐣', heures: 24,  depletion: 1.6, size: 60,  sprite: 'assets/sprites/poussin.svg',     png: 'assets/sprites/poussin.png',     desc: 'Un petit poussin fragile qui découvre le monde !' },
-        { id: 1, nom: 'Petit Coq',   emoji: '🐤', heures: 48,  depletion: 1.4, size: 80,  sprite: 'assets/sprites/petit_coq.svg',   png: 'assets/sprites/petit_coq.png',   desc: 'Francis grandit ! Ses premières plumes apparaissent.' },
-        { id: 2, nom: 'Coq Ado',     emoji: '🐔', heures: 72,  depletion: 1.2, size: 100, sprite: 'assets/sprites/coq_ado.svg',      png: 'assets/sprites/coq_ado.png',     desc: "L'adolescence ! Francis commence à chanter." },
-        { id: 3, nom: 'Coq Adulte',  emoji: '🐓', heures: 168, depletion: 1.0, size: 120, sprite: 'assets/sprites/coq_adulte.svg',   png: 'assets/sprites/coq_adulte.png',  desc: 'Francis dans toute sa splendeur ! Béret et lunettes.' },
-        { id: 4, nom: 'Coq Vieux',   emoji: '👴',  heures: null, depletion: 0.7, size: 110, sprite: 'assets/sprites/coq_vieux.svg',    png: 'assets/sprites/coq_vieux.png',   desc: 'Le sage Francis. Tant d\'histoires à raconter...' },
+        { id: 0, nom: 'Poussin',     emoji: '🐣', heures: 24,  depletion: 1.6, size: 80,  sprite: 'assets/sprites/poussin.png',     desc: 'Un petit poussin fragile qui découvre le monde !' },
+        { id: 1, nom: 'Petit Coq',   emoji: '🐤', heures: 48,  depletion: 1.4, size: 100, sprite: 'assets/sprites/petit_coq.png',   desc: 'Francis grandit ! Ses premières plumes apparaissent.' },
+        { id: 2, nom: 'Coq Ado',     emoji: '🐔', heures: 72,  depletion: 1.2, size: 120, sprite: 'assets/sprites/coq_ado.png',     desc: "L'adolescence ! Francis commence à chanter." },
+        { id: 3, nom: 'Coq Adulte',  emoji: '🐓', heures: 168, depletion: 1.0, size: 140, sprite: 'assets/sprites/coq_adulte.png',  desc: 'Francis dans toute sa splendeur ! Béret et lunettes.' },
+        { id: 4, nom: 'Coq Vieux',   emoji: '👴',  heures: null, depletion: 0.7, size: 130, sprite: 'assets/sprites/coq_vieux.png',   desc: 'Le sage Francis. Tant d\'histoires à raconter...' },
     ],
 
     FOODS: [

@@ -88,6 +88,14 @@ html, body {
     background: rgba(240,192,64,.1); padding: 3px 10px;
     border-radius: 20px; border: 1px solid rgba(240,192,64,.2);
 }
+.hud-right { display: flex; align-items: center; gap: 8px; }
+.hud-clock {
+    font-size: 12px; font-weight: 700; color: var(--gold);
+    background: rgba(240,192,64,.1); padding: 3px 10px;
+    border-radius: 20px; border: 1px solid rgba(240,192,64,.2);
+    font-family: 'Courier New', monospace;
+}
+.hud-weather { font-size: 14px; }
 .hud-icons { display: flex; gap: 8px; }
 .hud-btn {
     background: none; border: none; cursor: pointer;
@@ -131,7 +139,11 @@ html, body {
         #87CEEB 0%, #87CEEB 35%, 
         #7BC043 35%, #7BC043 45%,
         #5a9e32 45%, #5a9e32 100%);
-    transition: filter 1s;
+    transition: filter 1s, background-image 1.5s;
+}
+.weather-canvas {
+    position: absolute; inset: 0;
+    z-index: 2; pointer-events: none;
 }
 .scene-bg.night {
     filter: brightness(.35) saturate(.6);
@@ -142,19 +154,22 @@ html, body {
     pointer-events: none;
 }
 
-/* Ground elements */
+/* Ground elements - hidden when bg image loads */
 .scene::after {
     content: '';
     position: absolute; bottom: 0; left: 0; right: 0; height: 6%;
     background: #4a8c30;
     border-top: 2px solid #5a9e32;
+    z-index: 1;
 }
+.scene.has-bg::after { display: none; }
 
-/* Clouds */
+/* Clouds - hidden when bg image loads */
 .cloud {
     position: absolute; background: rgba(255,255,255,.8);
     border-radius: 50px; animation: cloudFloat linear infinite;
 }
+.scene.has-bg .cloud { display: none; }
 
 /* ─── Pet ─────────────────────────────────────────── */
 .pet-wrapper {
@@ -171,19 +186,15 @@ html, body {
     image-rendering: auto;
     filter: drop-shadow(0 4px 12px rgba(0,0,0,.3));
 }
-/* Stage size variations */
-.pet.stage-0 { width: 60px; height: 60px; }      /* poussin */
-.pet.stage-1 { width: 80px; height: 80px; }      /* petit coq */
-.pet.stage-2 { width: 100px; height: 100px; }    /* ado */
-.pet.stage-3 { width: 120px; height: 120px; }    /* adulte */
-.pet.stage-4 { width: 110px; height: 110px; }    /* vieux */
+/* Stage sizes set dynamically by renderer.js */
 
 /* Stage CSS - proper sprites loaded dynamically */
 .pet img, .pet svg {
     width: 100%; height: 100%; object-fit: contain;
     image-rendering: auto;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,.3));
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,.4));
 }
+.pet { transition: width .5s, height .5s, transform .3s; }
 
 /* Pet animations */
 .pet.idle { animation: petBounce 2s ease-in-out infinite; }

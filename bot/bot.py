@@ -10,7 +10,7 @@ from telegram import Update, WebAppInfo, MenuButtonWebApp, InlineKeyboardButton,
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 BOT_TOKEN = os.environ.get("FRANCIS_BOT_TOKEN", "VOTRE_TOKEN_ICI")
-WEBAPP_URL = os.environ.get("FRANCIS_WEBAPP_URL", "https://VOTRE_USERNAME.github.io/francis-le-coq/")
+WEBAPP_URL = os.environ.get("FRANCIS_WEBAPP_URL", "https://franclecoq.github.io/tamagotchi/")
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 
@@ -62,7 +62,7 @@ def main():
         print("4. Lance :")
         print()
         print("   FRANCIS_BOT_TOKEN=xxx \\")
-        print("   FRANCIS_WEBAPP_URL=https://ton-user.github.io/francis-le-coq/ \\")
+        print("   FRANCIS_WEBAPP_URL=https://franclecoq.github.io/tamagotchi/ \\")
         print("   python bot.py")
         print()
         return

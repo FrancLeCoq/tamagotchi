@@ -78,14 +78,14 @@ const Renderer = {
         const expectedSrc = stage.sprite;
         if (!this.els.petSprite.src.endsWith(expectedSrc)) {
             this.els.petSprite.src = expectedSrc;
-            // Fallback to PNG if SVG fails
             this.els.petSprite.onerror = () => {
-                this.els.petSprite.src = stage.png;
-                this.els.petSprite.onerror = () => {
-                    this.els.petSprite.src = 'assets/sprites/francis.png';
-                };
+                this.els.petSprite.src = 'assets/sprites/francis.png';
             };
         }
+
+        // Dynamic size from stage config
+        this.els.pet.style.width = stage.size + 'px';
+        this.els.pet.style.height = stage.size + 'px';
 
         // Animation state
         let anim = 'idle';
@@ -104,9 +104,7 @@ const Renderer = {
     },
 
     updateScene(pet) {
-        const night = Engine.isNight();
-        this.els.sceneBg.classList.toggle('night', night);
-        this.els.sceneOverlay.classList.toggle('night', night);
+        // Background and sky managed by Weather.js
     },
 
     updatePoops(pet) {
@@ -228,21 +226,8 @@ const Renderer = {
         }, 1200);
     },
 
-    // ─── Clouds ────────────────────────────────────────
-    spawnClouds() {
-        for (let i = 0; i < 3; i++) {
-            const cloud = document.createElement('div');
-            cloud.className = 'cloud';
-            const w = 60 + Math.random() * 80;
-            cloud.style.width = w + 'px';
-            cloud.style.height = (w * 0.4) + 'px';
-            cloud.style.top = (5 + Math.random() * 20) + '%';
-            cloud.style.animationDuration = (30 + Math.random() * 40) + 's';
-            cloud.style.animationDelay = (-Math.random() * 40) + 's';
-            cloud.style.opacity = 0.4 + Math.random() * 0.4;
-            this.els.scene.appendChild(cloud);
-        }
-    },
+    // Clouds now handled by Weather.js canvas
+    spawnClouds() {},
 
     // ─── Stats detail panel ────────────────────────────
     renderStatsDetail(pet) {

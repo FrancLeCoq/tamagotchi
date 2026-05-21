@@ -24,14 +24,14 @@ Un jeu Tamagotchi complet jouable directement dans Telegram ! Élève **Francis*
 
 ```bash
 # Fork ou clone ce repo
-git clone https://github.com/TON_USERNAME/francis-le-coq.git
+git clone https://github.com/FrancLeCoq/tamagotchi.git
 cd francis-le-coq
 git push origin main
 ```
 
 Dans les **Settings** du repo GitHub → **Pages** → Source : `main` / `/ (root)`.
 
-Ton jeu sera accessible à `https://TON_USERNAME.github.io/francis-le-coq/`
+Ton jeu sera accessible à `https://franclecoq.github.io/tamagotchi/`
 
 ### Étape 2 : Créer le bot Telegram
 
@@ -47,7 +47,7 @@ cd bot/
 pip install python-telegram-bot
 
 FRANCIS_BOT_TOKEN=ton_token \
-FRANCIS_WEBAPP_URL=https://ton-user.github.io/francis-le-coq/ \
+FRANCIS_WEBAPP_URL=https://franclecoq.github.io/tamagotchi/ \
 python bot.py
 ```
 

@@ -122,6 +122,7 @@ const App = {
         document.getElementById('game-screen').classList.add('active');
 
         Renderer.update(this.pet);
+        Weather.init();
         this.startLoops();
 
         // Check for death on load

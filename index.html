@@ -31,7 +31,9 @@
         <div class="hud-top">
             <div class="hud-name" id="hud-name">Francis</div>
             <div class="hud-stage" id="hud-stage">🐣 Poussin</div>
-            <div class="hud-icons">
+            <div class="hud-right">
+                <span class="hud-weather" id="hud-weather"></span>
+                <span class="hud-clock" id="hud-clock">☀️ 06:00</span>
                 <button class="hud-btn" id="btn-alert" title="Alertes">
                     <span class="icon">🔔</span>
                     <span class="alert-dot hidden" id="alert-dot"></span>
@@ -64,12 +66,16 @@
             <div class="scene" id="scene">
                 <!-- Background layers -->
                 <div class="scene-bg" id="scene-bg"></div>
+                
+                <!-- Weather canvas (clouds, rain, fog, sun/moon) -->
+                <canvas id="weather-canvas" class="weather-canvas"></canvas>
+                
                 <div class="scene-fg" id="scene-fg"></div>
                 
                 <!-- Pet container -->
                 <div class="pet-wrapper" id="pet-wrapper">
                     <div class="pet" id="pet">
-                        <img src="assets/sprites/poussin.svg" alt="Francis" id="pet-sprite" draggable="false">
+                        <img src="assets/sprites/poussin.png" alt="Francis" id="pet-sprite" draggable="false">
                     </div>
                     <!-- Emotion bubble -->
                     <div class="emotion-bubble hidden" id="emotion-bubble">
@@ -191,6 +197,7 @@
     <script src="js/storage.js"></script>
     <script src="js/engine.js"></script>
     <script src="js/renderer.js"></script>
+    <script src="js/weather.js"></script>
     <script src="js/minigames.js"></script>
     <script src="js/app.js"></script>
 </body>
