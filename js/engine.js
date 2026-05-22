@@ -1,10 +1,10 @@
 const Engine = {
     STAGES: [
-        { id:0, nom:'Poussin',    emoji:'🐣', heures:24,  depletion:1.6, size:80,  sprite:'assets/sprites/poussin.png',    desc:'Un petit poussin fragile !' },
-        { id:1, nom:'Petit Coq',  emoji:'🐤', heures:48,  depletion:1.4, size:100, sprite:'assets/sprites/petit_coq.png',  desc:'Premières plumes !' },
-        { id:2, nom:'Coq Ado',    emoji:'🐔', heures:72,  depletion:1.2, size:120, sprite:'assets/sprites/coq_ado.png',    desc:'Francis chante le matin.' },
-        { id:3, nom:'Coq Adulte', emoji:'🐓', heures:168, depletion:1.0, size:140, sprite:'assets/sprites/coq_adulte.png', desc:'Béret, lunettes, 1F !' },
-        { id:4, nom:'Coq Vieux',  emoji:'👴',  heures:null,depletion:0.7, size:130, sprite:'assets/sprites/coq_vieux.png',  desc:'Le sage Francis.' },
+        { id:0, nom:'Poussin',    emoji:'🐣', heures:24,  depletion:1.6, size:80,  sprite:'assets/sprites/poussin.png',    hen:'assets/sprites/poule_poussin.png', henName:'Poussinette', desc:'Un petit poussin fragile !' },
+        { id:1, nom:'Petit Coq',  emoji:'🐤', heures:48,  depletion:1.4, size:100, sprite:'assets/sprites/petit_coq.png',  hen:'assets/sprites/poule_petite.png',  henName:'Cocotte',     desc:'Premières plumes !' },
+        { id:2, nom:'Coq Ado',    emoji:'🐔', heures:72,  depletion:1.2, size:120, sprite:'assets/sprites/coq_ado.png',    hen:'assets/sprites/poule_ado.png',     henName:'Poulette',    desc:'Francis chante le matin.' },
+        { id:3, nom:'Coq Adulte', emoji:'🐓', heures:168, depletion:1.0, size:140, sprite:'assets/sprites/coq_adulte.png', hen:'assets/sprites/poule_adulte.png',  henName:'Françoise',   desc:'Béret, lunettes, 1F !' },
+        { id:4, nom:'Coq Vieux',  emoji:'👴',  heures:null,depletion:0.7, size:130, sprite:'assets/sprites/coq_vieux.png',  hen:'assets/sprites/poule_vieille.png', henName:'Mamie Plume', desc:'Le sage Francis.' },
     ],
     FOODS: [
         { id:'grain',   nom:'Grain',    emoji:'🌾', faim:20, bonheur:5,  energie:5,  sante:0 },
@@ -29,14 +29,14 @@ const Engine = {
         malade:['Côt côt... *tousse*...','Pas bien du tout...','Au secours ! 🏥'],
         sale:['Ça pue ici... 🤢','Une douche, svp !','Je suis tout crado...'],
     },
-    COOLDOWNS: { nourrir:120, jouer:300, dormir:900, soigner:600, toilette:120, douche:300, caresser:30, intellect:300 },
+    COOLDOWNS: { nourrir:120, jouer:300, dormir:900, soigner:600, toilette:120, douche:300, caresser:30, intellect:300, visite:600 },
     MAX_STAT:100, CRIT:15, POOP_INTERVAL:5400, PIPI_INTERVAL:3600,
 
     createPet(name='Francis') {
         const now = Date.now();
         return {
             nom:name, stade:0,
-            faim:80, bonheur:80, energie:80, sante:80, hygiene:90, intellect:50,
+            faim:80, bonheur:80, energie:80, sante:80, hygiene:90, intellect:50, amour:30,
             experience:0, actions:0, soinTotal:0, coins:0,
             housingLevel:0,
             neLe:now, derniereUpdate:now, derniereEvolution:now,
@@ -53,6 +53,7 @@ const Engine = {
         if (elapsed < 0.005) return pet;
         const m = this.STAGES[pet.stade].depletion;
         // Migration
+        if (pet.amour===undefined) pet.amour=30;
         if (pet.hygiene===undefined) pet.hygiene=50;
         if (pet.intellect===undefined) pet.intellect=30;
         if (pet.coins===undefined) pet.coins=0;
@@ -67,6 +68,7 @@ const Engine = {
             pet.bonheur = this.clamp(pet.bonheur - elapsed*0.5);
             pet.sante = this.clamp(pet.sante + elapsed*2);
             pet.hygiene = this.clamp(pet.hygiene - elapsed*0.5);
+            pet.amour = this.clamp(pet.amour - elapsed*0.3);
         } else {
             pet.faim = this.clamp(pet.faim - elapsed*4*m);
             pet.bonheur = this.clamp(pet.bonheur - elapsed*3*m);
@@ -74,6 +76,7 @@ const Engine = {
             pet.sante = this.clamp(pet.sante - elapsed*1.5*m);
             pet.hygiene = this.clamp(pet.hygiene - elapsed*2*m);
             pet.intellect = this.clamp(pet.intellect - elapsed*1*m);
+            pet.amour = this.clamp(pet.amour - elapsed*1.5*m);
         }
         const dirt = pet.poops + pet.pipis;
         if (dirt >= 2) { pet.bonheur = this.clamp(pet.bonheur - elapsed*dirt*0.8); pet.hygiene = this.clamp(pet.hygiene - elapsed*dirt*0.5); }
@@ -197,6 +200,17 @@ const Engine = {
         pet.cooldowns.caresser=Date.now()+this.COOLDOWNS.caresser*1000;
         pet.experience+=3; pet.actions++; pet.coins+=1;
         return {ok:true,msg:'💕'};
+    },
+    visit(pet) {
+        const c=this.canDoAction(pet,'visite'); if(!c.ok) return c;
+        if (pet.isSleeping) return {ok:false,msg:'Francis dort ! 😴'};
+        const stage = this.STAGES[pet.stade];
+        pet.amour=this.clamp(pet.amour+35);
+        pet.bonheur=this.clamp(pet.bonheur+20);
+        pet.energie=this.clamp(pet.energie-5);
+        pet.cooldowns.visite=Date.now()+this.COOLDOWNS.visite*1000;
+        pet.experience+=10; pet.actions++; pet.coins+=3;
+        return {ok:true, msg:'💕 '+stage.henName+' rend visite à Francis !', henSprite:stage.hen, henName:stage.henName};
     },
     upgradeHousing(pet) {
         const next = pet.housingLevel + 1;

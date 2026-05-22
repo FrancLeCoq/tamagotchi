@@ -61,6 +61,8 @@ const Renderer = {
         if (hygieneEl) this.setStatBar(hygieneEl, pet.hygiene || 50);
         const intellectEl = document.getElementById('stat-intellect');
         if (intellectEl) this.setStatBar(intellectEl, pet.intellect || 30);
+        const amourEl = document.getElementById('stat-amour');
+        if (amourEl) this.setStatBar(amourEl, pet.amour || 30);
     },
 
     setStatBar(el, value) {
@@ -278,6 +280,35 @@ const Renderer = {
         }
     },
 
+    showHenVisit(henSprite, petSize) {
+        const wrapper = document.getElementById('hen-wrapper');
+        const img = document.getElementById('hen-sprite');
+        img.src = henSprite;
+        const sz = Math.max(60, (petSize || 100) - 20);
+        img.style.width = sz + 'px';
+        img.style.height = sz + 'px';
+        wrapper.classList.remove('hidden');
+        wrapper.style.animation = 'none';
+        void wrapper.offsetHeight;
+        wrapper.style.animation = '';
+        // Float hearts between them
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                const h = document.createElement('div');
+                h.className = 'float-item';
+                h.textContent = ['💕','❤️','💗','💖'][Math.floor(Math.random()*4)];
+                h.style.left = (35 + Math.random() * 30) + '%';
+                h.style.top = (30 + Math.random() * 20) + '%';
+                this.els.sceneItems.appendChild(h);
+                setTimeout(() => h.remove(), 1500);
+            }, i * 400);
+        }
+        // Hide hen after 5 seconds
+        setTimeout(() => {
+            wrapper.classList.add('hidden');
+        }, 5000);
+    },
+
     // Clouds now handled by Weather.js canvas
     spawnClouds() {},
 
@@ -297,6 +328,7 @@ const Renderer = {
             { emoji: '❤️', name: 'Santé', val: pet.sante },
             { emoji: '🧼', name: 'Hygiène', val: pet.hygiene || 50 },
             { emoji: '🧠', name: 'Intellect', val: pet.intellect || 30 },
+            { emoji: '💕', name: 'Amour', val: pet.amour || 30 },
         ];
 
         let html = statRows.map(s => `

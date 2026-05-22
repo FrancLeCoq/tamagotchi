@@ -30,6 +30,7 @@ const App = {
         document.getElementById('btn-toilette').addEventListener('click',()=>this.doToilet());
         document.getElementById('btn-douche').addEventListener('click',()=>this.doShower());
         document.getElementById('btn-intellect').addEventListener('click',()=>this.openIntellect());
+        document.getElementById('btn-visite').addEventListener('click',()=>this.doVisit());
         document.getElementById('btn-stats').addEventListener('click',()=>this.openStats());
         document.getElementById('btn-housing').addEventListener('click',()=>this.openHousing());
         document.getElementById('btn-sound').addEventListener('click',()=>this.toggleSound());
@@ -85,7 +86,7 @@ const App = {
 
     updateCooldowns() {
         const now=Date.now();
-        ['nourrir','jouer','dormir','soigner','toilette','douche','intellect'].forEach(a=>{
+        ['nourrir','jouer','dormir','soigner','toilette','douche','intellect','visite'].forEach(a=>{
             const btn=document.getElementById('btn-'+a); if(!btn) return;
             const cd=this.pet.cooldowns[a]||0;
             if(now<cd){btn.classList.add('on-cooldown');const s=Math.ceil((cd-now)/1000),m=Math.floor(s/60);
@@ -138,6 +139,17 @@ const App = {
         if(!this.pet||this.pet.estMort||this.pet.isSleeping) return;
         const r=Engine.shower(this.pet); Renderer.toast(r.msg);
         if(r.ok){Renderer.showShowerAnimation();Renderer.showEmotion('🧼');Renderer.petHappyAnimation();Renderer.haptic('medium');this.showCoinGain(2);Storage.save(this.pet);}
+        Renderer.update(this.pet);
+    },
+
+    doVisit(){
+        if(!this.pet||this.pet.estMort||this.pet.isSleeping) return;
+        const r=Engine.visit(this.pet); Renderer.toast(r.msg);
+        if(r.ok){
+            Renderer.showHenVisit(r.henSprite, Engine.STAGES[this.pet.stade].size);
+            Renderer.showEmotion('💕');Renderer.petHappyAnimation();Renderer.haptic('medium');
+            this.showCoinGain(3);Storage.save(this.pet);
+        }
         Renderer.update(this.pet);
     },
 
