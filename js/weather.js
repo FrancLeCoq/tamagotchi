@@ -172,7 +172,12 @@ const Weather = {
         const sceneOverlay = document.getElementById('scene-overlay');
         const scene = document.getElementById('scene');
         const isDay = brightness > 0.5;
-        const bgSrc = isDay ? 'assets/backgrounds/bg_jour.png' : 'assets/backgrounds/bg_nuit.png';
+        // Get housing prefix from pet data
+        const housingLevel = (App.pet && App.pet.housingLevel) || 0;
+        const housing = Engine.HOUSING[housingLevel] || Engine.HOUSING[0];
+        const prefix = housing.bg;
+        const ext = (prefix === 'bois' && isDay) ? '.png' : '.png';
+        const bgSrc = 'assets/backgrounds/' + prefix + (isDay ? '_jour' : '_nuit') + ext;
         if (this.lastBgState !== bgSrc) {
             this.lastBgState = bgSrc;
             sceneBg.style.backgroundImage = 'url('+bgSrc+')';

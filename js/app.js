@@ -195,7 +195,7 @@ const App = {
             const idx=parseInt(el.dataset.housing);
             if(idx===this.pet.housingLevel+1){
                 const r=Engine.upgradeHousing(this.pet);Renderer.toast(r.msg);
-                if(r.ok){Renderer.showEmotion('🏠');Renderer.haptic('heavy');Storage.save(this.pet);this.updateHUD();this.openHousing();}
+                if(r.ok){Renderer.showEmotion('🏠');Renderer.haptic('heavy');Weather.lastBgState=null;Storage.save(this.pet);this.updateHUD();this.openHousing();}
             }
         }));
         document.getElementById('housing-screen').classList.remove('hidden');

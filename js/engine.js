@@ -15,11 +15,11 @@ const Engine = {
         { id:'fromage', nom:'Fromage',  emoji:'🧀', faim:35, bonheur:20, energie:10, sante:5 },
     ],
     HOUSING: [
-        { id:0, nom:'Poulailler',      emoji:'🏚️', cost:0,    bg:'bg_jour.png' },
-        { id:1, nom:'Maison en bois',  emoji:'🏡', cost:200,  bg:'bg_jour.png' },
-        { id:2, nom:'Maison en brique',emoji:'🏠', cost:800,  bg:'bg_jour.png' },
-        { id:3, nom:'Château',         emoji:'🏰', cost:2500, bg:'bg_jour.png' },
-        { id:4, nom:'Palace',          emoji:'🏛️', cost:8000, bg:'bg_jour.png' },
+        { id:0, nom:'Poulailler',      emoji:'🏚️', cost:0,    bg:'poulailler' },
+        { id:1, nom:'Maison en bois',  emoji:'🏡', cost:200,  bg:'bois' },
+        { id:2, nom:'Maison en brique',emoji:'🏠', cost:800,  bg:'brique' },
+        { id:3, nom:'Château',         emoji:'🏰', cost:2500, bg:'chateau' },
+        { id:4, nom:'Palace',          emoji:'🏛️', cost:8000, bg:'palace' },
     ],
     DIALOGUES: {
         content:['Cocoricoooo ! 🎵','Je suis le plus beau coq de France !','Mon béret est-il bien droit ?','1 Franc, la belle époque !','Côt côt côt !','Vive la République ! 🇫🇷'],
