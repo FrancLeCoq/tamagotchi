@@ -1,233 +1,166 @@
-/* ═══════════════════════════════════════════════════════
-   🐓 Minigames — Tap & Catch games
-   ═══════════════════════════════════════════════════════ */
-
 const Minigames = {
-    active: false,
-    timer: null,
-    score: 0,
-    onComplete: null,
+    active:false, timer:null, score:0, onComplete:null,
 
-    GAMES: [
-        { id: 'tap', nom: 'Attrape les grains ! 🌾', desc: 'Tape sur les grains le plus vite possible !' },
-        { id: 'memory', nom: 'Mémoire de coq 🧠', desc: 'Retiens la séquence !' },
-    ],
-
-    start(onComplete) {
-        this.onComplete = onComplete;
-        const game = this.GAMES[Math.floor(Math.random() * this.GAMES.length)];
-        document.getElementById('minigame-title').textContent = game.nom;
+    startPlay(onComplete) {
+        this.onComplete=onComplete;
+        document.getElementById('minigame-title').textContent='Attrape les grains ! 🌾';
         document.getElementById('minigame-screen').classList.remove('hidden');
-        
-        if (game.id === 'tap') this.startTapGame();
-        else this.startMemoryGame();
+        this.startTapGame();
+    },
+
+    startSudoku(onComplete) {
+        this.onComplete=onComplete;
+        document.getElementById('minigame-title').textContent='Mini Sudoku 🧠';
+        document.getElementById('minigame-screen').classList.remove('hidden');
+        this.startSudokuGame();
     },
 
     close() {
-        this.active = false;
-        clearTimeout(this.timer);
-        clearInterval(this._interval);
+        this.active=false; clearTimeout(this.timer); clearInterval(this._interval);
         document.getElementById('minigame-screen').classList.add('hidden');
     },
 
     // ─── Tap Game ──────────────────────────────────────
     startTapGame() {
-        this.active = true;
-        this.score = 0;
-        let timeLeft = 10000;
-        const area = document.getElementById('minigame-area');
+        this.active=true; this.score=0; let timeLeft=10000;
+        const area=document.getElementById('minigame-area');
+        area.innerHTML=`<div class="mini-score" id="mg-score">0</div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field" id="mg-field"></div>`;
+        const field=document.getElementById('mg-field'), scoreEl=document.getElementById('mg-score'), timerEl=document.getElementById('mg-timer');
 
-        area.innerHTML = `
-            <div class="mini-score" id="mg-score">0</div>
-            <div class="mini-timer-bar" id="mg-timer" style="width:100%"></div>
-            <div class="mini-field" id="mg-field"></div>
-        `;
-
-        const field = document.getElementById('mg-field');
-        const scoreEl = document.getElementById('mg-score');
-        const timerEl = document.getElementById('mg-timer');
-
-        const spawnTarget = () => {
-            if (!this.active) return;
-            field.querySelectorAll('.mini-target').forEach(t => t.remove());
-
-            const target = document.createElement('div');
-            target.className = 'mini-target';
-            const emojis = ['🌾', '🌽', '🥖', '🧀', '🐛'];
-            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-            const points = emoji === '🐛' ? -2 : (emoji === '🌾' ? 1 : 2);
-            target.textContent = emoji;
-            target.style.left = (10 + Math.random() * 70) + '%';
-            target.style.top = (10 + Math.random() * 70) + '%';
-
-            target.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.score = Math.max(0, this.score + points);
-                scoreEl.textContent = this.score;
-                target.remove();
-                Renderer.haptic(points > 0 ? 'light' : 'medium');
-
-                // Float effect
-                const item = document.createElement('div');
-                item.className = 'float-item';
-                item.textContent = points > 0 ? `+${points}` : `${points}`;
-                item.style.color = points > 0 ? '#2ecc71' : '#e74c3c';
-                item.style.left = target.style.left;
-                item.style.top = target.style.top;
-                item.style.fontSize = '18px';
-                item.style.fontWeight = '700';
-                field.appendChild(item);
-                setTimeout(() => item.remove(), 1000);
-
-                if (this.active) setTimeout(spawnTarget, 200);
+        const spawn=()=>{
+            if(!this.active) return;
+            field.querySelectorAll('.mini-target').forEach(t=>t.remove());
+            const t=document.createElement('div'); t.className='mini-target';
+            const emojis=['🌾','🌽','🥖','🧀','🐛'], emoji=emojis[Math.floor(Math.random()*emojis.length)];
+            const pts=emoji==='🐛'?-2:(emoji==='🌾'?1:2);
+            t.textContent=emoji; t.style.left=(10+Math.random()*70)+'%'; t.style.top=(10+Math.random()*70)+'%';
+            t.addEventListener('click',(e)=>{
+                e.stopPropagation(); this.score=Math.max(0,this.score+pts); scoreEl.textContent=this.score;
+                t.remove(); Renderer.haptic(pts>0?'light':'medium');
+                const fl=document.createElement('div'); fl.className='float-item';
+                fl.textContent=pts>0?'+'+pts:''+pts; fl.style.color=pts>0?'#2ecc71':'#e74c3c';
+                fl.style.left=t.style.left; fl.style.top=t.style.top; fl.style.fontSize='18px'; fl.style.fontWeight='700';
+                field.appendChild(fl); setTimeout(()=>fl.remove(),1000);
+                if(this.active) setTimeout(spawn,200);
             });
-
-            field.appendChild(target);
-            this.timer = setTimeout(() => { if (this.active) { target.remove(); spawnTarget(); } }, 1500);
+            field.appendChild(t);
+            this.timer=setTimeout(()=>{if(this.active){t.remove();spawn();}},1500);
         };
-
-        // Countdown timer
-        const startTime = Date.now();
-        this._interval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const pct = Math.max(0, (1 - elapsed / timeLeft) * 100);
-            timerEl.style.width = pct + '%';
-            timerEl.style.background = pct > 30 ? '#2ecc71' : pct > 10 ? '#f39c12' : '#e74c3c';
-
-            if (elapsed >= timeLeft) {
-                this.active = false;
-                clearInterval(this._interval);
-                this.endTapGame();
-            }
-        }, 50);
-
-        spawnTarget();
+        const st=Date.now();
+        this._interval=setInterval(()=>{
+            const e=Date.now()-st, pct=Math.max(0,(1-e/timeLeft)*100);
+            timerEl.style.width=pct+'%'; timerEl.style.background=pct>30?'#2ecc71':pct>10?'#f39c12':'#e74c3c';
+            if(e>=timeLeft){this.active=false;clearInterval(this._interval);this.endTapGame();}
+        },50);
+        spawn();
     },
-
     endTapGame() {
-        const area = document.getElementById('minigame-area');
-        const bonus = Math.min(20, this.score * 2);
-        area.innerHTML = `
-            <div class="mini-result">
-                <div style="font-size:48px;margin-bottom:12px">🌾</div>
-                <div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:8px">Score : ${this.score}</div>
-                <div style="font-size:14px;color:#8888aa;margin-bottom:16px">Bonus bonheur : +${bonus}</div>
-                <button class="mini-btn" id="mg-done">Super ! 🐓</button>
-            </div>
-        `;
-        document.getElementById('mg-done').addEventListener('click', () => {
-            this.close();
-            if (this.onComplete) this.onComplete(bonus);
-        });
-        Renderer.haptic('medium');
+        const area=document.getElementById('minigame-area'), bonus=Math.min(20,this.score*2);
+        area.innerHTML=`<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌾</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:8px">Score : ${this.score}</div><div style="font-size:14px;color:#8888aa;margin-bottom:16px">Bonus bonheur : +${bonus}</div><button class="mini-btn" id="mg-done">Super ! 🐓</button></div>`;
+        document.getElementById('mg-done').addEventListener('click',()=>{this.close();if(this.onComplete)this.onComplete(bonus);});
     },
 
-    // ─── Memory Game ───────────────────────────────────
-    startMemoryGame() {
-        this.active = true;
-        this.score = 0;
-        const area = document.getElementById('minigame-area');
-        const emojis = ['🌾', '🌽', '🥖', '🧀', '💊', '⚽'];
-        let sequence = [];
-        let playerSeq = [];
-        let round = 1;
+    // ─── Mini Sudoku 4×4 ───────────────────────────────
+    startSudokuGame() {
+        this.active=true;
+        const area=document.getElementById('minigame-area');
+        
+        // Generate a valid 4×4 sudoku
+        const solution=this.generateSudoku4();
+        const puzzle=solution.map(r=>[...r]);
+        // Remove some cells
+        let removals=0;
+        while(removals<8){
+            const r=Math.floor(Math.random()*4), c=Math.floor(Math.random()*4);
+            if(puzzle[r][c]!==0){puzzle[r][c]=0;removals++;}
+        }
 
-        const render = () => {
-            area.innerHTML = `
-                <div class="mini-score" id="mg-score">Niveau ${round}</div>
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px" id="mg-grid"></div>
-                <div style="font-size:13px;color:#8888aa" id="mg-msg">Regarde bien...</div>
-            `;
-            const grid = document.getElementById('mg-grid');
-            emojis.forEach((e, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'food-item';
-                btn.style.padding = '16px';
-                btn.style.opacity = '0.5';
-                btn.innerHTML = `<span style="font-size:32px">${e}</span>`;
-                btn.dataset.idx = i;
-                btn.addEventListener('click', () => handleTap(i));
-                grid.appendChild(btn);
+        let selected=null, mistakes=0;
+        const startTime=Date.now();
+
+        const render=()=>{
+            let html=`<div style="text-align:center;margin-bottom:8px"><span style="color:#f0c040;font-weight:700">Erreurs: ${mistakes}/3</span></div>`;
+            html+=`<div class="sudoku-grid">`;
+            for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+                const v=puzzle[r][c], isFixed=v!==0;
+                const sel=selected&&selected[0]===r&&selected[1]===c;
+                let cls='sudoku-cell';if(isFixed)cls+=' fixed';if(!isFixed)cls+=' empty';if(sel)cls+=' selected';
+                html+=`<div class="${cls}" data-r="${r}" data-c="${c}">${v||''}</div>`;
+            }
+            html+=`</div>`;
+            html+=`<div class="sudoku-numpad">`;
+            for(let n=1;n<=4;n++) html+=`<div class="sudoku-num" data-num="${n}">${n}</div>`;
+            html+=`</div>`;
+            area.innerHTML=html;
+
+            // Bind cells
+            area.querySelectorAll('.sudoku-cell:not(.fixed)').forEach(el=>{
+                el.addEventListener('click',()=>{
+                    selected=[parseInt(el.dataset.r),parseInt(el.dataset.c)];
+                    render();
+                });
+            });
+            // Bind numpad
+            area.querySelectorAll('.sudoku-num').forEach(el=>{
+                el.addEventListener('click',()=>{
+                    if(!selected) return;
+                    const [r,c]=selected, num=parseInt(el.dataset.num);
+                    if(num===solution[r][c]){
+                        puzzle[r][c]=num;
+                        selected=null;
+                        // Check win
+                        const complete=puzzle.every(row=>row.every(v=>v!==0));
+                        if(complete) this.endSudokuGame(mistakes,startTime);
+                        else render();
+                    } else {
+                        mistakes++;
+                        if(mistakes>=3) this.endSudokuGame(mistakes,startTime);
+                        else {
+                            // Flash wrong
+                            const cell=area.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+                            if(cell){cell.classList.add('wrong');setTimeout(()=>render(),500);}
+                        }
+                    }
+                });
             });
         };
-
-        const flash = async (idx) => {
-            const grid = document.getElementById('mg-grid');
-            if (!grid) return;
-            const btn = grid.children[idx];
-            if (!btn) return;
-            btn.style.opacity = '1';
-            btn.style.border = '2px solid #f0c040';
-            await new Promise(r => setTimeout(r, 500));
-            btn.style.opacity = '0.5';
-            btn.style.border = '';
-            await new Promise(r => setTimeout(r, 200));
-        };
-
-        const showSequence = async () => {
-            const newEmoji = Math.floor(Math.random() * emojis.length);
-            sequence.push(newEmoji);
-            render();
-
-            const msg = document.getElementById('mg-msg');
-            if (msg) msg.textContent = 'Regarde bien...';
-
-            await new Promise(r => setTimeout(r, 600));
-            for (const idx of sequence) {
-                if (!this.active) return;
-                await flash(idx);
-            }
-
-            if (msg) msg.textContent = 'À toi !';
-            playerSeq = [];
-            const grid = document.getElementById('mg-grid');
-            if (grid) Array.from(grid.children).forEach(b => b.style.opacity = '1');
-        };
-
-        const handleTap = (idx) => {
-            if (!this.active) return;
-            playerSeq.push(idx);
-            Renderer.haptic('light');
-
-            const grid = document.getElementById('mg-grid');
-            if (grid && grid.children[idx]) {
-                grid.children[idx].style.border = '2px solid #4ecdc4';
-                setTimeout(() => {
-                    if (grid.children[idx]) grid.children[idx].style.border = '';
-                }, 200);
-            }
-
-            const pos = playerSeq.length - 1;
-            if (playerSeq[pos] !== sequence[pos]) {
-                this.active = false;
-                this.endMemoryGame(round - 1);
-                return;
-            }
-
-            if (playerSeq.length === sequence.length) {
-                round++;
-                this.score = round - 1;
-                setTimeout(() => { if (this.active) showSequence(); }, 800);
-            }
-        };
-
-        showSequence();
+        render();
     },
 
-    endMemoryGame(level) {
-        const area = document.getElementById('minigame-area');
-        const bonus = Math.min(20, level * 4);
-        area.innerHTML = `
-            <div class="mini-result">
-                <div style="font-size:48px;margin-bottom:12px">🧠</div>
-                <div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:8px">Niveau atteint : ${level}</div>
-                <div style="font-size:14px;color:#8888aa;margin-bottom:16px">Bonus bonheur : +${bonus}</div>
-                <button class="mini-btn" id="mg-done">Cocorico ! 🐓</button>
-            </div>
-        `;
-        document.getElementById('mg-done').addEventListener('click', () => {
-            this.close();
-            if (this.onComplete) this.onComplete(bonus);
-        });
+    endSudokuGame(mistakes,startTime) {
+        const area=document.getElementById('minigame-area');
+        const won=mistakes<3;
+        const elapsed=Math.floor((Date.now()-startTime)/1000);
+        const bonus=won?Math.max(5,20-elapsed-mistakes*3):2;
+        area.innerHTML=`<div class="mini-result">
+            <div style="font-size:48px;margin-bottom:12px">${won?'🧠':'😵'}</div>
+            <div style="font-size:24px;font-weight:800;color:${won?'#f0c040':'#e74c3c'};margin-bottom:8px">${won?'Résolu !':'Trop d\'erreurs !'}</div>
+            <div style="font-size:14px;color:#8888aa;margin-bottom:16px">Temps: ${elapsed}s · Bonus intellect: +${bonus}</div>
+            <button class="mini-btn" id="mg-done">${won?'Brillant ! 🐓':'Réessayer...'}</button>
+        </div>`;
+        document.getElementById('mg-done').addEventListener('click',()=>{this.close();if(this.onComplete)this.onComplete(bonus);});
+    },
+
+    generateSudoku4() {
+        // Generate valid 4x4 sudoku using backtracking
+        const grid=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+        const isValid=(g,r,c,n)=>{
+            for(let i=0;i<4;i++){if(g[r][i]===n||g[i][c]===n) return false;}
+            const br=r<2?0:2, bc=c<2?0:2;
+            for(let i=br;i<br+2;i++) for(let j=bc;j<bc+2;j++) if(g[i][j]===n) return false;
+            return true;
+        };
+        const solve=(g)=>{
+            for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+                if(g[r][c]===0){
+                    const nums=[1,2,3,4].sort(()=>Math.random()-.5);
+                    for(const n of nums){if(isValid(g,r,c,n)){g[r][c]=n;if(solve(g)) return true;g[r][c]=0;}}
+                    return false;
+                }
+            }
+            return true;
+        };
+        solve(grid);
+        return grid;
     },
 };

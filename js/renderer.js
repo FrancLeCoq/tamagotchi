@@ -59,6 +59,8 @@ const Renderer = {
         this.setStatBar(this.els.statSante, pet.sante);
         const hygieneEl = document.getElementById('stat-hygiene');
         if (hygieneEl) this.setStatBar(hygieneEl, pet.hygiene || 50);
+        const intellectEl = document.getElementById('stat-intellect');
+        if (intellectEl) this.setStatBar(intellectEl, pet.intellect || 30);
     },
 
     setStatBar(el, value) {
@@ -294,6 +296,7 @@ const Renderer = {
             { emoji: '⚡', name: 'Énergie', val: pet.energie },
             { emoji: '❤️', name: 'Santé', val: pet.sante },
             { emoji: '🧼', name: 'Hygiène', val: pet.hygiene || 50 },
+            { emoji: '🧠', name: 'Intellect', val: pet.intellect || 30 },
         ];
 
         let html = statRows.map(s => `
