@@ -33,6 +33,7 @@ const App = {
         document.getElementById('btn-visite').addEventListener('click',()=>this.doVisit());
         document.getElementById('btn-stats').addEventListener('click',()=>this.openStats());
         document.getElementById('btn-housing').addEventListener('click',()=>this.openHousing());
+        document.getElementById('btn-farm').addEventListener('click',()=>this.openFarm());
         document.getElementById('btn-sound').addEventListener('click',()=>this.toggleSound());
         document.getElementById('btn-evo-ok').addEventListener('click',()=>Renderer.hideEvolution());
         document.getElementById('btn-restart').addEventListener('click',()=>{Renderer.hideDeath();this.newGame();});
@@ -41,7 +42,9 @@ const App = {
         document.getElementById('btn-study-auto').addEventListener('click',()=>this.doStudyAuto());
         document.getElementById('btn-study-sudoku').addEventListener('click',()=>this.doStudySudoku());
         document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>{
-            document.getElementById(b.dataset.close).classList.add('hidden');
+            const target = b.dataset.close;
+            if(target === 'farm-screen') Farm.close();
+            document.getElementById(target).classList.add('hidden');
             try{window.Telegram?.WebApp?.BackButton?.hide();}catch(e){}
         }));
     },
@@ -69,6 +72,15 @@ const App = {
     gameTick() {
         if(!this.pet||this.pet.estMort) return;
         Engine.updateStats(this.pet); Renderer.update(this.pet); this.updateCooldowns(); this.updateHUD();
+        // Farm passive update
+        if(this.pet.farm && this.pet.farm.hens > 0) {
+            const oldHens = this.pet.farm.hens;
+            Farm.update(this.pet);
+            if(this.pet.farm.deadRecent > 0 && !Farm.isOpen) {
+                Renderer.toast('💀 -' + this.pet.farm.deadRecent + ' poule(s) dans l\'enclos !');
+            }
+            if(Farm.isOpen) Farm.renderUI(this.pet);
+        }
         if(Engine.checkEvolution(this.pet)){
             const old=Engine.STAGES[this.pet.stade]; Engine.evolve(this.pet);
             Renderer.showEvolution(old,Engine.STAGES[this.pet.stade]); Storage.save(this.pet);
@@ -222,6 +234,39 @@ const App = {
         document.body.appendChild(el);
         setTimeout(()=>el.remove(),1200);
         this.updateHUD();
+    },
+
+    openFarm(){
+        if(!this.pet) return;
+        Farm.open(this.pet);
+        this.bindFarmButtons();
+        this.updateHUD();
+    },
+
+    bindFarmButtons(){
+        const buyBtn=document.getElementById('btn-farm-buy');
+        const feedBtn=document.getElementById('btn-farm-feed');
+        const cleanBtn=document.getElementById('btn-farm-clean');
+        // Remove old listeners by cloning
+        const newBuy=buyBtn.cloneNode(true); buyBtn.parentNode.replaceChild(newBuy,buyBtn);
+        const newFeed=feedBtn.cloneNode(true); feedBtn.parentNode.replaceChild(newFeed,feedBtn);
+        const newClean=cleanBtn.cloneNode(true); cleanBtn.parentNode.replaceChild(newClean,cleanBtn);
+
+        newBuy.addEventListener('click',()=>{
+            const r=Farm.buyHen(this.pet);
+            Renderer.toast(r.msg);
+            if(r.ok){Farm.addHenToScene();Renderer.haptic('light');this.showCoinGain(-50);Farm.renderUI(this.pet);Storage.save(this.pet);this.updateHUD();}
+        });
+        newFeed.addEventListener('click',()=>{
+            const r=Farm.feedEnclosure(this.pet);
+            Renderer.toast(r.msg);
+            if(r.ok){Farm.renderUI(this.pet);Storage.save(this.pet);}
+        });
+        newClean.addEventListener('click',()=>{
+            const r=Farm.cleanEnclosure(this.pet);
+            Renderer.toast(r.msg);
+            if(r.ok){Farm.renderUI(this.pet);Storage.save(this.pet);}
+        });
     },
 
     rndX(){return 20+Math.random()*60;},
