@@ -61,7 +61,7 @@ var Weather = {
         this.clouds=[];
         for(var i=0;i<4;i++) this.clouds.push({
             x:Math.random()*(this.canvas.width+400)-200,
-            y:-20+Math.random()*40, speed:0.15+Math.random()*0.25,
+            y:-40+Math.random()*30, speed:0.15+Math.random()*0.25,
             type:Math.random()>0.5?1:2, scale:0.4+Math.random()*0.5,
             opacity:0.5+Math.random()*0.3
         });
@@ -71,7 +71,7 @@ var Weather = {
         var dense=weather==='rain'||weather==='fog';
         var target=dense?10:4;
         while(this.clouds.length<target) this.clouds.push({
-            x:-300,y:-20+Math.random()*(dense?80:40),
+            x:-300,y:-40+Math.random()*(dense?60:30),
             speed:(dense?0.06:0.15)+Math.random()*(dense?0.08:0.25),
             type:Math.random()>0.5?1:2,scale:dense?0.7+Math.random()*0.7:0.4+Math.random()*0.5,
             opacity:dense?0.8+Math.random()*0.2:0.5+Math.random()*0.3

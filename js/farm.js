@@ -1,296 +1,186 @@
-/* ═══════════════════════════════════════════════════════
-   🐔 Farm — Enclosure management system
-   Buy hens, feed/clean enclosure, hens walk around
-   ═══════════════════════════════════════════════════════ */
+var Farm = {
+    HEN_COST:50, MAX_HENS:20, DEPLETION_RATE:3,
+    canvas:null, ctx:null, hens:[], animFrame:null, isOpen:false,
+    henImg:null, bgDayImg:null, bgNightImg:null,
 
-const Farm = {
-    HEN_COST: 50,
-    MAX_HENS: 20,
-    DEPLETION_RATE: 3, // per hour per hen
-    CHECK_INTERVAL: 60000, // check deaths every minute
-    canvas: null,
-    ctx: null,
-    hens: [],
-    animFrame: null,
-    isOpen: false,
-
-    // Initialize farm data in pet if not present
-    ensureData(pet) {
-        if (!pet.farm) {
-            pet.farm = {
-                hens: 0,
-                feedLevel: 80,
-                cleanLevel: 80,
-                lastUpdate: Date.now(),
-                deadRecent: 0,
-                totalEggs: 0,
-            };
-        }
+    ensureData:function(pet){
+        if(!pet.farm) pet.farm={hens:0,feedLevel:80,cleanLevel:80,lastUpdate:Date.now(),deadRecent:0,totalEggs:0};
         return pet.farm;
     },
 
-    // Update farm stats based on elapsed time
-    update(pet) {
-        const farm = this.ensureData(pet);
-        if (farm.hens <= 0) return farm;
-
-        const now = Date.now();
-        const elapsed = (now - farm.lastUpdate) / 3600000; // hours
-        if (elapsed < 0.01) return farm;
-
-        const rate = this.DEPLETION_RATE * farm.hens * 0.15;
-        farm.feedLevel = Math.max(0, farm.feedLevel - elapsed * rate);
-        farm.cleanLevel = Math.max(0, farm.cleanLevel - elapsed * rate * 0.7);
-
-        // Hen death check
-        farm.deadRecent = 0;
-        if (farm.feedLevel <= 0 && farm.hens > 0) {
-            const deaths = Math.min(farm.hens, Math.ceil(elapsed * 0.5));
-            if (deaths > 0) {
-                farm.hens -= deaths;
-                farm.deadRecent = deaths;
-                farm.feedLevel = 5; // reset slightly
-            }
+    update:function(pet){
+        var farm=this.ensureData(pet);
+        if(farm.hens<=0) return farm;
+        var now=Date.now(), elapsed=(now-farm.lastUpdate)/3600000;
+        if(elapsed<0.01) return farm;
+        var rate=this.DEPLETION_RATE*farm.hens*0.15;
+        farm.feedLevel=Math.max(0,farm.feedLevel-elapsed*rate);
+        farm.cleanLevel=Math.max(0,farm.cleanLevel-elapsed*rate*0.7);
+        farm.deadRecent=0;
+        if(farm.feedLevel<=0&&farm.hens>0){
+            var d=Math.min(farm.hens,Math.ceil(elapsed*0.5));
+            farm.hens-=d;farm.deadRecent=d;farm.feedLevel=5;
         }
-        if (farm.cleanLevel <= 0 && farm.hens > 0) {
-            const deaths = Math.min(farm.hens, Math.ceil(elapsed * 0.3));
-            if (deaths > 0) {
-                farm.hens -= deaths;
-                farm.deadRecent += deaths;
-                farm.cleanLevel = 5;
-            }
+        if(farm.cleanLevel<=0&&farm.hens>0){
+            var d2=Math.min(farm.hens,Math.ceil(elapsed*0.3));
+            farm.hens-=d2;farm.deadRecent+=d2;farm.cleanLevel=5;
         }
-
-        // Passive coin income from hens (eggs)
-        if (farm.feedLevel > 20 && farm.cleanLevel > 20) {
-            const eggs = Math.floor(elapsed * farm.hens * 0.3);
-            if (eggs > 0) {
-                pet.coins += eggs;
-                farm.totalEggs += eggs;
-            }
+        if(farm.feedLevel>20&&farm.cleanLevel>20){
+            var eggs=Math.floor(elapsed*farm.hens*0.3);
+            if(eggs>0){pet.coins+=eggs;farm.totalEggs+=eggs;}
         }
-
-        farm.lastUpdate = now;
+        farm.lastUpdate=now;
         return farm;
     },
 
-    buyHen(pet) {
-        const farm = this.ensureData(pet);
-        if (farm.hens >= this.MAX_HENS) return { ok: false, msg: 'Enclos plein ! (max ' + this.MAX_HENS + ')' };
-        if (pet.coins < this.HEN_COST) return { ok: false, msg: 'Il faut ' + this.HEN_COST + ' 🪙 (tu as ' + pet.coins + ')' };
-        pet.coins -= this.HEN_COST;
-        farm.hens++;
-        return { ok: true, msg: '🐔 Nouvelle poule achetée ! (' + farm.hens + '/' + this.MAX_HENS + ')' };
+    buyHen:function(pet){
+        var farm=this.ensureData(pet);
+        if(farm.hens>=this.MAX_HENS) return {ok:false,msg:'Enclos plein ! (max '+this.MAX_HENS+')'};
+        if(pet.coins<this.HEN_COST) return {ok:false,msg:'Il faut '+this.HEN_COST+' 🪙 (tu as '+pet.coins+')'};
+        pet.coins-=this.HEN_COST;farm.hens++;
+        return {ok:true,msg:'🐔 Nouvelle poule ! ('+farm.hens+'/'+this.MAX_HENS+')'};
     },
 
-    feedEnclosure(pet) {
-        const farm = this.ensureData(pet);
-        if (farm.hens <= 0) return { ok: false, msg: 'Pas de poules à nourrir !' };
-        if (farm.feedLevel >= 95) return { ok: false, msg: 'L\'enclos est déjà bien nourri ! 🌾' };
-        farm.feedLevel = Math.min(100, farm.feedLevel + 40);
-        pet.coins += 1;
-        return { ok: true, msg: '🌾 Enclos nourri ! +40' };
+    feedEnclosure:function(pet){
+        var farm=this.ensureData(pet);
+        if(farm.hens<=0) return {ok:false,msg:'Pas de poules !'};
+        if(farm.feedLevel>=95) return {ok:false,msg:'Déjà nourri ! 🌾'};
+        farm.feedLevel=Math.min(100,farm.feedLevel+40);pet.coins+=1;
+        return {ok:true,msg:'🌾 Enclos nourri !'};
     },
 
-    cleanEnclosure(pet) {
-        const farm = this.ensureData(pet);
-        if (farm.hens <= 0) return { ok: false, msg: 'Pas de poules à nettoyer !' };
-        if (farm.cleanLevel >= 95) return { ok: false, msg: 'L\'enclos est déjà propre ! ✨' };
-        farm.cleanLevel = Math.min(100, farm.cleanLevel + 40);
-        pet.coins += 1;
-        return { ok: true, msg: '🧹 Enclos nettoyé ! +40' };
+    cleanEnclosure:function(pet){
+        var farm=this.ensureData(pet);
+        if(farm.hens<=0) return {ok:false,msg:'Pas de poules !'};
+        if(farm.cleanLevel>=95) return {ok:false,msg:'Déjà propre ! ✨'};
+        farm.cleanLevel=Math.min(100,farm.cleanLevel+40);pet.coins+=1;
+        return {ok:true,msg:'🧹 Enclos nettoyé !'};
     },
 
-    // ─── Rendering ─────────────────────────────────────
-    open(pet) {
-        this.isOpen = true;
-        const farm = this.ensureData(pet);
+    open:function(pet){
+        this.isOpen=true;
+        var farm=this.ensureData(pet);
         this.update(pet);
+        document.getElementById('farm-screen').classList.remove('hidden');
 
-        const screen = document.getElementById('farm-screen');
-        screen.classList.remove('hidden');
+        // Preload images
+        this.henImg=new Image();this.henImg.src='assets/sprites/poule_enclos.png';
+        this.bgDayImg=new Image();this.bgDayImg.src='assets/backgrounds/champs_jour.png';
+        this.bgNightImg=new Image();this.bgNightImg.src='assets/backgrounds/champs_nuit.png';
 
-        // Setup canvas
-        this.canvas = document.getElementById('farm-canvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.resizeCanvas();
-
-        // Initialize hen positions
-        this.initHens(farm.hens);
-
-        // Update UI
-        this.renderUI(pet);
-
-        // Show death notification
-        if (farm.deadRecent > 0) {
-            this.showDeathNotice(farm.deadRecent);
-        }
-
-        // Start animation
-        this.animate();
+        // Setup canvas after a frame so DOM is ready
+        var self=this;
+        requestAnimationFrame(function(){
+            self.canvas=document.getElementById('farm-canvas');
+            if(!self.canvas) return;
+            self.ctx=self.canvas.getContext('2d');
+            var container=document.getElementById('farm-scene');
+            self.canvas.width=container.offsetWidth;
+            self.canvas.height=container.offsetHeight;
+            self.initHens(farm.hens);
+            self.renderUI(pet);
+            if(farm.deadRecent>0) self.showDeathNotice(farm.deadRecent);
+            self.animate();
+        });
     },
 
-    close() {
-        this.isOpen = false;
-        if (this.animFrame) cancelAnimationFrame(this.animFrame);
+    close:function(){
+        this.isOpen=false;
+        if(this.animFrame) cancelAnimationFrame(this.animFrame);
         document.getElementById('farm-screen').classList.add('hidden');
     },
 
-    resizeCanvas() {
-        const container = document.getElementById('farm-scene');
-        if (!container) return;
-        this.canvas.width = container.offsetWidth;
-        this.canvas.height = container.offsetHeight;
-    },
-
-    initHens(count) {
-        this.hens = [];
-        this.henImg = new Image();
-        this.henImg.src = 'assets/sprites/poule_enclos.png';
-        for (let i = 0; i < count; i++) {
+    initHens:function(count){
+        this.hens=[];
+        if(!this.canvas) return;
+        for(var i=0;i<count;i++){
             this.hens.push({
-                x: 30 + Math.random() * (this.canvas.width - 80),
-                y: this.canvas.height * 0.45 + Math.random() * (this.canvas.height * 0.4),
-                targetX: 0, targetY: 0,
-                speed: 0.3 + Math.random() * 0.5,
-                flipX: Math.random() > 0.5,
-                state: 'idle', // idle, walking, pecking
-                stateTimer: Math.random() * 200,
-                bobOffset: Math.random() * Math.PI * 2,
+                x:30+Math.random()*(this.canvas.width-80),
+                y:this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4),
+                targetX:30+Math.random()*(this.canvas.width-80),
+                targetY:this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4),
+                speed:0.3+Math.random()*0.5, flipX:Math.random()>0.5,
+                state:'idle', stateTimer:Math.random()*200, bob:Math.random()*Math.PI*2
             });
-            this.hens[i].targetX = this.hens[i].x;
-            this.hens[i].targetY = this.hens[i].y;
         }
     },
 
-    updateHens() {
-        for (const h of this.hens) {
+    updateHens:function(){
+        for(var i=0;i<this.hens.length;i++){
+            var h=this.hens[i];
             h.stateTimer--;
-            if (h.stateTimer <= 0) {
-                // Change state
-                const r = Math.random();
-                if (r < 0.4) {
-                    h.state = 'walking';
-                    h.targetX = 30 + Math.random() * (this.canvas.width - 80);
-                    h.targetY = this.canvas.height * 0.45 + Math.random() * (this.canvas.height * 0.4);
-                    h.stateTimer = 100 + Math.random() * 200;
-                } else if (r < 0.7) {
-                    h.state = 'pecking';
-                    h.stateTimer = 30 + Math.random() * 60;
-                } else {
-                    h.state = 'idle';
-                    h.stateTimer = 50 + Math.random() * 150;
-                }
+            if(h.stateTimer<=0){
+                var r=Math.random();
+                if(r<0.4){
+                    h.state='walking';
+                    h.targetX=30+Math.random()*(this.canvas.width-80);
+                    h.targetY=this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4);
+                    h.stateTimer=100+Math.random()*200;
+                } else if(r<0.7){h.state='pecking';h.stateTimer=30+Math.random()*60;}
+                else {h.state='idle';h.stateTimer=50+Math.random()*150;}
             }
-
-            if (h.state === 'walking') {
-                const dx = h.targetX - h.x;
-                const dy = h.targetY - h.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > 2) {
-                    h.x += (dx / dist) * h.speed;
-                    h.y += (dy / dist) * h.speed;
-                    h.flipX = dx < 0;
-                } else {
-                    h.state = 'idle';
-                    h.stateTimer = 50 + Math.random() * 100;
-                }
+            if(h.state==='walking'){
+                var dx=h.targetX-h.x,dy=h.targetY-h.y;
+                var dist=Math.sqrt(dx*dx+dy*dy);
+                if(dist>2){h.x+=(dx/dist)*h.speed;h.y+=(dy/dist)*h.speed;h.flipX=dx<0;}
+                else {h.state='idle';h.stateTimer=50+Math.random()*100;}
             }
         }
     },
 
-    drawHens() {
-        if (!this.henImg.complete) return;
-        const t = Date.now() / 1000;
-        for (const h of this.hens) {
-            const bob = h.state === 'pecking'
-                ? Math.sin(t * 8 + h.bobOffset) * 4
-                : Math.sin(t * 2 + h.bobOffset) * 1.5;
-            const sz = 40;
-
+    drawHens:function(){
+        if(!this.henImg||!this.henImg.complete) return;
+        var t=Date.now()/1000;
+        for(var i=0;i<this.hens.length;i++){
+            var h=this.hens[i];
+            var bobY=h.state==='pecking'?Math.sin(t*8+h.bob)*4:Math.sin(t*2+h.bob)*1.5;
+            var walkBob=h.state==='walking'?Math.sin(t*6+h.bob)*2:0;
+            var sz=40;
             this.ctx.save();
-            this.ctx.translate(h.x + sz / 2, h.y + sz / 2);
-            if (h.flipX) this.ctx.scale(-1, 1);
-
-            // Walking bob
-            const walkBob = h.state === 'walking' ? Math.sin(t * 6 + h.bobOffset) * 2 : 0;
-            this.ctx.drawImage(this.henImg, -sz / 2, -sz / 2 + bob + walkBob, sz, sz);
+            this.ctx.translate(h.x+sz/2,h.y+sz/2);
+            if(h.flipX) this.ctx.scale(-1,1);
+            this.ctx.drawImage(this.henImg,-sz/2,-sz/2+bobY+walkBob,sz,sz);
             this.ctx.restore();
         }
     },
 
-    animate() {
-        if (!this.isOpen) return;
-        const isDay = Weather.getSkyBrightness() > 0.5;
-        const bg = new Image();
-        bg.src = isDay ? 'assets/backgrounds/champs_jour.png' : 'assets/backgrounds/champs_nuit.png';
-
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // Draw background
-        if (bg.complete) {
-            this.ctx.drawImage(bg, 0, 0, this.canvas.width, this.canvas.height);
-        }
-
-        // Night overlay
-        if (!isDay) {
-            this.ctx.fillStyle = 'rgba(10,10,40,0.3)';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        }
-
+    animate:function(){
+        if(!this.isOpen||!this.canvas||!this.ctx) return;
+        var isDay=Weather.getSkyBrightness()>0.5;
+        var bg=isDay?this.bgDayImg:this.bgNightImg;
+        this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+        if(bg&&bg.complete) this.ctx.drawImage(bg,0,0,this.canvas.width,this.canvas.height);
+        if(!isDay){this.ctx.fillStyle='rgba(10,10,40,0.3)';this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);}
         this.updateHens();
         this.drawHens();
-
-        this.animFrame = requestAnimationFrame(() => this.animate());
+        var self=this;
+        this.animFrame=requestAnimationFrame(function(){self.animate();});
     },
 
-    renderUI(pet) {
-        const farm = this.ensureData(pet);
-
-        // Gauges
-        const feedBar = document.getElementById('farm-feed-bar');
-        const cleanBar = document.getElementById('farm-clean-bar');
-        if (feedBar) {
-            feedBar.style.width = farm.feedLevel + '%';
-            feedBar.style.background = farm.feedLevel > 40 ? '#2ecc71' : farm.feedLevel > 15 ? '#f39c12' : '#e74c3c';
-        }
-        if (cleanBar) {
-            cleanBar.style.width = farm.cleanLevel + '%';
-            cleanBar.style.background = farm.cleanLevel > 40 ? '#2ecc71' : farm.cleanLevel > 15 ? '#f39c12' : '#e74c3c';
-        }
-
-        // Info
-        const info = document.getElementById('farm-info');
-        if (info) {
-            info.innerHTML =
-                '<span>🐔 ' + farm.hens + '/' + this.MAX_HENS + '</span>' +
-                '<span>🥚 ' + farm.totalEggs + ' œufs</span>' +
-                '<span>🪙 ' + pet.coins + '</span>';
-        }
+    renderUI:function(pet){
+        var farm=this.ensureData(pet);
+        var fb=document.getElementById('farm-feed-bar');
+        var cb=document.getElementById('farm-clean-bar');
+        if(fb){fb.style.width=farm.feedLevel+'%';fb.style.background=farm.feedLevel>40?'#2ecc71':farm.feedLevel>15?'#f39c12':'#e74c3c';}
+        if(cb){cb.style.width=farm.cleanLevel+'%';cb.style.background=farm.cleanLevel>40?'#2ecc71':farm.cleanLevel>15?'#f39c12':'#e74c3c';}
+        var info=document.getElementById('farm-info');
+        if(info) info.innerHTML='<span>🐔 '+farm.hens+'/'+this.MAX_HENS+'</span><span>🥚 '+farm.totalEggs+'</span><span>🪙 '+pet.coins+'</span>';
     },
 
-    showDeathNotice(count) {
-        const notice = document.getElementById('farm-death-notice');
-        if (notice) {
-            notice.textContent = '💀 -' + count + ' poule' + (count > 1 ? 's' : '') + ' !';
-            notice.classList.remove('hidden');
-            setTimeout(() => notice.classList.add('hidden'), 4000);
-        }
+    showDeathNotice:function(count){
+        var n=document.getElementById('farm-death-notice');
+        if(n){n.textContent='💀 -'+count+' poule'+(count>1?'s':'');n.classList.remove('hidden');
+        setTimeout(function(){n.classList.add('hidden');},4000);}
     },
 
-    // Add a hen to the animation when bought
-    addHenToScene() {
-        if (!this.canvas) return;
+    addHenToScene:function(){
+        if(!this.canvas) return;
         this.hens.push({
-            x: -40,
-            y: this.canvas.height * 0.5 + Math.random() * (this.canvas.height * 0.3),
-            targetX: 50 + Math.random() * (this.canvas.width - 100),
-            targetY: this.canvas.height * 0.45 + Math.random() * (this.canvas.height * 0.4),
-            speed: 0.5 + Math.random() * 0.5,
-            flipX: false,
-            state: 'walking',
-            stateTimer: 200,
-            bobOffset: Math.random() * Math.PI * 2,
+            x:-40, y:this.canvas.height*0.5+Math.random()*(this.canvas.height*0.3),
+            targetX:50+Math.random()*(this.canvas.width-100),
+            targetY:this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4),
+            speed:0.5+Math.random()*0.5, flipX:false,
+            state:'walking', stateTimer:200, bob:Math.random()*Math.PI*2
         });
-    },
+    }
 };
