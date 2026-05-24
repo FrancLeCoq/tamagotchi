@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- SPLASH -->
     <div id="splash-screen" class="screen active">
         <div class="splash-content">
             <img src="assets/sprites/francis.png" alt="Francis" class="splash-francis">
@@ -20,9 +19,8 @@
         </div>
     </div>
 
-    <!-- GAME -->
     <div id="game-screen" class="screen">
-        <!-- TOP BAR -->
+        <!-- TOP BAR - translucent -->
         <div class="top-bar">
             <div class="tb-clock" id="hud-clock">☀️ 07:17</div>
             <div class="tb-avatar">
@@ -38,28 +36,36 @@
             </div>
         </div>
 
-        <!-- STATS BAR -->
+        <!-- STATS - translucent -->
         <div class="stats-panel">
             <div class="sp-row">
-                <div class="sp-stat"><span class="sp-icon">🌾</span><span class="sp-label">Faim</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-faim" style="width:80%"></div></div><span class="sp-pct" id="pct-faim">80%</span></div>
-                <div class="sp-stat"><span class="sp-icon">😊</span><span class="sp-label">Bonheur</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-bonheur" style="width:80%"></div></div><span class="sp-pct" id="pct-bonheur">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">🌾</span><span class="sp-label">Faim</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-faim"></div></div><span class="sp-pct" id="pct-faim">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">😊</span><span class="sp-label">Bonheur</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-bonheur"></div></div><span class="sp-pct" id="pct-bonheur">80%</span></div>
             </div>
             <div class="sp-row">
-                <div class="sp-stat"><span class="sp-icon">⚡</span><span class="sp-label">Énergie</span><div class="sp-track"><div class="sp-fill sp-yellow" id="stat-energie" style="width:80%"></div></div><span class="sp-pct" id="pct-energie">80%</span></div>
-                <div class="sp-stat"><span class="sp-icon">❤️</span><span class="sp-label">Santé</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-sante" style="width:80%"></div></div><span class="sp-pct" id="pct-sante">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">⚡</span><span class="sp-label">Énergie</span><div class="sp-track"><div class="sp-fill sp-yellow" id="stat-energie"></div></div><span class="sp-pct" id="pct-energie">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">❤️</span><span class="sp-label">Santé</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-sante"></div></div><span class="sp-pct" id="pct-sante">80%</span></div>
             </div>
             <div class="sp-row">
-                <div class="sp-stat"><span class="sp-icon">🧼</span><span class="sp-label">Hygiène</span><div class="sp-track"><div class="sp-fill sp-blue" id="stat-hygiene" style="width:90%"></div></div><span class="sp-pct" id="pct-hygiene">90%</span></div>
-                <div class="sp-stat"><span class="sp-icon">💕</span><span class="sp-label">Amour</span><div class="sp-track"><div class="sp-fill sp-pink" id="stat-amour" style="width:30%"></div></div><span class="sp-pct" id="pct-amour">30%</span></div>
+                <div class="sp-stat"><span class="sp-icon">🧼</span><span class="sp-label">Hygiène</span><div class="sp-track"><div class="sp-fill sp-blue" id="stat-hygiene"></div></div><span class="sp-pct" id="pct-hygiene">90%</span></div>
+                <div class="sp-stat"><span class="sp-icon">💕</span><span class="sp-label">Amour</span><div class="sp-track"><div class="sp-fill sp-pink" id="stat-amour"></div></div><span class="sp-pct" id="pct-amour">30%</span></div>
             </div>
         </div>
 
-        <!-- SCENE -->
+        <!-- SCENE - layered -->
         <div class="scene-container">
             <div class="scene" id="scene">
-                <div class="scene-bg" id="scene-bg"></div>
+                <!-- Layer 1: Sky gradient (dynamic) -->
+                <div class="layer-sky" id="layer-sky"></div>
+                <!-- Layer 2: Weather canvas -->
                 <canvas id="weather-canvas" class="weather-canvas"></canvas>
-                <div class="scene-fg" id="scene-fg"></div>
+                <!-- Layer 3: Paysage (transparent sky) -->
+                <div class="layer-landscape" id="layer-landscape"></div>
+                <!-- Layer 4: Building -->
+                <div class="layer-building" id="layer-building"></div>
+                <!-- Layer 5: Sleep ZZZ overlay -->
+                <div class="sleep-zzz hidden" id="sleep-zzz">💤💤💤</div>
+                <!-- Layer 6: Pet -->
                 <div class="pet-wrapper" id="pet-wrapper">
                     <div class="pet" id="pet">
                         <img src="assets/sprites/poussin.png" alt="Francis" id="pet-sprite" draggable="false">
@@ -67,19 +73,22 @@
                     <div class="emotion-bubble hidden" id="emotion-bubble"><span id="emotion-icon">💕</span></div>
                     <div class="speech-bubble hidden" id="speech-bubble"><span id="speech-text"></span></div>
                 </div>
+                <!-- Scene overlays -->
                 <div class="scene-items" id="scene-items"></div>
                 <div class="poop-container" id="poop-container"></div>
                 <div class="scene-touch" id="scene-touch"></div>
                 <div class="scene-overlay" id="scene-overlay"></div>
-                <div class="housing-badge" id="housing-badge">🏚️</div>
+                <div class="hud-weather" id="hud-weather"></div>
+                <!-- Hen visit -->
                 <div class="hen-wrapper hidden" id="hen-wrapper">
                     <img src="" alt="" id="hen-sprite" class="hen-sprite" draggable="false">
                 </div>
-                <div class="hud-weather" id="hud-weather"></div>
+                <!-- Enclos badge (goes to farm) -->
+                <button class="enclos-badge" id="btn-enclos-badge">🐔</button>
             </div>
         </div>
 
-        <!-- ACTION BUTTONS (colorful) -->
+        <!-- ACTION ROW -->
         <div class="action-row">
             <button class="act-btn act-green" id="btn-nourrir"><span class="act-icon">🍽️</span><span class="act-label">Nourrir</span></button>
             <button class="act-btn act-blue" id="btn-jouer"><span class="act-icon">🎮</span><span class="act-label">Jouer</span></button>
@@ -98,40 +107,17 @@
         </div>
     </div>
 
-    <!-- CARE SUBMENU OVERLAY -->
-    <div id="care-screen" class="overlay hidden">
-        <div class="overlay-panel">
-            <div class="overlay-header"><h2>Soins & Entretien</h2><button class="close-btn" data-close="care-screen">✕</button></div>
-            <div class="care-grid">
-                <button class="care-item" id="btn-toilette"><span class="care-icon">🚽</span><span>Toilette</span></button>
-                <button class="care-item" id="btn-douche"><span class="care-icon">🚿</span><span>Douche</span></button>
-                <button class="care-item" id="btn-intellect"><span class="care-icon">🧠</span><span>Intellect</span></button>
-                <button class="care-item" id="btn-farm"><span class="care-icon">🌾</span><span>Enclos</span></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MORE SUBMENU -->
-    <div id="more-screen" class="overlay hidden">
-        <div class="overlay-panel">
-            <div class="overlay-header"><h2>Paramètres</h2><button class="close-btn" data-close="more-screen">✕</button></div>
-            <div class="care-grid">
-                <button class="care-item" id="btn-sound"><span class="care-icon" id="sound-icon">🔇</span><span>Son</span></button>
-                <button class="care-item" id="btn-pause"><span class="care-icon" id="pause-icon">⏸️</span><span>Pause</span></button>
-                <button class="care-item care-danger" id="btn-reset"><span class="care-icon">🗑️</span><span>Reset</span></button>
-            </div>
-        </div>
-    </div>
-
-    <!-- OVERLAYS (food, stats, minigame, intellect, housing, farm, evolution, death) -->
-    <div id="food-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Nourrir Francis</h2><button class="close-btn" data-close="food-screen">✕</button></div><div class="food-grid" id="food-grid"></div></div></div>
+    <!-- OVERLAYS -->
+    <div id="care-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Soins</h2><button class="close-btn" data-close="care-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-toilette"><span class="care-icon">🚽</span><span>Toilette</span></button><button class="care-item" id="btn-douche"><span class="care-icon">🚿</span><span>Douche</span></button><button class="care-item" id="btn-intellect"><span class="care-icon">🧠</span><span>Intellect</span></button><button class="care-item" id="btn-farm"><span class="care-icon">🌾</span><span>Enclos</span></button></div></div></div>
+    <div id="more-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Paramètres</h2><button class="close-btn" data-close="more-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-sound"><span class="care-icon" id="sound-icon">🔇</span><span>Son</span></button><button class="care-item" id="btn-pause"><span class="care-icon" id="pause-icon">⏸️</span><span>Pause</span></button><button class="care-item care-danger" id="btn-reset"><span class="care-icon">🗑️</span><span>Reset</span></button></div></div></div>
+    <div id="food-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Nourrir</h2><button class="close-btn" data-close="food-screen">✕</button></div><div class="food-grid" id="food-grid"></div></div></div>
     <div id="stats-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2>Statistiques</h2><button class="close-btn" data-close="stats-screen">✕</button></div><div class="stats-detail" id="stats-detail"></div></div></div>
     <div id="minigame-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2 id="minigame-title">Mini-jeu</h2><button class="close-btn" data-close="minigame-screen">✕</button></div><div class="minigame-area" id="minigame-area"></div></div></div>
-    <div id="intellect-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Intellect 🧠</h2><button class="close-btn" data-close="intellect-screen">✕</button></div><div class="food-grid"><div class="food-item" id="btn-study-auto"><span class="food-icon">📖</span><span class="food-name">Lecture</span><span class="food-stats">+25🧠</span></div><div class="food-item" id="btn-study-sudoku"><span class="food-icon">🔢</span><span class="food-name">Sudoku</span><span class="food-stats">bonus variable</span></div></div></div></div>
+    <div id="intellect-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Intellect 🧠</h2><button class="close-btn" data-close="intellect-screen">✕</button></div><div class="food-grid"><div class="food-item" id="btn-study-auto"><span class="food-icon">📖</span><span class="food-name">Lecture</span><span class="food-stats">+25🧠</span></div><div class="food-item" id="btn-study-sudoku"><span class="food-icon">🔢</span><span class="food-name">Sudoku</span><span class="food-stats">bonus</span></div></div></div></div>
     <div id="housing-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2>Boutique 🏗️</h2><button class="close-btn" data-close="housing-screen">✕</button></div><div id="housing-list"></div></div></div>
-    <div id="farm-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full" style="max-height:95vh;padding:0"><div class="farm-header"><div class="farm-gauges"><div class="farm-gauge"><span>🌾</span><div class="farm-gauge-track"><div class="farm-gauge-fill" id="farm-feed-bar"></div></div><button class="farm-gauge-btn" id="btn-farm-feed">Nourrir</button></div><div class="farm-gauge"><span>🧹</span><div class="farm-gauge-track"><div class="farm-gauge-fill" id="farm-clean-bar"></div></div><button class="farm-gauge-btn" id="btn-farm-clean">Nettoyer</button></div></div><div class="farm-info" id="farm-info"></div><div class="farm-actions"><button class="farm-buy-btn" id="btn-farm-buy">🐔 Acheter poule (50🪙)</button><button class="close-btn" data-close="farm-screen">✕</button></div><div class="farm-death-notice hidden" id="farm-death-notice">💀</div></div><div class="farm-scene" id="farm-scene"><canvas id="farm-canvas" style="width:100%;height:100%"></canvas></div></div></div>
-    <div id="evolution-screen" class="overlay hidden"><div class="evolution-content"><div class="evo-particles" id="evo-particles"></div><h2 class="evo-title">✨ Évolution ! ✨</h2><div class="evo-stages"><div class="evo-old" id="evo-old"></div><div class="evo-arrow">→</div><div class="evo-new" id="evo-new"></div></div><p class="evo-desc" id="evo-desc"></p><button class="btn-start" id="btn-evo-ok">Cocorico !</button></div></div>
-    <div id="death-screen" class="overlay hidden"><div class="death-content"><div class="death-icon">😇</div><h2 class="death-title">Francis est parti...</h2><p class="death-desc" id="death-desc"></p><div class="death-stats" id="death-stats"></div><button class="btn-start" id="btn-restart">Nouvel œuf 🥚</button></div></div>
+    <div id="farm-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full" style="max-height:95vh;padding:0"><div class="farm-header"><div class="farm-gauges"><div class="farm-gauge"><span>🌾</span><div class="farm-gauge-track"><div class="farm-gauge-fill" id="farm-feed-bar"></div></div><button class="farm-gauge-btn" id="btn-farm-feed">Nourrir</button></div><div class="farm-gauge"><span>🧹</span><div class="farm-gauge-track"><div class="farm-gauge-fill" id="farm-clean-bar"></div></div><button class="farm-gauge-btn" id="btn-farm-clean">Nettoyer</button></div></div><div class="farm-info" id="farm-info"></div><div class="farm-actions"><button class="farm-buy-btn" id="btn-farm-buy">🐔 Acheter (50🪙)</button><button class="close-btn" data-close="farm-screen">✕</button></div><div class="farm-death-notice hidden" id="farm-death-notice">💀</div></div><div class="farm-scene" id="farm-scene"><canvas id="farm-canvas" style="width:100%;height:100%"></canvas></div></div></div>
+    <div id="evolution-screen" class="overlay hidden"><div class="evolution-content"><h2 class="evo-title">✨ Évolution ! ✨</h2><div class="evo-stages"><div class="evo-old" id="evo-old"></div><div class="evo-arrow">→</div><div class="evo-new" id="evo-new"></div></div><p class="evo-desc" id="evo-desc"></p><button class="btn-start" id="btn-evo-ok">Cocorico !</button></div></div>
+    <div id="death-screen" class="overlay hidden"><div class="death-content"><div style="font-size:72px;margin-bottom:16px">😇</div><h2 style="color:#8899bb;margin-bottom:8px">Francis est parti...</h2><p class="death-desc" id="death-desc"></p><div id="death-stats"></div><button class="btn-start" id="btn-restart">Nouvel œuf 🥚</button></div></div>
     <div class="toast hidden" id="toast"><span id="toast-text"></span></div>
 
     <script src="js/storage.js"></script>
