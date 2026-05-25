@@ -1,5 +1,6 @@
 var App = {
     pet:null,gameLoop:null,moveLoop:null,saveInterval:null,speechInterval:null,sleepZInterval:null,
+    farmWalkLoop:null,
     bgMusic:null,soundOn:false,paused:false,notificationsOn:true,lastNotif:0,NOTIF_INTERVAL:300000,
     touchStartX:0,touchStartY:0,isSwiping:false,
 
@@ -27,17 +28,20 @@ var App = {
         document.getElementById('btn-jouer').addEventListener('click',function(){self.doPlay();});
         document.getElementById('btn-dormir').addEventListener('click',function(){self.doSleep();});
         document.getElementById('btn-visite').addEventListener('click',function(){self.doVisit();});
-        document.getElementById('btn-soigner').addEventListener('click',function(){self.doHeal();});
+        // Soigner ouvre maintenant le panel Soins complet
+        document.getElementById('btn-soigner').addEventListener('click',function(){self.openCare();});
         document.getElementById('btn-nav-home').addEventListener('click',function(){self.closeAllOverlays();});
         document.getElementById('btn-stats').addEventListener('click',function(){self.openStats();});
-        document.getElementById('btn-nav-care').addEventListener('click',function(){self.openCare();});
+        document.getElementById('btn-nav-enclos').addEventListener('click',function(){self.openFarm();});
         document.getElementById('btn-housing').addEventListener('click',function(){self.openHousing();});
         document.getElementById('btn-nav-more').addEventListener('click',function(){self.openMore();});
+        // Care screen items
+        document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
         document.getElementById('btn-toilette').addEventListener('click',function(){self.doToilet();});
         document.getElementById('btn-douche').addEventListener('click',function(){self.doShower();});
         document.getElementById('btn-intellect').addEventListener('click',function(){self.openIntellect();});
-        document.getElementById('btn-farm').addEventListener('click',function(){self.openFarm();});
-        document.getElementById('btn-enclos-badge').addEventListener('click',function(){self.openFarm();});
+        // Enclos badge + bottom nav enclos
+        document.getElementById('btn-enclos-badge').addEventListener('click',function(e){e.stopPropagation();self.openFarm();});
         document.getElementById('btn-sound').addEventListener('click',function(){self.toggleSound();});
         document.getElementById('btn-pause').addEventListener('click',function(){self.togglePause();});
         document.getElementById('btn-reset').addEventListener('click',function(){self.resetGame();});
@@ -48,50 +52,97 @@ var App = {
         document.getElementById('btn-study-sudoku').addEventListener('click',function(){self.doStudySudoku();});
         document.getElementById('food-grid').addEventListener('click',function(e){var item=e.target.closest('[data-food]');if(item)self.doFeed(item.dataset.food);});
 
-        // Touch: tap = coin, swipe = caress (love)
+        // ─── Touch : tap UNIQUEMENT sur le personnage, swipe partout ───
         var touch=document.getElementById('scene-touch');
-        touch.addEventListener('touchstart',function(e){self.touchStartX=e.touches[0].clientX;self.touchStartY=e.touches[0].clientY;self.isSwiping=false;},{passive:true});
+        touch.addEventListener('touchstart',function(e){
+            self.touchStartX=e.touches[0].clientX;self.touchStartY=e.touches[0].clientY;self.isSwiping=false;
+        },{passive:true});
         touch.addEventListener('touchmove',function(e){
             var dx=e.touches[0].clientX-self.touchStartX,dy=e.touches[0].clientY-self.touchStartY;
-            if(Math.abs(dx)>15||Math.abs(dy)>15) self.isSwiping=true;
+            if(Math.abs(dx)>12||Math.abs(dy)>12) self.isSwiping=true;
         },{passive:true});
         touch.addEventListener('touchend',function(e){
             if(!self.pet||self.pet.estMort||self.paused) return;
             var cx=e.changedTouches[0].clientX,cy=e.changedTouches[0].clientY;
             if(self.isSwiping){
-                // Swipe = caress = love boost
                 Engine.caress(self.pet);
                 Renderer.showHeartAt(cx,cy-20);
                 Renderer.showEmotion('💕');
                 Renderer.toast('💕 Caresse !');
+                Renderer.update(self.pet);Storage.save(self.pet);
             } else {
-                // Tap = coin only
-                Engine.petClick(self.pet);
-                Renderer.showCoinAt(cx-10,cy-20);
+                // Tap = coin seulement si on tape sur/près du personnage
+                if(self._isTapOnPet(cx,cy)){
+                    Engine.petClick(self.pet);
+                    Renderer.showCoinAt(cx-10,cy-20);
+                    Renderer.update(self.pet);Storage.save(self.pet);
+                }
+                // Sinon : on ignore le tap (pas de réaction)
             }
-            Renderer.update(self.pet);Storage.save(self.pet);
         });
-        // Mouse fallback: click = coin
+        // Mouse fallback
         touch.addEventListener('click',function(e){
             if(!self.pet||self.pet.estMort||self.paused) return;
-            // Only fire on non-touch devices
             if('ontouchstart' in window) return;
-            Engine.petClick(self.pet);
-            Renderer.showCoinAt(e.clientX-10,e.clientY-20);
-            Renderer.update(self.pet);Storage.save(self.pet);
+            if(self._isTapOnPet(e.clientX,e.clientY)){
+                Engine.petClick(self.pet);
+                Renderer.showCoinAt(e.clientX-10,e.clientY-20);
+                Renderer.update(self.pet);Storage.save(self.pet);
+            }
         });
 
         // Close buttons
         var cb=document.querySelectorAll('[data-close]');
-        for(var i=0;i<cb.length;i++){(function(btn){btn.addEventListener('click',function(){var t=btn.getAttribute('data-close');if(t==='farm-screen')Farm.close();document.getElementById(t).classList.add('hidden');});})(cb[i]);}
+        for(var i=0;i<cb.length;i++){(function(btn){btn.addEventListener('click',function(){var t=btn.getAttribute('data-close');if(t==='farm-screen'){Farm.close();self.stopFarmWalk();}document.getElementById(t).classList.add('hidden');});})(cb[i]);}
     },
 
-    closeAllOverlays:function(){var ids=['care-screen','more-screen','food-screen','stats-screen','minigame-screen','intellect-screen','housing-screen','farm-screen'];for(var i=0;i<ids.length;i++)document.getElementById(ids[i]).classList.add('hidden');Farm.close();},
+    /* ─── Vérifie si le tap est proche du personnage ─── */
+    _isTapOnPet:function(cx,cy){
+        var pw=document.getElementById('pet-wrapper');
+        if(!pw) return false;
+        var rect=pw.getBoundingClientRect();
+        // Zone de tap élargie autour du personnage (±30px de marge)
+        var margin=30;
+        return cx>rect.left-margin && cx<rect.right+margin && cy>rect.top-margin && cy<rect.bottom+margin;
+    },
+
+    closeAllOverlays:function(){var ids=['care-screen','more-screen','food-screen','stats-screen','minigame-screen','intellect-screen','housing-screen','farm-screen'];for(var i=0;i<ids.length;i++)document.getElementById(ids[i]).classList.add('hidden');Farm.close();this.stopFarmWalk();},
 
     newGame:function(){this.pet=Engine.createPet('Francis');Storage.save(this.pet);this.showGame();Renderer.toast('🥚 Francis est né !');Renderer.showEmotion('🐣',2000);},
     showGame:function(){document.getElementById('splash-screen').classList.remove('active');document.getElementById('game-screen').classList.add('active');Renderer.update(this.pet);Weather.init();this.startLoops();if(this.pet.estMort){var self=this;setTimeout(function(){Renderer.showDeath(self.pet);},500);}},
-    startLoops:function(){this.stopLoops();var self=this;this.gameLoop=setInterval(function(){self.gameTick();},5000);this.moveLoop=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.paused)Renderer.tickMovement(self.pet);},50);this.saveInterval=setInterval(function(){if(self.pet)Storage.save(self.pet);},30000);this.speechInterval=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.pet.isSleeping&&!self.paused&&Math.random()<.3)Renderer.showSpeech(Engine.getDialogue(self.pet));},15000);this.sleepZInterval=setInterval(function(){if(self.pet&&self.pet.isSleeping&&!self.paused)Renderer.showSleepZ();},1500);},
+
+    startLoops:function(){
+        this.stopLoops();var self=this;
+        this.gameLoop=setInterval(function(){self.gameTick();},5000);
+        this.moveLoop=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.paused)Renderer.tickMovement(self.pet);},50);
+        this.saveInterval=setInterval(function(){if(self.pet)Storage.save(self.pet);},30000);
+        this.speechInterval=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.pet.isSleeping&&!self.paused&&Math.random()<.3)Renderer.showSpeech(Engine.getDialogue(self.pet));},15000);
+        this.sleepZInterval=setInterval(function(){if(self.pet&&self.pet.isSleeping&&!self.paused)Renderer.showSleepZ();},1500);
+    },
     stopLoops:function(){clearInterval(this.gameLoop);clearInterval(this.moveLoop);clearInterval(this.saveInterval);clearInterval(this.speechInterval);clearInterval(this.sleepZInterval);},
+
+    /* ─── Francis se balade dans l'enclos ─── */
+    _farmWalkX:15,_farmWalkTarget:50,_farmWalkDir:1,
+    startFarmWalk:function(){
+        var self=this;
+        var el=document.getElementById('farm-francis');
+        var img=document.getElementById('farm-francis-img');
+        if(!el||!img)return;
+        // Mettre à jour le sprite
+        if(this.pet){var stage=Engine.STAGES[this.pet.stade];img.src=stage.sprite;}
+        el.style.left=self._farmWalkX+'%';
+        this.farmWalkLoop=setInterval(function(){
+            if(Math.random()<0.02) self._farmWalkTarget=10+Math.random()*75;
+            var dx=self._farmWalkTarget-self._farmWalkX;
+            if(Math.abs(dx)>1){
+                self._farmWalkDir=dx>0?1:-1;
+                self._farmWalkX+=self._farmWalkDir*0.25;
+                el.style.left=self._farmWalkX+'%';
+                el.classList.toggle('flip',self._farmWalkDir<0);
+            }
+        },50);
+    },
+    stopFarmWalk:function(){clearInterval(this.farmWalkLoop);this.farmWalkLoop=null;},
 
     gameTick:function(){
         if(!this.pet||this.pet.estMort||this.paused) return;
@@ -138,6 +189,7 @@ var App = {
 
     doHeal:function(){
         if(!this.pet||this.pet.estMort||this.pet.isSleeping) return;
+        document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.heal(this.pet);Renderer.toast(r.msg);
         if(r.ok){
             Renderer.showBigSyringe();
@@ -150,10 +202,7 @@ var App = {
     doToilet:function(){
         if(!this.pet) return;document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.toilet(this.pet);Renderer.toast(r.msg);
-        if(r.ok){
-            Renderer.showBigBroom();
-            Renderer.showEmotion('✨');Renderer.haptic('light');Storage.save(this.pet);
-        }
+        if(r.ok){Renderer.showBigBroom();Renderer.showEmotion('✨');Renderer.haptic('light');Storage.save(this.pet);}
         Renderer.update(this.pet);
     },
 
@@ -161,10 +210,7 @@ var App = {
         if(!this.pet||this.pet.estMort||this.pet.isSleeping) return;
         document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.shower(this.pet);Renderer.toast(r.msg);
-        if(r.ok){
-            Renderer.showHeavyShower();
-            Renderer.showEmotion('🧼');Renderer.petHappyAnimation();Renderer.haptic('medium');Storage.save(this.pet);
-        }
+        if(r.ok){Renderer.showHeavyShower();Renderer.showEmotion('🧼');Renderer.petHappyAnimation();Renderer.haptic('medium');Storage.save(this.pet);}
         Renderer.update(this.pet);
     },
 
@@ -178,9 +224,11 @@ var App = {
     openIntellect:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;document.getElementById('care-screen').classList.add('hidden');var c=Engine.canDo(this.pet,'intellect');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('intellect-screen').classList.remove('hidden');},
     doStudyAuto:function(){document.getElementById('intellect-screen').classList.add('hidden');var r=Engine.studyAuto(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showEmotion('📖');Storage.save(this.pet);}Renderer.update(this.pet);},
     doStudySudoku:function(){document.getElementById('intellect-screen').classList.add('hidden');var self=this;Minigames.startSudoku(function(bonus){var r=Engine.studyGame(self.pet,bonus);if(r.ok){Renderer.toast(r.msg);Renderer.showEmotion('🧠');Storage.save(self.pet);}Renderer.update(self.pet);});},
+
     openCare:function(){document.getElementById('care-screen').classList.remove('hidden');},
     openMore:function(){document.getElementById('more-screen').classList.remove('hidden');},
     openStats:function(){if(!this.pet)return;document.getElementById('stats-detail').innerHTML=Renderer.renderStatsDetail(this.pet);document.getElementById('stats-screen').classList.remove('hidden');},
+
     openHousing:function(){
         if(!this.pet) return;var list=document.getElementById('housing-list');list.innerHTML='';var self=this;
         for(var i=0;i<Engine.HOUSING.length;i++){var h=Engine.HOUSING[i],isCur=i===this.pet.housingLevel,isNext=i===this.pet.housingLevel+1,isLock=i>this.pet.housingLevel+1;
@@ -191,7 +239,17 @@ var App = {
         for(var j=0;j<items.length;j++){(function(el){el.addEventListener('click',function(){var idx=parseInt(el.getAttribute('data-housing'));if(idx===self.pet.housingLevel+1){var r=Engine.upgradeHousing(self.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showEmotion('🏠');Renderer.haptic('heavy');Weather.lastBuildingState=null;Storage.save(self.pet);Renderer.update(self.pet);self.openHousing();}}});})(items[j]);}
         document.getElementById('housing-screen').classList.remove('hidden');
     },
-    openFarm:function(){if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');Farm.open(this.pet);this.bindFarmButtons();},
+
+    openFarm:function(){
+        if(!this.pet)return;
+        document.getElementById('care-screen').classList.add('hidden');
+        Farm.open(this.pet);
+        this.bindFarmButtons();
+        // Lance la balade de Francis dans l'enclos
+        this.stopFarmWalk();
+        this.startFarmWalk();
+    },
+
     bindFarmButtons:function(){
         var self=this;
         var bb=document.getElementById('btn-farm-buy'),bf=document.getElementById('btn-farm-feed'),bc=document.getElementById('btn-farm-clean');
