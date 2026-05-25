@@ -147,10 +147,8 @@ var Farm = {
     animate:function(){
         if(!this.isOpen||!this.canvas||!this.ctx) return;
         var isDay=Weather.getSkyBrightness()>0.5;
-        var bg=isDay?this.bgDayImg:this.bgNightImg;
         this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
-        if(bg&&bg.complete) this.ctx.drawImage(bg,0,0,this.canvas.width,this.canvas.height);
-        if(!isDay){this.ctx.fillStyle='rgba(10,10,40,0.3)';this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);}
+        if(!isDay){this.ctx.fillStyle='rgba(10,10,40,0.35)';this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);}
         this.updateHens();
         this.drawHens();
         var self=this;
