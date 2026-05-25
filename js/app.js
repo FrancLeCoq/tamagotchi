@@ -11,15 +11,17 @@ var App = {
 
     showSplash:function(){
         var self=this;
+        var resumeBtn=document.getElementById('btn-resume');
         Storage.load(function(data){
-            var resumeBtn=document.getElementById('btn-resume');
             if(data&&!data.estMort){
                 resumeBtn.classList.remove('hidden');
+            } else {
+                resumeBtn.classList.add('hidden');
             }
             // Wallet status
             if(Engine.isWalletConnected()){
-                document.getElementById('splash-wallet').classList.add('hidden');
-                document.getElementById('wallet-connected').classList.remove('hidden');
+                var holder=document.getElementById('holder-amount');
+                if(holder) holder.textContent='✅ CONNECTÉ';
             }
         });
     },
@@ -40,7 +42,8 @@ var App = {
             if(self.pet){if(!confirm('Écraser la partie en cours ?'))return;}
             self.newGame();
         });
-        document.getElementById('btn-wallet').addEventListener('click',function(){self.connectWallet();});
+        var holderEl=document.getElementById('splash-holder');
+        if(holderEl)holderEl.addEventListener('click',function(){self.connectWallet();});
         document.getElementById('btn-wallet-game').addEventListener('click',function(){self.connectWallet();document.getElementById('more-screen').classList.add('hidden');});
         document.getElementById('btn-wallet-gate').addEventListener('click',function(){self.connectWallet();document.getElementById('wallet-gate').classList.add('hidden');});
         document.getElementById('btn-wallet-skip').addEventListener('click',function(){document.getElementById('wallet-gate').classList.add('hidden');self.newGame();});
@@ -95,8 +98,14 @@ var App = {
         touch.addEventListener('touchend',function(e){
             if(!self.pet||self.pet.estMort||self.paused)return;
             var cx=e.changedTouches[0].clientX,cy=e.changedTouches[0].clientY;
-            if(self.isSwiping){Engine.caress(self.pet);Renderer.showHeartAt(cx,cy-20);Renderer.showEmotion('💕');Renderer.toast('💕 Caresse !');Renderer.update(self.pet);Storage.save(self.pet);}
-            else if(self._isTapOnPet(cx,cy)){Engine.petClick(self.pet);Renderer.showCoinAt(cx-10,cy-20);Renderer.update(self.pet);Storage.save(self.pet);}
+            if(self.isSwiping){
+                // Caress only if swipe started near the pet
+                if(self._isTapOnPet(self.touchStartX,self.touchStartY)){
+                    Engine.caress(self.pet);Renderer.showHeartAt(cx,cy-20);Renderer.showEmotion('💕');Renderer.toast('💕 Caresse !');Renderer.update(self.pet);Storage.save(self.pet);
+                }
+            } else if(self._isTapOnPet(cx,cy)){
+                Engine.petClick(self.pet);Renderer.showCoinAt(cx-10,cy-20);Renderer.update(self.pet);Storage.save(self.pet);
+            }
         });
         touch.addEventListener('click',function(e){
             if(!self.pet||self.pet.estMort||self.paused)return;
@@ -111,8 +120,8 @@ var App = {
 
     connectWallet:function(){
         Engine.connectWallet();
-        document.getElementById('splash-wallet').classList.add('hidden');
-        document.getElementById('wallet-connected').classList.remove('hidden');
+        var holder=document.getElementById('holder-amount');
+        if(holder) holder.textContent='✅ CONNECTÉ';
         Renderer.toast('✅ Wallet connecté !');
     },
 
@@ -145,7 +154,7 @@ var App = {
         this.stopLoops();var self=this;
         this.gameLoop=setInterval(function(){self.gameTick();},5000);
         this.moveLoop=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.paused)Renderer.tickMovement(self.pet);},50);
-        this.saveInterval=setInterval(function(){if(self.pet)Storage.save(self.pet);},30000);
+        this.saveInterval=setInterval(function(){if(self.pet)Storage.save(self.pet);},60000);
         this.speechInterval=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.pet.isSleeping&&!self.paused&&Math.random()<.3)Renderer.showSpeech(Engine.getDialogue(self.pet));},15000);
         this.sleepZInterval=setInterval(function(){if(self.pet&&self.pet.isSleeping&&!self.paused)Renderer.showSleepZ();},1500);
     },

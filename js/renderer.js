@@ -40,12 +40,17 @@ var Renderer = {
         if(txt)txt.textContent=Math.round(pct)+'%';
     },
 
+    _currentSpriteSrc:'',
+
     updatePet:function(pet){
         var sprite=Engine.getSpriteForPet(pet);
         var mood=Engine.getMood(pet);
         this.els.pet.className='pet stage-'+pet.stade;
-        // Update sprite (sad or normal)
-        if(this.els.petSprite.src.indexOf(sprite)===-1) this.els.petSprite.src=sprite;
+        // Only change sprite src if actually different (prevents blinking)
+        if(this._currentSpriteSrc!==sprite){
+            this._currentSpriteSrc=sprite;
+            this.els.petSprite.src=sprite;
+        }
         var stage=Engine.STAGES[pet.stade];
         this.els.pet.style.width=stage.size+'px';this.els.pet.style.height=stage.size+'px';
         var anim='idle';
@@ -123,10 +128,10 @@ var Renderer = {
     showCoinAt:function(x,y){var c=document.createElement('div');c.className='coin-float';c.textContent='+1 🪙';c.style.left=x+'px';c.style.top=y+'px';document.body.appendChild(c);setTimeout(function(){c.remove();},1200);},
     showBigSyringe:function(){var s=document.createElement('div');s.className='big-syringe';s.textContent='💉';s.style.left='50%';s.style.top='35%';this.els.sceneItems.appendChild(s);setTimeout(function(){s.remove();},1500);},
     showBigBroom:function(){var b=document.createElement('div');b.className='big-broom';b.textContent='🧹';b.style.left='50%';b.style.bottom='15%';this.els.sceneItems.appendChild(b);setTimeout(function(){b.remove();},1200);},
-    showHeavyShower:function(){var self=this;for(var i=0;i<40;i++){(function(i){setTimeout(function(){var d=document.createElement('div');d.className='shower-drop';d.textContent='💧';d.style.fontSize=(10+Math.random()*8)+'px';d.style.left=(self.currentPetX-12+Math.random()*24)+'%';d.style.top='5%';d.style.animationDuration=(.3+Math.random()*.3)+'s';self.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},800);},i*60);})(i);}},
+    showHeavyShower:function(){var self=this;var petRect=this.els.petWrapper.getBoundingClientRect();var sceneRect=this.els.scene.getBoundingClientRect();var petCenterPct=((petRect.left+petRect.width/2-sceneRect.left)/sceneRect.width*100);var petTopPct=((petRect.top-sceneRect.top)/sceneRect.height*100)-5;for(var i=0;i<40;i++){(function(i){setTimeout(function(){var d=document.createElement('div');d.className='shower-drop';d.textContent='💧';d.style.fontSize=(10+Math.random()*8)+'px';d.style.left=(petCenterPct-8+Math.random()*16)+'%';d.style.top=Math.max(0,petTopPct-5)+'%';d.style.animationDuration=(.4+Math.random()*.3)+'s';self.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},900);},i*60);})(i);}},
     petEatAnimation:function(){this.els.pet.classList.remove('idle','walking');this.els.pet.classList.add('eating');var self=this;setTimeout(function(){self.els.pet.classList.remove('eating');self.els.pet.classList.add('idle');},2000);},
     petHappyAnimation:function(){this.els.pet.classList.remove('idle','walking','sad');this.els.pet.classList.add('happy');var self=this;setTimeout(function(){self.els.pet.classList.remove('happy');self.els.pet.classList.add('idle');},1200);},
-    showHenVisit:function(henSprite,petSize){var w=document.getElementById('hen-wrapper'),img=document.getElementById('hen-sprite');img.src=henSprite;var sz=Math.max(55,(petSize||100)-25);img.style.width=sz+'px';img.style.height=sz+'px';w.classList.remove('hidden');w.style.animation='none';void w.offsetHeight;w.style.animation='';var self=this;for(var i=0;i<8;i++){(function(i){setTimeout(function(){var h=document.createElement('div');h.className='float-item';h.textContent=['💕','❤️','💗','💖'][Math.floor(Math.random()*4)];h.style.left=(35+Math.random()*30)+'%';h.style.top=(30+Math.random()*20)+'%';self.els.sceneItems.appendChild(h);setTimeout(function(){h.remove();},1500);},i*400);})(i);}setTimeout(function(){w.classList.add('hidden');},5000);},
+    showHenVisit:function(henSprite,petSize){var w=document.getElementById('hen-wrapper'),img=document.getElementById('hen-sprite');img.src=henSprite;var sz=petSize||120;img.style.width=sz+'px';img.style.height=sz+'px';w.classList.remove('hidden');w.style.animation='none';void w.offsetHeight;w.style.animation='';var self=this;for(var i=0;i<8;i++){(function(i){setTimeout(function(){var h=document.createElement('div');h.className='float-item';h.textContent=['💕','❤️','💗','💖'][Math.floor(Math.random()*4)];h.style.left=(35+Math.random()*30)+'%';h.style.top=(30+Math.random()*20)+'%';self.els.sceneItems.appendChild(h);setTimeout(function(){h.remove();},1500);},i*400);})(i);}setTimeout(function(){w.classList.add('hidden');},5000);},
     showEvolution:function(old,nw){document.getElementById('evo-old').textContent=old.emoji;document.getElementById('evo-new').textContent=nw.emoji;document.getElementById('evo-desc').textContent=nw.nom;document.getElementById('evolution-screen').classList.remove('hidden');this.haptic('heavy');},
     hideEvolution:function(){document.getElementById('evolution-screen').classList.add('hidden');},
     showDeath:function(pet){var age=Engine.getAge(pet);document.getElementById('death-desc').textContent=pet.nom+' a vécu '+age.days+'j. Cause: '+(pet.causeMort||'?');document.getElementById('death-stats').innerHTML='<p style="color:#8899bb">XP: '+pet.experience+' · 🪙 '+pet.coins+'</p>';document.getElementById('death-screen').classList.remove('hidden');},

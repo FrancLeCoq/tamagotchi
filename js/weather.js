@@ -30,6 +30,10 @@ var Weather = {
         this.rainAudio.loop=true;this.rainAudio.volume=0.25;
 
         this.initClouds();
+        // Set sky immediately
+        this.updateSky();
+        this.updateBuilding();
+        this.updateClock();
         this.tick();
     },
 
