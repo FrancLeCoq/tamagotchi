@@ -34,11 +34,11 @@ const Engine = {
 
     // Cheat codes
     CHEATS: {
-        'FRANC':  function(p){ p.coins+=50000; return '💰 +50000 pièces !' },
-        'FRANC1': function(p){ p.stade=1; p.derniereEvolution=Date.now(); return '🐤 Petit Coq !' },
-        'FRANC2': function(p){ p.stade=2; p.derniereEvolution=Date.now(); return '🐔 Coq Ado !' },
-        'FRANC3': function(p){ p.stade=3; p.derniereEvolution=Date.now(); return '🐓 Coq Adulte !' },
-        'FRANC4': function(p){ p.stade=4; p.derniereEvolution=Date.now(); return '👴 Coq Vieux !' },
+        'FRANCA': function(p){ p.coins+=50000; return '💰 +50000 pièces !' },
+        'FRANCB': function(p){ p.stade=1; p.derniereEvolution=Date.now(); return '🐤 Petit Coq !' },
+        'FRANCC': function(p){ p.stade=2; p.derniereEvolution=Date.now(); return '🐔 Coq Ado !' },
+        'FRANCD': function(p){ p.stade=3; p.derniereEvolution=Date.now(); return '🐓 Coq Adulte !' },
+        'FRANCE': function(p){ p.stade=4; p.derniereEvolution=Date.now(); return '👴 Coq Vieux !' },
     },
 
     applyCheat(pet, code) {

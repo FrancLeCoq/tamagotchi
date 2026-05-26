@@ -10,20 +10,18 @@ var App = {
     },
 
     showSplash:function(){
-        var self=this;
         var resumeBtn=document.getElementById('btn-resume');
-        Storage.load(function(data){
-            if(data&&!data.estMort){
-                resumeBtn.classList.remove('hidden');
-            } else {
-                resumeBtn.classList.add('hidden');
-            }
-            // Wallet status
-            if(Engine.isWalletConnected()){
-                var holder=document.getElementById('holder-amount');
-                if(holder) holder.textContent='✅ CONNECTÉ';
-            }
-        });
+        // Synchronous check for save
+        var data=null;
+        try{var raw=localStorage.getItem('francis_save');if(raw)data=JSON.parse(raw);}catch(e){}
+        if(data&&!data.estMort){
+            resumeBtn.classList.remove('hidden');
+        } else {
+            resumeBtn.classList.add('hidden');
+        }
+        if(Engine.isWalletConnected()){
+            var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';
+        }
     },
 
     initTelegram:function(){try{var tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand();tg.enableClosingConfirmation();}}catch(e){}},
@@ -48,23 +46,39 @@ var App = {
         document.getElementById('btn-wallet-gate').addEventListener('click',function(){self.connectWallet();document.getElementById('wallet-gate').classList.add('hidden');});
         document.getElementById('btn-wallet-skip').addEventListener('click',function(){document.getElementById('wallet-gate').classList.add('hidden');self.newGame();});
 
-        // Cheat code
-        document.getElementById('cheat-input').addEventListener('keydown',function(e){
+        // ═══ CHEAT CODE ═══
+        var cheatInput=document.getElementById('cheat-input');
+        cheatInput.addEventListener('keydown',function(e){
             if(e.key==='Enter'){
-                var code=this.value.trim();this.value='';
-                if(self.pet){
-                    var r=Engine.applyCheat(self.pet,code);
-                    if(r.ok){Renderer.toast(r.msg);Renderer.update(self.pet);Storage.save(self.pet);}
-                    else Renderer.toast(r.msg);
-                } else {
-                    // Can apply cheats even from splash (create pet first)
-                    self.newGame();
-                    setTimeout(function(){
-                        var r=Engine.applyCheat(self.pet,code);
-                        if(r.ok){Renderer.toast(r.msg);Renderer.update(self.pet);Storage.save(self.pet);}
-                    },200);
+                e.preventDefault();
+                var code=cheatInput.value.trim();
+                cheatInput.value='';
+                if(!code)return;
+                // If no pet yet, start a game first
+                if(!self.pet){
+                    self.pet=Engine.createPet('Francis');
+                    Storage.save(self.pet);
+                }
+                var r=Engine.applyCheat(self.pet,code);
+                Renderer.toast(r.msg);
+                if(r.ok){
+                    Storage.save(self.pet);
+                    // If game screen is visible, update display
+                    if(document.getElementById('game-screen').classList.contains('active')){
+                        Renderer.update(self.pet);
+                    }
                 }
             }
+        });
+        // Also allow submit on blur/change for mobile
+        cheatInput.addEventListener('change',function(){
+            var code=cheatInput.value.trim();
+            cheatInput.value='';
+            if(!code)return;
+            if(!self.pet){self.pet=Engine.createPet('Francis');Storage.save(self.pet);}
+            var r=Engine.applyCheat(self.pet,code);
+            Renderer.toast(r.msg);
+            if(r.ok){Storage.save(self.pet);if(document.getElementById('game-screen').classList.contains('active'))Renderer.update(self.pet);}
         });
 
         // Game buttons
@@ -91,7 +105,7 @@ var App = {
         document.getElementById('food-grid').addEventListener('click',function(e){var item=e.target.closest('[data-food]');if(item)self.doFeed(item.dataset.food);});
         document.getElementById('btn-reset').addEventListener('click',function(){document.getElementById('more-screen').classList.add('hidden');self.resetGame();});
 
-        // Touch
+        // ═══ TOUCH — caress only on pet ═══
         var touch=document.getElementById('scene-touch');
         touch.addEventListener('touchstart',function(e){self.touchStartX=e.touches[0].clientX;self.touchStartY=e.touches[0].clientY;self.isSwiping=false;},{passive:true});
         touch.addEventListener('touchmove',function(e){var dx=e.touches[0].clientX-self.touchStartX,dy=e.touches[0].clientY-self.touchStartY;if(Math.abs(dx)>12||Math.abs(dy)>12)self.isSwiping=true;},{passive:true});
@@ -120,8 +134,7 @@ var App = {
 
     connectWallet:function(){
         Engine.connectWallet();
-        var holder=document.getElementById('holder-amount');
-        if(holder) holder.textContent='✅ CONNECTÉ';
+        var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';
         Renderer.toast('✅ Wallet connecté !');
     },
 
@@ -136,25 +149,47 @@ var App = {
     resumeGame:function(){
         var self=this;
         Storage.load(function(data){
-            if(data&&!data.estMort){self.pet=data;Engine.updateStats(self.pet);self.showGame();}
-            else{self.newGame();}
+            if(data&&!data.estMort){
+                self.pet=data;
+                Engine.migrate(self.pet);
+                Engine.updateStats(self.pet);
+                self.showGame();
+                Renderer.toast('▶ Partie reprise !');
+            } else {
+                self.newGame();
+            }
         });
     },
 
-    newGame:function(){this.pet=Engine.createPet('Francis');Storage.save(this.pet);this.showGame();Renderer.toast('🥚 Francis est né !');Renderer.showEmotion('🐣',2000);},
+    newGame:function(){
+        this.pet=Engine.createPet('Francis');
+        Storage.save(this.pet);
+        this.showGame();
+        Renderer.toast('🥚 Francis est né !');
+        Renderer.showEmotion('🐣',2000);
+    },
 
     showGame:function(){
         document.getElementById('splash-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
-        Renderer.update(this.pet);Weather.init();this.startLoops();
-        if(this.pet.estMort){var self=this;setTimeout(function(){Renderer.showDeath(self.pet);},500);}
+        // Force immediate save so resume works
+        Storage.save(this.pet);
+        // Init weather AFTER game screen is visible
+        var self=this;
+        requestAnimationFrame(function(){
+            Renderer.update(self.pet);
+            Weather.init();
+            self.startLoops();
+        });
+        if(this.pet.estMort){setTimeout(function(){Renderer.showDeath(self.pet);},500);}
     },
 
     startLoops:function(){
         this.stopLoops();var self=this;
         this.gameLoop=setInterval(function(){self.gameTick();},5000);
         this.moveLoop=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.paused)Renderer.tickMovement(self.pet);},50);
-        this.saveInterval=setInterval(function(){if(self.pet)Storage.save(self.pet);},60000);
+        // Save every 60 seconds
+        this.saveInterval=setInterval(function(){if(self.pet){Storage.save(self.pet);}},60000);
         this.speechInterval=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.pet.isSleeping&&!self.paused&&Math.random()<.3)Renderer.showSpeech(Engine.getDialogue(self.pet));},15000);
         this.sleepZInterval=setInterval(function(){if(self.pet&&self.pet.isSleeping&&!self.paused)Renderer.showSleepZ();},1500);
     },
@@ -177,29 +212,23 @@ var App = {
     gameTick:function(){
         if(!this.pet||this.pet.estMort||this.paused)return;
         Engine.updateStats(this.pet);Renderer.update(this.pet);this.updateCooldowns();
-        // Wallet gate check
         if(Engine.needsWalletGate(this.pet)){document.getElementById('wallet-gate').classList.remove('hidden');return;}
         if(this.pet.farm&&this.pet.farm.hens>0){Farm.update(this.pet);if(this.pet.farm.deadRecent>0&&!Farm.isOpen)Renderer.toast('💀 -'+this.pet.farm.deadRecent+' poule(s) !');if(Farm.isOpen)Farm.renderUI(this.pet);}
         if(Engine.checkEvolution(this.pet)){var old=Engine.STAGES[this.pet.stade];Engine.evolve(this.pet);Renderer.showEvolution(old,Engine.STAGES[this.pet.stade]);Storage.save(this.pet);}
         if(this.pet.estMort){Renderer.showDeath(this.pet);Storage.save(this.pet);}
-        this.checkNotifications();
     },
 
     checkNotifications:function(){
-        if(!this.notificationsOn||!this.pet)return;
-        var now=Date.now();if(now-this.lastNotif<this.NOTIF_INTERVAL)return;
+        if(!this.notificationsOn||!this.pet)return;var now=Date.now();if(now-this.lastNotif<this.NOTIF_INTERVAL)return;
         var alerts=[];
-        if(this.pet.faim<10)alerts.push('🌾 ALERTE : Francis meurt de faim !');
-        if(this.pet.bonheur<10)alerts.push('😢 ALERTE : Francis est très triste !');
-        if(this.pet.energie<10)alerts.push('😴 ALERTE : Francis est épuisé !');
-        if(this.pet.sante<10)alerts.push('🤒 ALERTE : Francis est très malade !');
+        if(this.pet.faim<10)alerts.push('🌾 Francis meurt de faim !');
+        if(this.pet.bonheur<10)alerts.push('😢 Francis est très triste !');
         if(alerts.length>0){Renderer.toast(alerts[0]);this.lastNotif=now;}
     },
 
     updateCooldowns:function(){
         var now=Date.now(),actions=['nourrir','jouer','dormir','soigner','visite'];
         for(var i=0;i<actions.length;i++){var a=actions[i],btn=document.getElementById('btn-'+a);if(!btn)continue;
-        // Skip dormir cooldown display when sleeping (shows stop button instead)
         if(a==='dormir'&&this.pet&&this.pet.isSleeping)continue;
         var cd=(this.pet.cooldowns&&this.pet.cooldowns[a])||0;
         if(now<cd){btn.classList.add('on-cooldown');var secs=Math.ceil((cd-now)/1000),mn=Math.floor(secs/60),s=secs%60;var t=btn.querySelector('.cooldown-timer');if(!t){t=document.createElement('span');t.className='cooldown-timer';btn.appendChild(t);}t.textContent=mn+':'+String(s).padStart(2,'0');}
@@ -209,21 +238,8 @@ var App = {
     openFood:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping){Renderer.toast('💤');return;}var c=Engine.canDo(this.pet,'nourrir');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('food-grid').innerHTML=Renderer.renderFoodGrid();document.getElementById('food-screen').classList.remove('hidden');},
     doFeed:function(foodId){var r=Engine.feed(this.pet,foodId);document.getElementById('food-screen').classList.add('hidden');if(r.ok){Renderer.toast(r.msg);Renderer.petEatAnimation();Renderer.showFloatingItem(r.food.emoji,50,50);Renderer.haptic('light');Storage.save(this.pet);}else Renderer.toast(r.msg);Renderer.update(this.pet);},
     doPlay:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var c=Engine.canDo(this.pet,'jouer');if(!c.ok){Renderer.toast(c.msg);return;}var self=this;Minigames.startPlay(function(bonus){var r=Engine.play(self.pet,bonus);if(r.ok){Renderer.toast('🎮 +'+bonus);Renderer.petHappyAnimation();Renderer.showEmotion('🎉');Storage.save(self.pet);}Renderer.update(self.pet);});},
-
-    doSleep:function(){
-        if(!this.pet||this.pet.estMort)return;
-        var r=Engine.sleep(this.pet);Renderer.toast(r.msg);
-        if(r.ok){Renderer.haptic('light');Storage.save(this.pet);}
-        Renderer.update(this.pet);
-    },
-
-    doHeal:function(){
-        if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
-        document.getElementById('care-screen').classList.add('hidden');
-        var r=Engine.heal(this.pet);Renderer.toast(r.msg);
-        if(r.ok){Renderer.showBigSyringe();Renderer.showEmotion(r.isInjection?'😖':'😬');Renderer.haptic('heavy');Storage.save(this.pet);}
-        Renderer.update(this.pet);
-    },
+    doSleep:function(){if(!this.pet||this.pet.estMort)return;var r=Engine.sleep(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.haptic('light');Storage.save(this.pet);}Renderer.update(this.pet);},
+    doHeal:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.heal(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showBigSyringe();Renderer.showEmotion(r.isInjection?'😖':'😬');Renderer.haptic('heavy');Storage.save(this.pet);}Renderer.update(this.pet);},
     doToilet:function(){if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.toilet(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showBigBroom();Renderer.showEmotion('✨');Renderer.haptic('light');Storage.save(this.pet);}Renderer.update(this.pet);},
     doShower:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.shower(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showHeavyShower();Renderer.showEmotion('🧼');Renderer.petHappyAnimation();Renderer.haptic('medium');Storage.save(this.pet);}Renderer.update(this.pet);},
     doVisit:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var r=Engine.visit(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showHenVisit(r.henSprite,Engine.STAGES[this.pet.stade].size);Renderer.showEmotion('💕');Renderer.petHappyAnimation();Renderer.haptic('medium');Storage.save(this.pet);}Renderer.update(this.pet);},

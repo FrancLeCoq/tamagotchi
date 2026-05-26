@@ -1,6 +1,6 @@
 var Renderer = {
     els:{},walkDir:1,walkTarget:50,currentPetX:50,
-    _lastMoodKey:null,
+    _lastMoodKey:null,_currentSpriteSrc:'',_currentAnim:'',_currentStade:-1,
 
     init:function(){
         this.els={pet:document.getElementById('pet'),petSprite:document.getElementById('pet-sprite'),petWrapper:document.getElementById('pet-wrapper'),scene:document.getElementById('scene'),sceneItems:document.getElementById('scene-items'),poopContainer:document.getElementById('poop-container'),emotionBubble:document.getElementById('emotion-bubble'),emotionIcon:document.getElementById('emotion-icon'),speechBubble:document.getElementById('speech-bubble'),speechText:document.getElementById('speech-text'),moodEmoji:document.getElementById('mood-emoji')};
@@ -14,14 +14,14 @@ var Renderer = {
         var lv=document.getElementById('hud-level');if(lv)lv.textContent='Niveau '+Math.floor(pet.experience/50+1);
         var coins=document.getElementById('hud-coins');if(coins)coins.textContent='🪙 '+pet.coins;
         var dot=document.getElementById('alert-dot');if(dot)dot.classList.toggle('hidden',!Engine.hasAlerts(pet));
-        // Avatar uses current sprite (sad or normal)
         var sprite=Engine.getSpriteForPet(pet);
-        var avi=document.getElementById('tb-avatar-img');if(avi&&avi.src.indexOf(sprite)===-1)avi.src=sprite;
+        var avi=document.getElementById('tb-avatar-img');
+        if(avi&&this._currentSpriteSrc!==sprite){avi.src=sprite;}
         this.updateXPRing(pet);
     },
 
     updateXPRing:function(pet){
-        var ring=document.getElementById('xp-ring');if(!ring) return;
+        var ring=document.getElementById('xp-ring');if(!ring)return;
         var stage=Engine.STAGES[pet.stade];var pct=0;
         if(stage.heures){pct=Math.min(1,(Date.now()-pet.derniereEvolution)/3600000/stage.heures);}else{pct=1;}
         ring.style.strokeDashoffset=(132*(1-pct)).toFixed(2);
@@ -36,27 +36,44 @@ var Renderer = {
     setStat:function(name,value){
         var pct=Math.max(0,Math.min(100,value));
         var bar=document.getElementById('stat-'+name);var txt=document.getElementById('pct-'+name);
-        if(bar){bar.style.width=pct+'%';bar.className='sp-fill '+(pct>=60?'sp-green':pct>=30?'sp-yellow':'sp-red');if(name==='amour')bar.className='sp-fill '+(pct>=40?'sp-pink':'sp-red');if(name==='hygiene')bar.className='sp-fill '+(pct>=40?'sp-blue':'sp-red');}
-        if(txt)txt.textContent=Math.round(pct)+'%';
+        if(bar){bar.style.width=pct+'%';
+            var cls='sp-fill ';
+            if(name==='amour') cls+=pct>=40?'sp-pink':'sp-red';
+            else if(name==='hygiene') cls+=pct>=40?'sp-blue':'sp-red';
+            else cls+=pct>=60?'sp-green':pct>=30?'sp-yellow':'sp-red';
+            if(bar.className!==cls) bar.className=cls;
+        }
+        if(txt){var t=Math.round(pct)+'%';if(txt.textContent!==t)txt.textContent=t;}
     },
 
-    _currentSpriteSrc:'',
-
+    /* ═══ PET UPDATE — NO BLINKING ═══ 
+       Only change DOM when state actually changed */
     updatePet:function(pet){
         var sprite=Engine.getSpriteForPet(pet);
+        var stage=Engine.STAGES[pet.stade];
         var mood=Engine.getMood(pet);
-        this.els.pet.className='pet stage-'+pet.stade;
-        // Only change sprite src if actually different (prevents blinking)
+        var anim='idle';
+        if(mood==='sleeping')anim='sleeping';
+        else if(mood==='malade')anim='sick';
+        else if(mood==='triste'||mood==='faim'||mood==='fatigue'||mood==='sale')anim='sad';
+
+        // Only change sprite src if different
         if(this._currentSpriteSrc!==sprite){
             this._currentSpriteSrc=sprite;
             this.els.petSprite.src=sprite;
         }
-        var stage=Engine.STAGES[pet.stade];
-        this.els.pet.style.width=stage.size+'px';this.els.pet.style.height=stage.size+'px';
-        var anim='idle';
-        if(mood==='sleeping')anim='sleeping';else if(mood==='malade')anim='sick';
-        else if(mood==='triste'||mood==='faim'||mood==='fatigue'||mood==='sale')anim='sad';
-        this.els.pet.classList.add(anim);
+        // Only change size if stade changed
+        if(this._currentStade!==pet.stade){
+            this._currentStade=pet.stade;
+            this.els.pet.style.width=stage.size+'px';
+            this.els.pet.style.height=stage.size+'px';
+        }
+        // Only change animation class if different
+        if(this._currentAnim!==anim){
+            this.els.pet.classList.remove('idle','walking','eating','sleeping','happy','sad','sick');
+            this.els.pet.classList.add(anim);
+            this._currentAnim=anim;
+        }
         this.els.pet.classList.toggle('flip',this.walkDir<0);
     },
 
@@ -66,7 +83,6 @@ var Renderer = {
         else{pw.classList.remove('in-building');if(zzz)zzz.classList.add('hidden');}
     },
 
-    // Bouton dormir → stop quand sieste active
     updateSleepButton:function(pet){
         var btn=document.getElementById('btn-dormir');if(!btn)return;
         if(pet.isSleeping){
@@ -114,9 +130,23 @@ var Renderer = {
         if(!pet||pet.isSleeping||pet.estMort)return;
         if(Math.random()<0.02)this.walkTarget=15+Math.random()*70;
         var dx=this.walkTarget-this.currentPetX;
-        if(Math.abs(dx)>2){this.walkDir=dx>0?1:-1;this.currentPetX+=this.walkDir*0.3;this.els.petWrapper.style.left=this.currentPetX+'%';
-        if(!this.els.pet.classList.contains('walking')){this.els.pet.classList.remove('idle');this.els.pet.classList.add('walking');}}
-        else{if(this.els.pet.classList.contains('walking')){this.els.pet.classList.remove('walking');this.els.pet.classList.add('idle');}if(Math.random()<0.005)this.walkTarget=15+Math.random()*70;}
+        if(Math.abs(dx)>2){
+            this.walkDir=dx>0?1:-1;
+            this.currentPetX+=this.walkDir*0.3;
+            this.els.petWrapper.style.left=this.currentPetX+'%';
+            if(this._currentAnim!=='walking'){
+                this.els.pet.classList.remove('idle','sad','sick');
+                this.els.pet.classList.add('walking');
+                this._currentAnim='walking';
+            }
+        } else {
+            if(this._currentAnim==='walking'){
+                this.els.pet.classList.remove('walking');
+                this.els.pet.classList.add('idle');
+                this._currentAnim='idle';
+            }
+            if(Math.random()<0.005)this.walkTarget=15+Math.random()*70;
+        }
         this.els.pet.classList.toggle('flip',this.walkDir<0);
     },
 
@@ -129,14 +159,14 @@ var Renderer = {
     showBigSyringe:function(){var s=document.createElement('div');s.className='big-syringe';s.textContent='💉';s.style.left='50%';s.style.top='35%';this.els.sceneItems.appendChild(s);setTimeout(function(){s.remove();},1500);},
     showBigBroom:function(){var b=document.createElement('div');b.className='big-broom';b.textContent='🧹';b.style.left='50%';b.style.bottom='15%';this.els.sceneItems.appendChild(b);setTimeout(function(){b.remove();},1200);},
     showHeavyShower:function(){var self=this;var petRect=this.els.petWrapper.getBoundingClientRect();var sceneRect=this.els.scene.getBoundingClientRect();var petCenterPct=((petRect.left+petRect.width/2-sceneRect.left)/sceneRect.width*100);var petTopPct=((petRect.top-sceneRect.top)/sceneRect.height*100)-5;for(var i=0;i<40;i++){(function(i){setTimeout(function(){var d=document.createElement('div');d.className='shower-drop';d.textContent='💧';d.style.fontSize=(10+Math.random()*8)+'px';d.style.left=(petCenterPct-8+Math.random()*16)+'%';d.style.top=Math.max(0,petTopPct-5)+'%';d.style.animationDuration=(.4+Math.random()*.3)+'s';self.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},900);},i*60);})(i);}},
-    petEatAnimation:function(){this.els.pet.classList.remove('idle','walking');this.els.pet.classList.add('eating');var self=this;setTimeout(function(){self.els.pet.classList.remove('eating');self.els.pet.classList.add('idle');},2000);},
-    petHappyAnimation:function(){this.els.pet.classList.remove('idle','walking','sad');this.els.pet.classList.add('happy');var self=this;setTimeout(function(){self.els.pet.classList.remove('happy');self.els.pet.classList.add('idle');},1200);},
+    petEatAnimation:function(){this.els.pet.classList.remove('idle','walking');this.els.pet.classList.add('eating');this._currentAnim='eating';var self=this;setTimeout(function(){self.els.pet.classList.remove('eating');self.els.pet.classList.add('idle');self._currentAnim='idle';},2000);},
+    petHappyAnimation:function(){this.els.pet.classList.remove('idle','walking','sad');this.els.pet.classList.add('happy');this._currentAnim='happy';var self=this;setTimeout(function(){self.els.pet.classList.remove('happy');self.els.pet.classList.add('idle');self._currentAnim='idle';},1200);},
     showHenVisit:function(henSprite,petSize){var w=document.getElementById('hen-wrapper'),img=document.getElementById('hen-sprite');img.src=henSprite;var sz=petSize||120;img.style.width=sz+'px';img.style.height=sz+'px';w.classList.remove('hidden');w.style.animation='none';void w.offsetHeight;w.style.animation='';var self=this;for(var i=0;i<8;i++){(function(i){setTimeout(function(){var h=document.createElement('div');h.className='float-item';h.textContent=['💕','❤️','💗','💖'][Math.floor(Math.random()*4)];h.style.left=(35+Math.random()*30)+'%';h.style.top=(30+Math.random()*20)+'%';self.els.sceneItems.appendChild(h);setTimeout(function(){h.remove();},1500);},i*400);})(i);}setTimeout(function(){w.classList.add('hidden');},5000);},
     showEvolution:function(old,nw){document.getElementById('evo-old').textContent=old.emoji;document.getElementById('evo-new').textContent=nw.emoji;document.getElementById('evo-desc').textContent=nw.nom;document.getElementById('evolution-screen').classList.remove('hidden');this.haptic('heavy');},
     hideEvolution:function(){document.getElementById('evolution-screen').classList.add('hidden');},
     showDeath:function(pet){var age=Engine.getAge(pet);document.getElementById('death-desc').textContent=pet.nom+' a vécu '+age.days+'j. Cause: '+(pet.causeMort||'?');document.getElementById('death-stats').innerHTML='<p style="color:#8899bb">XP: '+pet.experience+' · 🪙 '+pet.coins+'</p>';document.getElementById('death-screen').classList.remove('hidden');},
     hideDeath:function(){document.getElementById('death-screen').classList.add('hidden');},
-    toast:function(msg){var el=document.getElementById('toast');document.getElementById('toast-text').textContent=msg;el.classList.remove('hidden');el.style.animation='none';void el.offsetHeight;el.style.animation='';clearTimeout(this._tt);var self=this;this._tt=setTimeout(function(){el.classList.add('hidden');},2500);},
+    toast:function(msg){var el=document.getElementById('toast');document.getElementById('toast-text').textContent=msg;el.classList.remove('hidden');el.style.animation='none';void el.offsetHeight;el.style.animation='';clearTimeout(this._tt);this._tt=setTimeout(function(){el.classList.add('hidden');},2500);},
     haptic:function(type){try{if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.HapticFeedback)window.Telegram.WebApp.HapticFeedback.impactOccurred(type||'light');}catch(e){}},
     renderFoodGrid:function(){return Engine.FOODS.map(function(f){return'<div class="food-item" data-food="'+f.id+'"><span class="food-icon">'+f.emoji+'</span><span class="food-name">'+f.nom+'</span><span class="food-stats">+'+f.faim+'🌾 +'+f.bonheur+'😊</span></div>';}).join('');},
     renderStatsDetail:function(pet){
