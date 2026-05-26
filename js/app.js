@@ -1,0 +1,146 @@
+var App={
+    pet:null,gameLoop:null,moveLoop:null,saveInterval:null,speechInterval:null,sleepZInterval:null,
+    farmWalkLoop:null,soundOn:false,paused:false,
+    touchStartX:0,touchStartY:0,isSwiping:false,
+    _cheatBuffer:'',_cheatTimer:null,
+
+    init:function(){
+        Storage.init();Renderer.init();this.showSplash();this.bindEvents();
+    },
+
+    showSplash:function(){
+        var data=Storage.loadSync();
+        var rb=document.getElementById('btn-resume');
+        if(data&&!data.estMort)rb.classList.remove('hidden');else rb.classList.add('hidden');
+        if(Engine.isWalletConnected()){var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';}
+    },
+
+    bindEvents:function(){
+        var self=this;
+        document.getElementById('btn-resume').addEventListener('click',function(){
+            var data=Storage.loadSync();
+            if(data){self.pet=data;Engine.migrate(self.pet);Engine.updateStats(self.pet);self.showGame();Renderer.toast('▶ Reprise !');}
+        });
+        document.getElementById('btn-new-game').addEventListener('click',function(){self.newGame();});
+        var holder=document.getElementById('splash-holder');if(holder)holder.addEventListener('click',function(){self.connectWallet();});
+        document.getElementById('btn-wallet-game').addEventListener('click',function(){self.connectWallet();document.getElementById('more-screen').classList.add('hidden');});
+        document.getElementById('btn-wallet-gate').addEventListener('click',function(){self.connectWallet();document.getElementById('wallet-gate').classList.add('hidden');});
+        document.getElementById('btn-wallet-skip').addEventListener('click',function(){document.getElementById('wallet-gate').classList.add('hidden');self.newGame();});
+
+        // Game buttons
+        document.getElementById('btn-nourrir').addEventListener('click',function(){self.openFood();});
+        document.getElementById('btn-jouer').addEventListener('click',function(){self.openPlay();});
+        document.getElementById('btn-dormir').addEventListener('click',function(){self.doSleep();});
+        document.getElementById('btn-visite').addEventListener('click',function(){self.doVisit();});
+        document.getElementById('btn-soigner').addEventListener('click',function(){document.getElementById('care-screen').classList.remove('hidden');});
+        document.getElementById('btn-stats').addEventListener('click',function(){self.openStats();});
+        document.getElementById('btn-housing').addEventListener('click',function(){self.openHousing();});
+        document.getElementById('btn-sound').addEventListener('click',function(){self.soundOn=!self.soundOn;document.getElementById('sound-icon').textContent=self.soundOn?'🔊':'🔇';});
+        document.getElementById('btn-pause').addEventListener('click',function(){self.paused=!self.paused;document.getElementById('pause-icon').textContent=self.paused?'▶️':'⏸️';Renderer.toast(self.paused?'⏸️':'▶️');});
+        document.getElementById('btn-nav-more').addEventListener('click',function(){document.getElementById('more-screen').classList.remove('hidden');});
+        document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
+        document.getElementById('btn-toilette').addEventListener('click',function(){self.doToilet();});
+        document.getElementById('btn-douche').addEventListener('click',function(){self.doShower();});
+        document.getElementById('btn-enclos-badge').addEventListener('click',function(e){e.stopPropagation();self.openFarm();});
+        document.getElementById('btn-notif').addEventListener('click',function(){Renderer.toast('🔔');});
+        document.getElementById('btn-evo-ok').addEventListener('click',function(){Renderer.hideEvolution();});
+        document.getElementById('btn-restart').addEventListener('click',function(){Renderer.hideDeath();self.newGame();});
+        // Play panel: mini-jeu + intellect
+        document.getElementById('btn-play-game').addEventListener('click',function(){self.doPlay();});
+        document.getElementById('btn-play-study').addEventListener('click',function(){self.doStudyAuto();});
+        document.getElementById('btn-play-sudoku').addEventListener('click',function(){self.doStudySudoku();});
+        document.getElementById('food-grid').addEventListener('click',function(e){var item=e.target.closest('[data-food]');if(item)self.doFeed(item.dataset.food);});
+        document.getElementById('btn-reset').addEventListener('click',function(){document.getElementById('more-screen').classList.add('hidden');if(confirm('Reset?')){Storage.clear();self.pet=null;document.getElementById('game-screen').classList.remove('active');document.getElementById('splash-screen').classList.add('active');self.showSplash();}});
+
+        // ═══ CHEAT CODES (keyboard in game screen) ═══
+        document.addEventListener('keyup',function(e){
+            if(!self.pet)return;
+            var k=e.key.toUpperCase();
+            if(k.length===1&&k>='A'&&k<='Z'){
+                self._cheatBuffer+=k;
+                clearTimeout(self._cheatTimer);
+                self._cheatTimer=setTimeout(function(){self._cheatBuffer='';},2000);
+                var r=Engine.applyCheat(self.pet,self._cheatBuffer);
+                if(r.ok){Renderer.toast(r.msg);Storage.save(self.pet);Renderer.update(self.pet);self._cheatBuffer='';}
+            }
+        });
+
+        // Touch
+        var touch=document.getElementById('scene-touch');
+        touch.addEventListener('touchstart',function(e){self.touchStartX=e.touches[0].clientX;self.touchStartY=e.touches[0].clientY;self.isSwiping=false;},{passive:true});
+        touch.addEventListener('touchmove',function(e){if(Math.abs(e.touches[0].clientX-self.touchStartX)>12||Math.abs(e.touches[0].clientY-self.touchStartY)>12)self.isSwiping=true;},{passive:true});
+        touch.addEventListener('touchend',function(e){
+            if(!self.pet||self.pet.estMort||self.paused)return;
+            var cx=e.changedTouches[0].clientX,cy=e.changedTouches[0].clientY;
+            if(self.isSwiping&&self._nearPet(self.touchStartX,self.touchStartY)){Engine.caress(self.pet);Renderer.showHeartAt(cx,cy-20);Renderer.toast('💕');Renderer.update(self.pet);Storage.save(self.pet);}
+            else if(!self.isSwiping&&self._nearPet(cx,cy)){Engine.petClick(self.pet);Renderer.showCoinAt(cx-10,cy-20);Renderer.update(self.pet);Storage.save(self.pet);}
+        });
+        touch.addEventListener('click',function(e){if(!self.pet||self.pet.estMort||self.paused||'ontouchstart' in window)return;if(self._nearPet(e.clientX,e.clientY)){Engine.petClick(self.pet);Renderer.showCoinAt(e.clientX-10,e.clientY-20);Renderer.update(self.pet);Storage.save(self.pet);}});
+
+        // Close buttons
+        document.querySelectorAll('[data-close]').forEach(function(btn){btn.addEventListener('click',function(){var id=btn.getAttribute('data-close');if(id==='farm-screen'){Farm.close();clearInterval(self.farmWalkLoop);}document.getElementById(id).classList.add('hidden');});});
+    },
+
+    _nearPet:function(cx,cy){var pw=document.getElementById('pet-wrapper');if(!pw)return false;var r=pw.getBoundingClientRect(),m=40;return cx>r.left-m&&cx<r.right+m&&cy>r.top-m&&cy<r.bottom+m;},
+    connectWallet:function(){Engine.connectWallet();var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';Renderer.toast('✅ Wallet connecté !');},
+
+    newGame:function(){this.pet=Engine.createPet('Francis');Storage.save(this.pet);this.showGame();Renderer.toast('🥚 Francis est né !');},
+    showGame:function(){
+        document.getElementById('splash-screen').classList.remove('active');
+        document.getElementById('game-screen').classList.add('active');
+        Storage.save(this.pet);
+        var self=this;
+        requestAnimationFrame(function(){requestAnimationFrame(function(){Renderer.update(self.pet);Weather.init();self.startLoops();});});
+    },
+
+    startLoops:function(){this.stopLoops();var self=this;
+        this.gameLoop=setInterval(function(){self.gameTick();},5000);
+        this.moveLoop=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.paused)Renderer.tickMovement(self.pet);},50);
+        this.saveInterval=setInterval(function(){Storage.save(self.pet);},60000);
+        this.speechInterval=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.pet.isSleeping&&!self.paused&&Math.random()<.3)Renderer.showSpeech(Engine.getDialogue(self.pet));},15000);
+        this.sleepZInterval=setInterval(function(){if(self.pet&&self.pet.isSleeping&&!self.paused)Renderer.showSleepZ();},1500);
+    },
+    stopLoops:function(){clearInterval(this.gameLoop);clearInterval(this.moveLoop);clearInterval(this.saveInterval);clearInterval(this.speechInterval);clearInterval(this.sleepZInterval);},
+
+    gameTick:function(){
+        if(!this.pet||this.pet.estMort||this.paused)return;
+        Engine.updateStats(this.pet);Renderer.update(this.pet);this.updateCooldowns();
+        if(Engine.needsWalletGate(this.pet)){document.getElementById('wallet-gate').classList.remove('hidden');return;}
+        if(this.pet.farm&&this.pet.farm.hens>0)Farm.update(this.pet);
+        if(Engine.checkEvolution(this.pet)){var old=Engine.STAGES[this.pet.stade];Engine.evolve(this.pet);Renderer.showEvolution(old,Engine.STAGES[this.pet.stade]);Storage.save(this.pet);}
+        if(this.pet.estMort){Renderer.showDeath(this.pet);Storage.save(this.pet);}
+    },
+    updateCooldowns:function(){
+        var now=Date.now(),acts=['nourrir','jouer','dormir','soigner','visite'];
+        for(var i=0;i<acts.length;i++){var a=acts[i],btn=document.getElementById('btn-'+a);if(!btn)continue;
+        if(a==='dormir'&&this.pet&&this.pet.isSleeping)continue;
+        var cd=(this.pet.cooldowns&&this.pet.cooldowns[a])||0;
+        if(now<cd){btn.classList.add('on-cooldown');var s=Math.ceil((cd-now)/1000);var t=btn.querySelector('.cooldown-timer');if(!t){t=document.createElement('span');t.className='cooldown-timer';btn.appendChild(t);}t.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+        else{btn.classList.remove('on-cooldown');var t2=btn.querySelector('.cooldown-timer');if(t2)t2.remove();}}
+    },
+
+    openFood:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var c=Engine.canDo(this.pet,'nourrir');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('food-grid').innerHTML=Renderer.renderFoodGrid();document.getElementById('food-screen').classList.remove('hidden');},
+    doFeed:function(id){var r=Engine.feed(this.pet,id);document.getElementById('food-screen').classList.add('hidden');if(r.ok){Renderer.toast(r.msg);Renderer.petEatAnimation();Storage.save(this.pet);}else Renderer.toast(r.msg);Renderer.update(this.pet);},
+    openPlay:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var c=Engine.canDo(this.pet,'jouer');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('play-screen').classList.remove('hidden');},
+    doPlay:function(){document.getElementById('play-screen').classList.add('hidden');var self=this;Minigames.startPlay(function(b){Engine.play(self.pet,b);Renderer.toast('🎮 +'+b);Renderer.petHappyAnimation();Storage.save(self.pet);Renderer.update(self.pet);});},
+    doStudyAuto:function(){document.getElementById('play-screen').classList.add('hidden');Engine.studyAuto(this.pet);Renderer.toast('📖 Lecture !');Storage.save(this.pet);Renderer.update(this.pet);},
+    doStudySudoku:function(){document.getElementById('play-screen').classList.add('hidden');var self=this;Minigames.startSudoku(function(b){Engine.studyGame(self.pet,b);Renderer.toast('🧠');Storage.save(self.pet);Renderer.update(self.pet);});},
+    doSleep:function(){if(!this.pet||this.pet.estMort)return;var r=Engine.sleep(this.pet);Renderer.toast(r.msg);Storage.save(this.pet);Renderer.update(this.pet);},
+    doHeal:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.heal(this.pet);Renderer.toast(r.msg);if(r.ok)Renderer.showBigSyringe();Storage.save(this.pet);Renderer.update(this.pet);},
+    doToilet:function(){if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.toilet(this.pet);Renderer.toast(r.msg);if(r.ok)Renderer.showBigBroom();Storage.save(this.pet);Renderer.update(this.pet);},
+    doShower:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.shower(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showHeavyShower();Renderer.petHappyAnimation();}Storage.save(this.pet);Renderer.update(this.pet);},
+    doVisit:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var r=Engine.visit(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showHenVisit(r.henSprite,Engine.STAGES[this.pet.stade].size);Renderer.petHappyAnimation();}Storage.save(this.pet);Renderer.update(this.pet);},
+    openStats:function(){if(!this.pet)return;document.getElementById('stats-detail').innerHTML=Renderer.renderStatsDetail(this.pet);document.getElementById('stats-screen').classList.remove('hidden');},
+    openHousing:function(){
+        if(!this.pet)return;var list=document.getElementById('housing-list');list.innerHTML='';var self=this;
+        for(var i=0;i<Engine.HOUSING.length;i++){var h=Engine.HOUSING[i],isCur=i===this.pet.housingLevel,isNext=i===this.pet.housingLevel+1;
+        var cls='housing-item'+(isCur?' current':'')+(i>this.pet.housingLevel+1?' locked':'');
+        var canBuy=isNext&&this.pet.coins>=h.cost;
+        list.innerHTML+='<div class="'+cls+(canBuy?' can-buy':'')+'" data-housing="'+i+'"><span class="housing-emoji">'+h.emoji+'</span><div class="housing-info"><div class="housing-name">'+h.nom+'</div><div class="housing-cost">'+(h.cost||'Gratuit')+'</div></div></div>';}
+        list.querySelectorAll('[data-housing]').forEach(function(el){el.addEventListener('click',function(){var idx=+el.dataset.housing;if(idx===self.pet.housingLevel+1){var r=Engine.upgradeHousing(self.pet);Renderer.toast(r.msg);if(r.ok){Weather.lastBuildingState=null;Storage.save(self.pet);Renderer.update(self.pet);self.openHousing();}}});});
+        document.getElementById('housing-screen').classList.remove('hidden');
+    },
+    openFarm:function(){if(!this.pet)return;Farm.open(this.pet);this.bindFarmButtons();clearInterval(this.farmWalkLoop);var self=this,el=document.getElementById('farm-francis'),img=document.getElementById('farm-francis-img');if(el&&img&&this.pet){img.src=Engine.STAGES[this.pet.stade].sprite;var x=15;this.farmWalkLoop=setInterval(function(){x+=(Math.random()-.48)*.4;x=Math.max(5,Math.min(85,x));el.style.left=x+'%';},50);}},
+    bindFarmButtons:function(){var self=this;['btn-farm-buy','btn-farm-feed','btn-farm-clean'].forEach(function(id){var o=document.getElementById(id);if(!o)return;var n=o.cloneNode(true);o.parentNode.replaceChild(n,o);});document.getElementById('btn-farm-buy').addEventListener('click',function(){var r=Farm.buyHen(self.pet);Renderer.toast(r.msg);if(r.ok){Farm.addHenToScene();Farm.renderUI(self.pet);Storage.save(self.pet);Renderer.update(self.pet);}});document.getElementById('btn-farm-feed').addEventListener('click',function(){var r=Farm.feedEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok)Farm.renderUI(self.pet);Storage.save(self.pet);});document.getElementById('btn-farm-clean').addEventListener('click',function(){var r=Farm.cleanEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok)Farm.renderUI(self.pet);Storage.save(self.pet);});}
+};
+document.addEventListener('DOMContentLoaded',function(){App.init();});
