@@ -138,7 +138,7 @@ var App={
         var r=Engine.feed(this.pet,id);
         document.getElementById('food-screen').classList.add('hidden');
         if(r.ok){
-            Renderer.petEatAnimation(f?f.emoji:'🌾');
+            Renderer.petEatAnimation(f?f.emoji:'🌾',f?f.emoji:'🌾');
             Storage.save(this.pet);
             var self=this;
             setTimeout(function(){Renderer.showGaugeResult('Faim',self.pet.faim);Renderer.update(self.pet);},10000);
@@ -233,7 +233,7 @@ var App={
     openFarm:function(){if(!this.pet)return;Farm.open(this.pet);this.bindFarmButtons();clearInterval(this.farmWalkLoop);var self=this,el=document.getElementById('farm-francis'),img=document.getElementById('farm-francis-img');if(el&&img&&this.pet){img.src=Engine.STAGES[this.pet.stade].sprite;var x=15;this.farmWalkLoop=setInterval(function(){x+=(Math.random()-.48)*.4;x=Math.max(5,Math.min(85,x));el.style.left=x+'%';},50);}},
     bindFarmButtons:function(){var self=this;['btn-farm-buy','btn-farm-feed','btn-farm-clean'].forEach(function(id){var o=document.getElementById(id);if(!o)return;var n=o.cloneNode(true);o.parentNode.replaceChild(n,o);});
     document.getElementById('btn-farm-buy').addEventListener('click',function(){var r=Farm.buyHen(self.pet);Renderer.toast(r.msg);if(r.ok){Farm.addHenToScene();Farm.renderUI(self.pet);Storage.save(self.pet);Renderer.update(self.pet);}});
-    document.getElementById('btn-farm-feed').addEventListener('click',function(){var r=Farm.feedEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok)Farm.renderUI(self.pet);Storage.save(self.pet);});
-    document.getElementById('btn-farm-clean').addEventListener('click',function(){var r=Farm.cleanEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok)Farm.renderUI(self.pet);Storage.save(self.pet);});}
+    document.getElementById('btn-farm-feed').addEventListener('click',function(){var r=Farm.feedEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok){Farm.showFeedAnimation('🌾');Farm.renderUI(self.pet);}Storage.save(self.pet);});
+    document.getElementById('btn-farm-clean').addEventListener('click',function(){var r=Farm.cleanEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok){Farm.showCleanAnimation();Farm.renderUI(self.pet);}Storage.save(self.pet);});}
 };
 document.addEventListener('DOMContentLoaded',function(){App.init();});

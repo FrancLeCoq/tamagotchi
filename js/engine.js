@@ -78,7 +78,7 @@ const Engine = {
         var now = Date.now();
         return { nom:name||'Francis', stade:0,
             faim:80,bonheur:80,energie:80,sante:80,hygiene:90,intellect:50,amour:30,
-            experience:0,actions:0,soinTotal:0,coins:0,housingLevel:0,
+            experience:0,actions:0,soinTotal:0,coins:0,housingLevel:0,jeu:0,travail:0,
             neLe:now,derniereUpdate:now,derniereEvolution:now,dernierePoop:now,dernierePipi:now,startRealHour:new Date().getHours(),
             cooldowns:{},poops:0,pipis:0,healthActionCount:0,
             estMort:false,causeMort:null,isSleeping:false,sleepStart:null,farm:null
@@ -90,6 +90,8 @@ const Engine = {
         if(pet.intellect===undefined) pet.intellect=30;
         if(pet.amour===undefined) pet.amour=30;
         if(pet.coins===undefined) pet.coins=0;
+        if(pet.jeu===undefined) pet.jeu=0;
+        if(pet.travail===undefined) pet.travail=0;
         if(pet.housingLevel===undefined) pet.housingLevel=0;
         if(pet.pipis===undefined) pet.pipis=0;
         if(pet.dernierePipi===undefined) pet.dernierePipi=Date.now();
@@ -114,7 +116,7 @@ const Engine = {
             pet.energie=this.cl(pet.energie-elapsed*2.5*m);
             pet.sante=this.cl(pet.sante-elapsed*1.5*m);
             pet.hygiene=this.cl(pet.hygiene-elapsed*2*m);
-            pet.intellect=this.cl(pet.intellect-elapsed*1*m);
+            pet.intellect=this.cl(pet.intellect-elapsed*1*m);pet.jeu=this.cl((pet.jeu||0)-elapsed*2*m);pet.travail=this.cl((pet.travail||0)-elapsed*1.5*m);
             pet.amour=this.cl(pet.amour-elapsed*1.5*m);
         }
         var dirt=pet.poops+pet.pipis;
@@ -183,7 +185,7 @@ const Engine = {
     },
     play(pet,bonus){
         var c=this.canDo(pet,'jouer');if(!c.ok)return c;
-        pet.bonheur=this.cl(pet.bonheur+Math.min(20,15+bonus));pet.energie=this.cl(pet.energie-10);
+        pet.bonheur=this.cl(pet.bonheur+Math.min(20,15+bonus));pet.energie=this.cl(pet.energie-10);pet.jeu=this.cl(pet.jeu+20);
         pet.experience+=15+bonus;pet.actions++;pet.coins+=2+Math.floor(bonus/3);
         this.setCooldown(pet,'jouer');return{ok:true,msg:'🎮 Fun !'};
     },
@@ -226,7 +228,7 @@ const Engine = {
     },
     studyAuto(pet){
         var c=this.canDo(pet,'intellect');if(!c.ok)return c;
-        pet.intellect=this.cl(pet.intellect+20);pet.energie=this.cl(pet.energie-5);
+        pet.intellect=this.cl(pet.intellect+20);pet.energie=this.cl(pet.energie-5);pet.jeu=this.cl(pet.jeu+20);
         pet.experience+=10;pet.actions++;pet.coins+=2;
         this.setCooldown(pet,'intellect');return{ok:true,msg:'📖 Lecture !'};
     },

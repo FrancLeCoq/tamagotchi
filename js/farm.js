@@ -44,15 +44,13 @@ var Farm = {
     feedEnclosure:function(pet){
         var farm=this.ensureData(pet);
         if(farm.hens<=0) return {ok:false,msg:'Pas de poules !'};
-        if(farm.feedLevel>=95) return {ok:false,msg:'Déjà nourri ! 🌾'};
-        farm.feedLevel=Math.min(100,farm.feedLevel+40);pet.coins+=1;
+        farm.feedLevel=Math.min(100,farm.feedLevel+20);pet.coins+=1;
         return {ok:true,msg:'🌾 Enclos nourri !'};
     },
 
     cleanEnclosure:function(pet){
         var farm=this.ensureData(pet);
         if(farm.hens<=0) return {ok:false,msg:'Pas de poules !'};
-        if(farm.cleanLevel>=95) return {ok:false,msg:'Déjà propre ! ✨'};
         farm.cleanLevel=Math.min(100,farm.cleanLevel+20);pet.coins+=1;
         return {ok:true,msg:'🧹 Enclos nettoyé !'};
     },
@@ -65,8 +63,7 @@ var Farm = {
 
         // Preload images
         this.henImg=new Image();this.henImg.src='assets/sprites/poule_enclos.png';
-        this.bgDayImg=new Image();this.bgDayImg.src='assets/backgrounds/champs_jour.png';
-        this.bgNightImg=new Image();this.bgNightImg.src='assets/backgrounds/champs_nuit.png';
+        
 
         // Setup canvas after a frame so DOM is ready
         var self=this;
@@ -146,6 +143,8 @@ var Farm = {
 
     animate:function(){
         if(!this.isOpen||!this.canvas||!this.ctx) return;
+        // Travail gauge ticks while in enclos
+        if(typeof App!=='undefined'&&App.pet){App.pet.travail=Math.min(100,(App.pet.travail||0)+0.005);}
         var isDay=Weather.getBri()>0.5;
         this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
         if(!isDay){this.ctx.fillStyle='rgba(10,10,40,0.35)';this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);}
@@ -180,5 +179,50 @@ var Farm = {
             speed:0.5+Math.random()*0.5, flipX:false,
             state:'walking', stateTimer:200, bob:Math.random()*Math.PI*2
         });
-    }
+    },
+
+    showFeedAnimation:function(foodEmoji){
+        if(!this.canvas||!this.hens||!this.hens.length) return;
+        var emoji = foodEmoji || '🌾';
+        var scene = document.getElementById('farm-scene');
+        if(!scene) return;
+        var self = this;
+        var duration = 30000; // 30s
+        var startTime = Date.now();
+        var loop = setInterval(function(){
+            if(!self.isOpen || Date.now()-startTime > duration){clearInterval(loop);return;}
+            // Pick a random hen and send food to it
+            var h = self.hens[Math.floor(Math.random()*self.hens.length)];
+            if(!h) return;
+            var item = document.createElement('div');
+            item.className = 'farm-food-fly'; item.textContent = emoji;
+            // Start from top center of canvas, fly to hen
+            var cRect = self.canvas.getBoundingClientRect();
+            var sRect = scene.getBoundingClientRect();
+            var startX = ((cRect.left-sRect.left+cRect.width/2)/sRect.width*100);
+            var henXpct = (h.x/self.canvas.width*100);
+            var henYpct = (h.y/self.canvas.height*100);
+            item.style.left = startX+'%'; item.style.top = '5%';
+            item.style.setProperty('--farm-tx',(henXpct-startX)+'vw');
+            item.style.setProperty('--farm-ty',(henYpct-5)+'vh');
+            scene.appendChild(item);
+            setTimeout(function(){if(item.parentNode)item.remove();},2000);
+        }, 800);
+    },
+
+    // ═══ FARM CLEAN ANIMATION — broom sweeps poops ═══
+    showCleanAnimation:function(){
+        if(!this.canvas) return;
+        var scene = document.getElementById('farm-scene');if(!scene) return;
+        var broom = document.createElement('div');
+        broom.className='farm-broom'; broom.textContent='🧹'; broom.style.fontSize='48px';
+        scene.appendChild(broom);
+        var left=5; var dir=1;
+        var iv=setInterval(function(){
+            left+=dir*2; broom.style.left=left+'%'; broom.style.bottom='8%';
+            if(left>90){dir=-1;} if(left<5){dir=1;}
+        },50);
+        setTimeout(function(){clearInterval(iv);broom.remove();},10000);
+    },
+
 };

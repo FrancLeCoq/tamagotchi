@@ -256,3 +256,64 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 
 /* ═══ HEN WRAPPER — absolute positioning for following ═══ */
 .hen-wrapper{position:absolute;bottom:10%;z-index:5;transition:left .5s ease}
+
+/* ═══ BONHEUR MAIN BAR — full width ═══ */
+.sp-bonheur-main{margin-bottom:4px}
+.sp-full{flex:1!important;width:100%}
+.sp-label-main{font-size:9px;font-weight:800;color:#9b59b6;min-width:42px}
+.sp-track-main{flex:1;height:10px;background:rgba(255,255,255,.1);border-radius:5px;overflow:hidden;border:1px solid rgba(155,89,182,.2)}
+
+/* ═══ COUNTDOWN ═══ */
+.countdown-display{position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:16;background:rgba(10,20,40,.88);color:#f0f0f5;font-size:13px;font-weight:700;padding:5px 16px;border-radius:20px;border:1px solid rgba(240,192,64,.25);pointer-events:none;white-space:nowrap;display:flex;gap:8px;align-items:center}
+.cd-label{opacity:.85}.cd-num{color:#f0c040;font-family:'Courier New',monospace;font-size:15px;font-weight:900}
+
+/* ═══ FOOD ANIMATION ═══ */
+.big-food-anim{position:absolute;top:18%;left:50%;transform:translateX(-50%);font-size:72px;z-index:8;pointer-events:none;animation:foodPulse 1s ease-in-out infinite}
+@keyframes foodPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.22)}}
+.food-fly{position:absolute;font-size:32px;z-index:8;pointer-events:none;animation:foodFly 1.8s ease-in forwards}
+@keyframes foodFly{0%{opacity:1;transform:translate(0,0) scale(1)}60%{opacity:1;transform:translate(calc(var(--tx,0)*1),90px) scale(.7)}100%{opacity:0;transform:translate(calc(var(--tx,0)*1),130px) scale(.2)}}
+
+/* ═══ BROOM SWEEPING ═══ */
+.broom-sweeping{position:absolute;z-index:8;pointer-events:none;font-size:56px;transition:left .4s ease}
+@keyframes broomSwing{0%{transform:rotate(-15deg)}50%{transform:rotate(15deg)}100%{transform:rotate(-5deg)}}
+
+/* ═══ STUDY ═══ */
+.big-book-anim{position:absolute;font-size:64px;z-index:8;pointer-events:none;animation:bookBob 2s ease-in-out infinite}
+@keyframes bookBob{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.brain-float{position:absolute;font-size:24px;z-index:8;pointer-events:none;animation:brainUp 2.5s ease-out forwards}
+@keyframes brainUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-130px)}}
+
+/* ═══ SYRINGE — rotated 180°, flies toward pet ═══ */
+.syringe-fly{position:absolute;font-size:70px;z-index:8;pointer-events:none;top:5%;left:82%;transform:rotate(180deg);animation:syringeToPet 2s ease-in forwards}
+@keyframes syringeToPet{0%{left:82%;top:5%;opacity:1;transform:rotate(180deg) scale(1)}75%{left:var(--pet-x,50%);top:48%;opacity:1;transform:rotate(180deg) scale(.85)}100%{left:var(--pet-x,50%);top:52%;opacity:0;transform:rotate(180deg) scale(.5)}}
+
+/* ═══ SHOWER ═══ */
+.shower-head{position:absolute;font-size:44px;z-index:8;pointer-events:none;animation:headBob 1s ease-in-out infinite}
+@keyframes headBob{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+
+/* ═══ GAUGE RESULT ═══ */
+.gauge-result{position:absolute;top:36%;left:50%;transform:translateX(-50%);z-index:16;text-align:center;animation:grPop .4s ease;pointer-events:none;width:72%}
+.gr-label{font-size:15px;font-weight:800;color:#fff;margin-bottom:5px;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.gr-bar{height:20px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.15)}
+.gr-fill{height:100%;border-radius:8px;transition:width 1.5s ease}
+.gr-pct{font-size:34px;font-weight:900;color:#f0c040;margin-top:3px;text-shadow:0 2px 14px rgba(240,192,64,.6)}
+@keyframes grPop{0%{transform:translateX(-50%) scale(0)}60%{transform:translateX(-50%) scale(1.1)}100%{transform:translateX(-50%) scale(1)}}
+
+/* ═══ ACTION OVERLAY ═══ */
+.action-overlay{position:absolute;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.15);pointer-events:none}
+.action-text{background:rgba(10,20,40,.88);color:#f0f0f5;padding:10px 24px;border-radius:50px;font-size:15px;font-weight:700;animation:pulse2 1s infinite}
+
+/* ═══ FARM ANIMATIONS ═══ */
+.farm-food-fly{position:absolute;font-size:28px;z-index:10;pointer-events:none;animation:farmFoodFly 2s ease-in forwards}
+@keyframes farmFoodFly{0%{opacity:1;transform:translate(0,0) scale(1)}70%{opacity:1;transform:translate(var(--farm-tx,0),var(--farm-ty,60px)) scale(.7)}100%{opacity:0;transform:translate(var(--farm-tx,0),calc(var(--farm-ty,60px) + 30px)) scale(.3)}}
+.farm-broom{position:absolute;z-index:10;pointer-events:none;transition:left .15s linear;animation:farmBroomBob .4s ease-in-out infinite}
+@keyframes farmBroomBob{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+
+/* ═══ HEN WRAPPER — static left ═══ */
+.hen-wrapper{position:absolute;bottom:10%;left:2%;z-index:5}
+
+/* ═══ SPEECH BUBBLE — always LTR ═══ */
+.speech-bubble,.speech-bubble *{direction:ltr!important;unicode-bidi:plaintext!important;text-align:center!important}
+
+/* ═══ BONHEUR STATS CARD ═══ */
+.bonheur-main-row{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(155,89,182,.08);border-radius:10px;border:1px solid rgba(155,89,182,.2);margin-bottom:4px}

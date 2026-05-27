@@ -58,9 +58,13 @@
         </div>
 
         <div class="stats-panel" id="stats-panel">
+            <!-- Bonheur général = moyenne de toutes les jauges — pleine largeur -->
+            <div class="sp-row sp-bonheur-main">
+                <div class="sp-stat sp-full"><span class="sp-icon">😊</span><span class="sp-label sp-label-main">Bonheur</span><div class="sp-track sp-track-main"><div class="sp-fill" id="stat-bonheur-main" style="width:50%"></div></div><span class="sp-pct" id="pct-bonheur-main">50%</span></div>
+            </div>
             <div class="sp-row">
-                <div class="sp-stat"><span class="sp-icon">🌾</span><span class="sp-label">Faim</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-faim"></div></div><span class="sp-pct" id="pct-faim">80%</span></div>
-                <div class="sp-stat"><span class="sp-icon">😊</span><span class="sp-label">Bonheur</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-bonheur"></div></div><span class="sp-pct" id="pct-bonheur">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">🌾</span><span class="sp-label">Faim</span><div class="sp-track"><div class="sp-fill" id="stat-faim"></div></div><span class="sp-pct" id="pct-faim">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">🎮</span><span class="sp-label">Jeu</span><div class="sp-track"><div class="sp-fill" id="stat-jeu"></div></div><span class="sp-pct" id="pct-jeu">0%</span></div>
             </div>
             <div class="sp-row">
                 <div class="sp-stat"><span class="sp-icon">⚡</span><span class="sp-label">Énergie</span><div class="sp-track"><div class="sp-fill sp-yellow" id="stat-energie"></div></div><span class="sp-pct" id="pct-energie">80%</span></div>
