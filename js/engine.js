@@ -183,7 +183,7 @@ const Engine = {
     },
     play(pet,bonus){
         var c=this.canDo(pet,'jouer');if(!c.ok)return c;
-        pet.bonheur=this.cl(pet.bonheur+20+bonus);pet.energie=this.cl(pet.energie-10);
+        pet.bonheur=this.cl(pet.bonheur+Math.min(20,15+bonus));pet.energie=this.cl(pet.energie-10);
         pet.experience+=15+bonus;pet.actions++;pet.coins+=2+Math.floor(bonus/3);
         this.setCooldown(pet,'jouer');return{ok:true,msg:'🎮 Fun !'};
     },
@@ -201,7 +201,7 @@ const Engine = {
     heal(pet){
         var c=this.canDo(pet,'soigner');if(!c.ok)return c;
         var isInj=pet.healthActionCount%2===0;
-        pet.sante=this.cl(pet.sante+30);pet.bonheur=this.cl(pet.bonheur-5);
+        pet.sante=this.cl(pet.sante+20);pet.bonheur=this.cl(pet.bonheur-5);
         pet.experience+=5;pet.actions++;pet.coins+=1;pet.healthActionCount++;pet.soinTotal++;
         this.setCooldown(pet,'soigner');return{ok:true,msg:isInj?'💉 Piqûre !':'💊 Cachet !',isInjection:isInj};
     },
@@ -213,20 +213,20 @@ const Engine = {
     },
     shower(pet){
         var c=this.canDo(pet,'douche');if(!c.ok)return c;
-        pet.hygiene=this.cl(pet.hygiene+40);pet.bonheur=this.cl(pet.bonheur+5);
+        pet.hygiene=this.cl(pet.hygiene+20);pet.bonheur=this.cl(pet.bonheur+5);
         pet.experience+=10;pet.actions++;pet.coins+=3;
         this.setCooldown(pet,'douche');return{ok:true,msg:'🚿 Douche !'};
     },
     visit(pet){
         var c=this.canDo(pet,'visite');if(!c.ok)return c;
         var stage=this.STAGES[pet.stade];
-        pet.amour=this.cl(pet.amour+35);pet.bonheur=this.cl(pet.bonheur+20);
+        pet.amour=this.cl(pet.amour+20);pet.bonheur=this.cl(pet.bonheur+20);
         pet.experience+=15;pet.actions++;pet.coins+=3;
         this.setCooldown(pet,'visite');return{ok:true,msg:'💕 '+stage.henName+' !',henSprite:stage.hen};
     },
     studyAuto(pet){
         var c=this.canDo(pet,'intellect');if(!c.ok)return c;
-        pet.intellect=this.cl(pet.intellect+25);pet.energie=this.cl(pet.energie-5);
+        pet.intellect=this.cl(pet.intellect+20);pet.energie=this.cl(pet.energie-5);
         pet.experience+=10;pet.actions++;pet.coins+=2;
         this.setCooldown(pet,'intellect');return{ok:true,msg:'📖 Lecture !'};
     },

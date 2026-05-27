@@ -53,7 +53,7 @@ var Farm = {
         var farm=this.ensureData(pet);
         if(farm.hens<=0) return {ok:false,msg:'Pas de poules !'};
         if(farm.cleanLevel>=95) return {ok:false,msg:'Déjà propre ! ✨'};
-        farm.cleanLevel=Math.min(100,farm.cleanLevel+40);pet.coins+=1;
+        farm.cleanLevel=Math.min(100,farm.cleanLevel+20);pet.coins+=1;
         return {ok:true,msg:'🧹 Enclos nettoyé !'};
     },
 
@@ -135,7 +135,7 @@ var Farm = {
             var h=this.hens[i];
             var bobY=h.state==='pecking'?Math.sin(t*8+h.bob)*4:Math.sin(t*2+h.bob)*1.5;
             var walkBob=h.state==='walking'?Math.sin(t*6+h.bob)*2:0;
-            var sz=40;
+            var sz=80;
             this.ctx.save();
             this.ctx.translate(h.x+sz/2,h.y+sz/2);
             if(h.flipX) this.ctx.scale(-1,1);

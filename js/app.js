@@ -2,7 +2,7 @@ var App={
     pet:null,gameLoop:null,moveLoop:null,saveInterval:null,speechInterval:null,sleepZInterval:null,
     farmWalkLoop:null,soundOn:false,paused:false,
     touchStartX:0,touchStartY:0,isSwiping:false,
-    _cheatBuffer:'',_cheatTimer:null,
+    _cheatBuffer:'',_cheatTimer:null,_visitTimer:null,
 
     init:function(){
         Storage.init();Renderer.init();this.showSplash();this.bindEvents();
@@ -11,23 +11,22 @@ var App={
     showSplash:function(){
         var data=Storage.loadSync();
         var rb=document.getElementById('btn-resume');
-        if(data&&!data.estMort)rb.classList.remove('hidden');else rb.classList.add('hidden');
+        rb.classList.toggle('hidden',!(data&&!data.estMort));
         if(Engine.isWalletConnected()){var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';}
     },
 
     bindEvents:function(){
         var self=this;
         document.getElementById('btn-resume').addEventListener('click',function(){
-            var data=Storage.loadSync();
-            if(data){self.pet=data;Engine.migrate(self.pet);Engine.updateStats(self.pet);self.showGame();Renderer.toast('▶ Reprise !');}
+            var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);Engine.updateStats(self.pet);self.showGame();Renderer.toast('▶ Reprise !');}
         });
         document.getElementById('btn-new-game').addEventListener('click',function(){self.newGame();});
-        var holder=document.getElementById('splash-holder');if(holder)holder.addEventListener('click',function(){self.connectWallet();});
+        var ho=document.getElementById('splash-holder');if(ho)ho.addEventListener('click',function(){self.connectWallet();});
         document.getElementById('btn-wallet-game').addEventListener('click',function(){self.connectWallet();document.getElementById('more-screen').classList.add('hidden');});
         document.getElementById('btn-wallet-gate').addEventListener('click',function(){self.connectWallet();document.getElementById('wallet-gate').classList.add('hidden');});
         document.getElementById('btn-wallet-skip').addEventListener('click',function(){document.getElementById('wallet-gate').classList.add('hidden');self.newGame();});
 
-        // Game buttons
+        // Game
         document.getElementById('btn-nourrir').addEventListener('click',function(){self.openFood();});
         document.getElementById('btn-jouer').addEventListener('click',function(){self.openPlay();});
         document.getElementById('btn-dormir').addEventListener('click',function(){self.doSleep();});
@@ -45,20 +44,17 @@ var App={
         document.getElementById('btn-notif').addEventListener('click',function(){Renderer.toast('🔔');});
         document.getElementById('btn-evo-ok').addEventListener('click',function(){Renderer.hideEvolution();});
         document.getElementById('btn-restart').addEventListener('click',function(){Renderer.hideDeath();self.newGame();});
-        // Play panel: mini-jeu + intellect
         document.getElementById('btn-play-game').addEventListener('click',function(){self.doPlay();});
-        document.getElementById('btn-play-study').addEventListener('click',function(){self.doStudyAuto();});
+        document.getElementById('btn-play-study').addEventListener('click',function(){self.doStudy();});
         document.getElementById('btn-play-sudoku').addEventListener('click',function(){self.doStudySudoku();});
         document.getElementById('food-grid').addEventListener('click',function(e){var item=e.target.closest('[data-food]');if(item)self.doFeed(item.dataset.food);});
         document.getElementById('btn-reset').addEventListener('click',function(){document.getElementById('more-screen').classList.add('hidden');if(confirm('Reset?')){Storage.clear();self.pet=null;document.getElementById('game-screen').classList.remove('active');document.getElementById('splash-screen').classList.add('active');self.showSplash();}});
 
-        // ═══ CHEAT CODES (keyboard in game screen) ═══
+        // Cheats via keyboard
         document.addEventListener('keyup',function(e){
-            if(!self.pet)return;
-            var k=e.key.toUpperCase();
+            if(!self.pet)return;var k=e.key.toUpperCase();
             if(k.length===1&&k>='A'&&k<='Z'){
-                self._cheatBuffer+=k;
-                clearTimeout(self._cheatTimer);
+                self._cheatBuffer+=k;clearTimeout(self._cheatTimer);
                 self._cheatTimer=setTimeout(function(){self._cheatBuffer='';},2000);
                 var r=Engine.applyCheat(self.pet,self._cheatBuffer);
                 if(r.ok){Renderer.toast(r.msg);Storage.save(self.pet);Renderer.update(self.pet);self._cheatBuffer='';}
@@ -77,7 +73,6 @@ var App={
         });
         touch.addEventListener('click',function(e){if(!self.pet||self.pet.estMort||self.paused||'ontouchstart' in window)return;if(self._nearPet(e.clientX,e.clientY)){Engine.petClick(self.pet);Renderer.showCoinAt(e.clientX-10,e.clientY-20);Renderer.update(self.pet);Storage.save(self.pet);}});
 
-        // Close buttons
         document.querySelectorAll('[data-close]').forEach(function(btn){btn.addEventListener('click',function(){var id=btn.getAttribute('data-close');if(id==='farm-screen'){Farm.close();clearInterval(self.farmWalkLoop);}document.getElementById(id).classList.add('hidden');});});
     },
 
@@ -92,7 +87,6 @@ var App={
         var self=this;
         requestAnimationFrame(function(){requestAnimationFrame(function(){Renderer.update(self.pet);Weather.init();self.startLoops();});});
     },
-
     startLoops:function(){this.stopLoops();var self=this;
         this.gameLoop=setInterval(function(){self.gameTick();},5000);
         this.moveLoop=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.paused)Renderer.tickMovement(self.pet);},50);
@@ -105,11 +99,29 @@ var App={
     gameTick:function(){
         if(!this.pet||this.pet.estMort||this.paused)return;
         Engine.updateStats(this.pet);Renderer.update(this.pet);this.updateCooldowns();
+        this.checkAlerts();
         if(Engine.needsWalletGate(this.pet)){document.getElementById('wallet-gate').classList.remove('hidden');return;}
         if(this.pet.farm&&this.pet.farm.hens>0)Farm.update(this.pet);
         if(Engine.checkEvolution(this.pet)){var old=Engine.STAGES[this.pet.stade];Engine.evolve(this.pet);Renderer.showEvolution(old,Engine.STAGES[this.pet.stade]);Storage.save(this.pet);}
         if(this.pet.estMort){Renderer.showDeath(this.pet);Storage.save(this.pet);}
     },
+
+    // Alert when any gauge < 20%
+    checkAlerts:function(){
+        if(!this.pet)return;
+        var p=this.pet,alerts=[];
+        if(p.faim<20)alerts.push('🌾 Faim critique : '+Math.round(p.faim)+'%');
+        if(p.bonheur<20)alerts.push('😢 Bonheur critique : '+Math.round(p.bonheur)+'%');
+        if(p.energie<20)alerts.push('😴 Énergie critique : '+Math.round(p.energie)+'%');
+        if(p.sante<20)alerts.push('❤️ Santé critique : '+Math.round(p.sante)+'%');
+        if((p.hygiene||50)<20)alerts.push('🧼 Hygiène critique : '+Math.round(p.hygiene)+'%');
+        if((p.amour||30)<20)alerts.push('💕 Amour critique : '+Math.round(p.amour)+'%');
+        var dot=document.getElementById('alert-dot');
+        if(dot)dot.classList.toggle('hidden',alerts.length===0);
+        // Show toast for first critical
+        if(alerts.length>0&&Math.random()<0.15)Renderer.toast(alerts[0]);
+    },
+
     updateCooldowns:function(){
         var now=Date.now(),acts=['nourrir','jouer','dormir','soigner','visite'];
         for(var i=0;i<acts.length;i++){var a=acts[i],btn=document.getElementById('btn-'+a);if(!btn)continue;
@@ -119,28 +131,109 @@ var App={
         else{btn.classList.remove('on-cooldown');var t2=btn.querySelector('.cooldown-timer');if(t2)t2.remove();}}
     },
 
+    // ═══ NOURRIR — 10s animation with food emoji ═══
     openFood:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var c=Engine.canDo(this.pet,'nourrir');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('food-grid').innerHTML=Renderer.renderFoodGrid();document.getElementById('food-screen').classList.remove('hidden');},
-    doFeed:function(id){var r=Engine.feed(this.pet,id);document.getElementById('food-screen').classList.add('hidden');if(r.ok){Renderer.toast(r.msg);Renderer.petEatAnimation();Storage.save(this.pet);}else Renderer.toast(r.msg);Renderer.update(this.pet);},
+    doFeed:function(id){
+        var f=Engine.FOODS.find(function(x){return x.id===id;});
+        var r=Engine.feed(this.pet,id);
+        document.getElementById('food-screen').classList.add('hidden');
+        if(r.ok){
+            Renderer.petEatAnimation(f?f.emoji:'🌾');
+            Storage.save(this.pet);
+            var self=this;
+            setTimeout(function(){Renderer.showGaugeResult('Faim',self.pet.faim);Renderer.update(self.pet);},10000);
+        }else Renderer.toast(r.msg);
+    },
+
+    // ═══ JOUER — panel with mini-jeu + lecture + sudoku ═══
     openPlay:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var c=Engine.canDo(this.pet,'jouer');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('play-screen').classList.remove('hidden');},
-    doPlay:function(){document.getElementById('play-screen').classList.add('hidden');var self=this;Minigames.startPlay(function(b){Engine.play(self.pet,b);Renderer.toast('🎮 +'+b);Renderer.petHappyAnimation();Storage.save(self.pet);Renderer.update(self.pet);});},
-    doStudyAuto:function(){document.getElementById('play-screen').classList.add('hidden');Engine.studyAuto(this.pet);Renderer.toast('📖 Lecture !');Storage.save(this.pet);Renderer.update(this.pet);},
-    doStudySudoku:function(){document.getElementById('play-screen').classList.add('hidden');var self=this;Minigames.startSudoku(function(b){Engine.studyGame(self.pet,b);Renderer.toast('🧠');Storage.save(self.pet);Renderer.update(self.pet);});},
+    doPlay:function(){
+        document.getElementById('play-screen').classList.add('hidden');
+        var self=this;
+        Minigames.startPlay(function(b){
+            Engine.play(self.pet,b);Renderer.petHappyAnimation();Storage.save(self.pet);
+            setTimeout(function(){Renderer.showGaugeResult('Bonheur',self.pet.bonheur);Renderer.update(self.pet);},1500);
+        });
+    },
+    doStudy:function(){
+        document.getElementById('play-screen').classList.add('hidden');
+        Engine.studyAuto(this.pet);
+        Renderer.showStudyAnimation();
+        Storage.save(this.pet);
+        var self=this;
+        setTimeout(function(){Renderer.showGaugeResult('Intellect',self.pet.intellect||30);Renderer.update(self.pet);},10000);
+    },
+    doStudySudoku:function(){
+        document.getElementById('play-screen').classList.add('hidden');
+        var self=this;
+        Minigames.startSudoku(function(b){Engine.studyGame(self.pet,b);Storage.save(self.pet);
+            setTimeout(function(){Renderer.showGaugeResult('Intellect',self.pet.intellect||30);Renderer.update(self.pet);},1500);
+        });
+    },
+
+    // ═══ DORMIR ═══
     doSleep:function(){if(!this.pet||this.pet.estMort)return;var r=Engine.sleep(this.pet);Renderer.toast(r.msg);Storage.save(this.pet);Renderer.update(this.pet);},
-    doHeal:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.heal(this.pet);Renderer.toast(r.msg);if(r.ok)Renderer.showBigSyringe();Storage.save(this.pet);Renderer.update(this.pet);},
-    doToilet:function(){if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.toilet(this.pet);Renderer.toast(r.msg);if(r.ok)Renderer.showBigBroom();Storage.save(this.pet);Renderer.update(this.pet);},
-    doShower:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;document.getElementById('care-screen').classList.add('hidden');var r=Engine.shower(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showHeavyShower();Renderer.petHappyAnimation();}Storage.save(this.pet);Renderer.update(this.pet);},
-    doVisit:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var r=Engine.visit(this.pet);Renderer.toast(r.msg);if(r.ok){Renderer.showHenVisit(r.henSprite,Engine.STAGES[this.pet.stade].size);Renderer.petHappyAnimation();}Storage.save(this.pet);Renderer.update(this.pet);},
+
+    // ═══ SOIGNER — 10s animation, +20%, gauge result ═══
+    doHeal:function(){
+        if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
+        document.getElementById('care-screen').classList.add('hidden');
+        var r=Engine.heal(this.pet);Renderer.toast(r.msg);
+        if(r.ok){Renderer.showBigSyringe();Storage.save(this.pet);
+        var self=this;setTimeout(function(){Renderer.showGaugeResult('Santé',self.pet.sante);Renderer.update(self.pet);},10000);}
+    },
+
+    // ═══ TOILETTE — +20%, gauge result ═══
+    doToilet:function(){
+        if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');
+        var r=Engine.toilet(this.pet);Renderer.toast(r.msg);
+        if(r.ok){Renderer.showBigBroom();Storage.save(this.pet);
+        var self=this;setTimeout(function(){Renderer.showGaugeResult('Hygiène',self.pet.hygiene);Renderer.update(self.pet);},10000);}
+        Renderer.update(this.pet);
+    },
+
+    // ═══ DOUCHE — 10s, +20%, gauge result ═══
+    doShower:function(){
+        if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
+        document.getElementById('care-screen').classList.add('hidden');
+        var r=Engine.shower(this.pet);Renderer.toast(r.msg);
+        if(r.ok){Renderer.showHeavyShower();Storage.save(this.pet);
+        var self=this;setTimeout(function(){Renderer.showGaugeResult('Hygiène',self.pet.hygiene);Renderer.update(self.pet);},10000);}
+    },
+
+    // ═══ CALINER — 1 min, amour ticks +5 every 10s ═══
+    doVisit:function(){
+        if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
+        var r=Engine.visit(this.pet);Renderer.toast(r.msg);
+        if(r.ok){
+            Renderer.showHenVisit(r.henSprite,Engine.STAGES[this.pet.stade].size);
+            Storage.save(this.pet);
+            // Amour ticks during visit
+            var self=this;
+            clearInterval(this._visitTimer);
+            this._visitTimer=setInterval(function(){
+                if(self.pet)self.pet.amour=Math.min(100,(self.pet.amour||30)+5);
+                Renderer.update(self.pet);Storage.save(self.pet);
+            },10000);
+            setTimeout(function(){clearInterval(self._visitTimer);
+                Renderer.showGaugeResult('Amour',self.pet.amour);
+            },60000);
+        }
+    },
+
     openStats:function(){if(!this.pet)return;document.getElementById('stats-detail').innerHTML=Renderer.renderStatsDetail(this.pet);document.getElementById('stats-screen').classList.remove('hidden');},
     openHousing:function(){
         if(!this.pet)return;var list=document.getElementById('housing-list');list.innerHTML='';var self=this;
         for(var i=0;i<Engine.HOUSING.length;i++){var h=Engine.HOUSING[i],isCur=i===this.pet.housingLevel,isNext=i===this.pet.housingLevel+1;
-        var cls='housing-item'+(isCur?' current':'')+(i>this.pet.housingLevel+1?' locked':'');
-        var canBuy=isNext&&this.pet.coins>=h.cost;
-        list.innerHTML+='<div class="'+cls+(canBuy?' can-buy':'')+'" data-housing="'+i+'"><span class="housing-emoji">'+h.emoji+'</span><div class="housing-info"><div class="housing-name">'+h.nom+'</div><div class="housing-cost">'+(h.cost||'Gratuit')+'</div></div></div>';}
+        var cls='housing-item'+(isCur?' current':'')+(i>this.pet.housingLevel+1?' locked':'')+(isNext&&this.pet.coins>=h.cost?' can-buy':'');
+        list.innerHTML+='<div class="'+cls+'" data-housing="'+i+'"><span class="housing-emoji">'+h.emoji+'</span><div class="housing-info"><div class="housing-name">'+h.nom+'</div><div class="housing-cost">'+(h.cost||'Gratuit')+' 🪙</div></div></div>';}
         list.querySelectorAll('[data-housing]').forEach(function(el){el.addEventListener('click',function(){var idx=+el.dataset.housing;if(idx===self.pet.housingLevel+1){var r=Engine.upgradeHousing(self.pet);Renderer.toast(r.msg);if(r.ok){Weather.lastBuildingState=null;Storage.save(self.pet);Renderer.update(self.pet);self.openHousing();}}});});
         document.getElementById('housing-screen').classList.remove('hidden');
     },
     openFarm:function(){if(!this.pet)return;Farm.open(this.pet);this.bindFarmButtons();clearInterval(this.farmWalkLoop);var self=this,el=document.getElementById('farm-francis'),img=document.getElementById('farm-francis-img');if(el&&img&&this.pet){img.src=Engine.STAGES[this.pet.stade].sprite;var x=15;this.farmWalkLoop=setInterval(function(){x+=(Math.random()-.48)*.4;x=Math.max(5,Math.min(85,x));el.style.left=x+'%';},50);}},
-    bindFarmButtons:function(){var self=this;['btn-farm-buy','btn-farm-feed','btn-farm-clean'].forEach(function(id){var o=document.getElementById(id);if(!o)return;var n=o.cloneNode(true);o.parentNode.replaceChild(n,o);});document.getElementById('btn-farm-buy').addEventListener('click',function(){var r=Farm.buyHen(self.pet);Renderer.toast(r.msg);if(r.ok){Farm.addHenToScene();Farm.renderUI(self.pet);Storage.save(self.pet);Renderer.update(self.pet);}});document.getElementById('btn-farm-feed').addEventListener('click',function(){var r=Farm.feedEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok)Farm.renderUI(self.pet);Storage.save(self.pet);});document.getElementById('btn-farm-clean').addEventListener('click',function(){var r=Farm.cleanEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok)Farm.renderUI(self.pet);Storage.save(self.pet);});}
+    bindFarmButtons:function(){var self=this;['btn-farm-buy','btn-farm-feed','btn-farm-clean'].forEach(function(id){var o=document.getElementById(id);if(!o)return;var n=o.cloneNode(true);o.parentNode.replaceChild(n,o);});
+    document.getElementById('btn-farm-buy').addEventListener('click',function(){var r=Farm.buyHen(self.pet);Renderer.toast(r.msg);if(r.ok){Farm.addHenToScene();Farm.renderUI(self.pet);Storage.save(self.pet);Renderer.update(self.pet);}});
+    document.getElementById('btn-farm-feed').addEventListener('click',function(){var r=Farm.feedEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok)Farm.renderUI(self.pet);Storage.save(self.pet);});
+    document.getElementById('btn-farm-clean').addEventListener('click',function(){var r=Farm.cleanEnclosure(self.pet);Renderer.toast(r.msg);if(r.ok)Farm.renderUI(self.pet);Storage.save(self.pet);});}
 };
 document.addEventListener('DOMContentLoaded',function(){App.init();});
