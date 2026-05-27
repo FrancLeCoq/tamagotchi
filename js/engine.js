@@ -1,7 +1,7 @@
 const Engine = {
     STAGES: [
         { id:0, nom:'Poussin',    emoji:'🐣', heures:24,  depletion:1.6, size:104,  sprite:'assets/sprites/poussin.png', spriteSad:'assets/sprites/poussin_triste.png', hen:'assets/sprites/poule_poussin.png', henName:'Poussinette' },
-        { id:1, nom:'Petit Coq',  emoji:'🐤', heures:48,  depletion:1.4, size:130, sprite:'assets/sprites/petit_coq.png', spriteSad:'assets/sprites/petit_coq_triste.png', hen:'assets/sprites/poule_petite.png',  henName:'Cocotte' },
+        { id:1, nom:'Petit Coq',  emoji:'🐤', heures:48,  depletion:1.4, size:260, sprite:'assets/sprites/petit_coq.png', spriteSad:'assets/sprites/petit_coq_triste.png', hen:'assets/sprites/poule_petite.png',  henName:'Cocotte' },
         { id:2, nom:'Coq Ado',    emoji:'🐔', heures:72,  depletion:1.2, size:156, sprite:'assets/sprites/coq_ado.png', spriteSad:'assets/sprites/coq_ado_triste.png', hen:'assets/sprites/poule_ado.png',     henName:'Poulette' },
         { id:3, nom:'Coq Adulte', emoji:'🐓', heures:168, depletion:1.0, size:182, sprite:'assets/sprites/coq_adulte.png', spriteSad:'assets/sprites/coq_adulte_triste.png', hen:'assets/sprites/poule_adulte.png',  henName:'Françoise' },
         { id:4, nom:'Coq Vieux',  emoji:'👴', heures:null,depletion:0.7, size:169, sprite:'assets/sprites/coq_vieux.png', spriteSad:'assets/sprites/coq_vieux_triste.png', hen:'assets/sprites/poule_vieille.png', henName:'Mamie Plume' },
@@ -79,7 +79,7 @@ const Engine = {
         return { nom:name||'Francis', stade:0,
             faim:80,bonheur:80,energie:80,sante:80,hygiene:90,intellect:50,amour:30,
             experience:0,actions:0,soinTotal:0,coins:0,housingLevel:0,
-            neLe:now,derniereUpdate:now,derniereEvolution:now,dernierePoop:now,dernierePipi:now,
+            neLe:now,derniereUpdate:now,derniereEvolution:now,dernierePoop:now,dernierePipi:now,startRealHour:new Date().getHours(),
             cooldowns:{},poops:0,pipis:0,healthActionCount:0,
             estMort:false,causeMort:null,isSleeping:false,sleepStart:null,farm:null
         };
@@ -121,7 +121,7 @@ const Engine = {
         if(dirt>=2){pet.bonheur=this.cl(pet.bonheur-elapsed*dirt*0.8);pet.hygiene=this.cl(pet.hygiene-elapsed*dirt*0.5);}
         if(dirt>=4) pet.sante=this.cl(pet.sante-elapsed*1.5);
         // Poop/pipi
-        if(now-pet.dernierePoop>this.POOP_INTERVAL*1000){pet.poops=Math.min(8,pet.poops+1);pet.dernierePoop=now;pet.hygiene=this.cl(pet.hygiene-8);}
+        if(now-pet.dernierePoop>this.POOP_INTERVAL*1000){pet.poops=Math.min(12,pet.poops+3);pet.dernierePoop=now;pet.hygiene=this.cl(pet.hygiene-8);}
         if(now-pet.dernierePipi>this.PIPI_INTERVAL*1000){pet.pipis=Math.min(5,pet.pipis+1);pet.dernierePipi=now;}
         // Starvation / death
         if(pet.faim<=0&&pet.sante<=5){pet.estMort=true;pet.causeMort='Famine';}

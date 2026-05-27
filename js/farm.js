@@ -146,7 +146,7 @@ var Farm = {
 
     animate:function(){
         if(!this.isOpen||!this.canvas||!this.ctx) return;
-        var isDay=Weather.getSkyBrightness()>0.5;
+        var isDay=Weather.getBri()>0.5;
         this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
         if(!isDay){this.ctx.fillStyle='rgba(10,10,40,0.35)';this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);}
         this.updateHens();

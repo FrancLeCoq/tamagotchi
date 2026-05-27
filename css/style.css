@@ -1,4 +1,4 @@
-:root{--bg:#0a0818;--border:rgba(130,80,255,.25);--glass:rgba(255,255,255,.06);--accent:#f0c040;--green:#44cc66;--blue:#4a90d9;--pink:#e84393;--purple:#8b5cf6;--orange:#f97316;--red:#e74c3c;--text:#f0f0f5;--dim:#8899bb;--safe-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#0a0818;--border:rgba(130,80,255,.25);--glass:rgba(255,255,255,.06);--accent:#f0c040;--purple-accent:#9b59b6;--green:#44cc66;--blue:#4a90d9;--pink:#e84393;--purple:#8b5cf6;--orange:#f97316;--red:#e74c3c;--text:#f0f0f5;--dim:#8899bb;--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,system-ui,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .screen{display:none;width:100%;height:100%;flex-direction:column;position:relative}.screen.active{display:flex}
@@ -34,7 +34,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .tb-avatar-ring-wrap{position:relative;width:44px;height:44px;flex-shrink:0}
 .tb-ring-svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
 .ring-track{fill:none;stroke:rgba(240,192,64,.18);stroke-width:3}
-.ring-fill{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-dasharray:132;stroke-dashoffset:132;transition:stroke-dashoffset .8s ease}
+.ring-fill{fill:none;stroke:#9b59b6;stroke-width:3;stroke-linecap:round;stroke-dasharray:132;stroke-dashoffset:132;transition:stroke-dashoffset .8s ease}
 .tb-avatar-img{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;object-fit:contain;border-radius:50%;background:rgba(240,192,64,.08);padding:2px}
 .tb-avatar-info{text-align:center}.tb-name{font-size:13px;font-weight:700}.tb-level{font-size:9px;color:var(--dim)}
 .tb-right{display:flex;align-items:center;gap:6px}
@@ -69,10 +69,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .pet-wrapper{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);z-index:5;transition:left 2s ease-in-out,bottom .8s ease-in-out,opacity .8s}
 .pet{position:relative;transition:width .5s,height .5s,transform .3s}
 .pet img{width:100%;height:100%;object-fit:contain}
-.pet.idle{animation:bounce 2s ease-in-out infinite}.pet.walking{animation:walk .4s steps(2) infinite}
-.pet.eating{animation:eat .5s ease-in-out infinite}.pet.sleeping{animation:sleep 2s ease-in-out infinite}
-.pet.happy{animation:happy .3s ease-in-out 3}.pet.sad{animation:sad 1.5s ease-in-out infinite}
-.pet.sick{animation:sick 1s ease-in-out infinite}.pet.flip{transform:scaleX(-1)}
 .pet-wrapper.in-building{bottom:22%;opacity:0;pointer-events:none}
 
 /* Mood emoji */
@@ -158,3 +154,54 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* Eye blink overlay — CSS pseudo-element on pet wrapper */
 .pet::after{content:'';position:absolute;top:24%;left:25%;width:50%;height:8%;background:transparent;border-radius:50%;animation:eyeBlink 4s ease-in-out infinite;pointer-events:none;z-index:2}
 @keyframes eyeBlink{0%,95%,100%{opacity:0}96%,99%{opacity:0}}
+
+
+/* ═══ PURPLE clock and XP ring ═══ */
+.tb-clock{color:#9b59b6!important;background:rgba(155,89,182,.08)!important;border-color:rgba(155,89,182,.2)!important}
+.ring-fill{stroke:#9b59b6!important}
+.ring-track{stroke:rgba(155,89,182,.18)!important}
+
+/* ═══ GAUGE COLORS (set via JS inline) ═══ */
+.sp-fill{border-radius:4px;transition:width .6s,background .6s}
+
+/* ═══ ACTION OVERLAY (cleaning/healing text) ═══ */
+.action-overlay{position:absolute;inset:0;z-index:15;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);pointer-events:none;animation:fadeIn .3s}
+.action-text{background:rgba(10,20,40,.85);color:#f0f0f5;padding:10px 24px;border-radius:50px;font-size:14px;font-weight:700;animation:pulse2 1s infinite}
+
+/* ═══ SHOWER HEAD ═══ */
+.shower-head{position:absolute;font-size:40px;z-index:8;pointer-events:none;animation:showerHeadBob 1s ease-in-out infinite}
+@keyframes showerHeadBob{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+
+/* ═══ BIGGER POOP ═══ */
+.poop{font-size:42px!important}
+
+/* ═══ BIGGER BROOM/SYRINGE ═══ */
+.big-broom{font-size:80px!important}
+.big-syringe{font-size:80px!important}
+
+/* ═══ PET SPRITE - no flip class, flip via JS transform on img ═══ */
+.pet img{width:100%;height:100%;object-fit:contain;transition:transform .3s}
+
+/* ═══ PET ANIMATIONS - stable, never restart ═══ */
+.pet.idle{animation:petIdle 2.5s ease-in-out infinite}
+.pet.walking{animation:petWalk .4s ease-in-out infinite}
+.pet.eating{animation:petEat .5s ease-in-out infinite}
+.pet.sleeping{animation:petSleep 2s ease-in-out infinite}
+.pet.happy{animation:petHappy .3s ease-in-out 3}
+.pet.sad{animation:petSad 1.5s ease-in-out infinite}
+.pet.sick{animation:petSick 1s ease-in-out infinite}
+
+@keyframes petIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes petWalk{0%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-3px) rotate(1deg)}}
+@keyframes petEat{0%,100%{transform:rotate(0)}25%{transform:rotate(6deg) translateY(3px)}75%{transform:rotate(-3deg)}}
+@keyframes petSleep{0%,100%{transform:scale(1)}50%{transform:scale(.97) translateY(2px)}}
+@keyframes petHappy{0%,100%{transform:translateY(0)}25%{transform:translateY(-10px) rotate(-3deg)}75%{transform:translateY(-10px) rotate(3deg)}}
+@keyframes petSad{0%,100%{transform:translateY(0)}50%{transform:translateY(2px) scale(.97)}}
+@keyframes petSick{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+
+/* ═══ COINS PULSE ═══ */
+.coins-pulse{animation:coinPulse 1.5s ease-in-out infinite!important;background:rgba(240,192,64,.2)!important;border-color:var(--accent)!important}
+@keyframes coinPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 rgba(240,192,64,0)}50%{transform:scale(1.08);box-shadow:0 0 12px rgba(240,192,64,.5)}}
+
+.housing-item.can-buy{border-color:var(--accent)!important;animation:canBuyShimmer 2s ease-in-out infinite}
+@keyframes canBuyShimmer{0%,100%{box-shadow:0 0 0 rgba(240,192,64,0)}50%{box-shadow:0 0 16px rgba(240,192,64,.4)}}
