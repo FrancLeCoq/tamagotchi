@@ -197,10 +197,11 @@ var Renderer={
         var self=this;this._actionLock=true;this._forceAnim('eating');
         var emoji=foodEmoji||'🌾';
         var big=document.createElement('div');big.className='big-food-anim';big.textContent=emoji;
+        big.style.top='8%';
         this.els.scene.appendChild(big);
         var feedLoop=setInterval(function(){
             var m=document.createElement('div');m.className='food-fly';m.textContent=emoji;
-            m.style.left='50%';m.style.top='22%';
+            m.style.left='50%';m.style.top='16%';
             // Target: pet position
             var petPct=self.currentPetX;
             m.style.setProperty('--tx',(petPct-50)+'vw');
@@ -286,31 +287,31 @@ var Renderer={
         var timer=this._countdown('🚨 Soin en cours',20,function(){clearInterval(loop);self._actionLock=false;});
     },
 
-    // ═══ CALINER — hen static left, pet locked in place ═══
-    showHenVisit:function(henSprite,petSize){
+    // ═══ CALINER — hen static left, pet locked, countdown ═══
+    showHenVisit:function(henSprite,petSize,onAmourEnd){
         var w=document.getElementById('hen-wrapper'),img=document.getElementById('hen-sprite');
         img.src=henSprite;img.style.width=(petSize||120)+'px';img.style.height=(petSize||120)+'px';
-        // Hen static at left edge
         w.style.left='3%';w.style.bottom='10%';w.style.position='absolute';
         w.style.transition='none';
         w.classList.remove('hidden');
-        // Lock pet movement — keep it at current X or push right if too close to hen
+        // Lock pet — push right
         var self=this;
-        var safePetX=Math.max(30,this.currentPetX); // stay right of hen
-        this.currentPetX=safePetX;
-        this.walkTarget=safePetX;
+        var safePetX=Math.max(30,this.currentPetX);
+        this.currentPetX=safePetX;this.walkTarget=safePetX;
         this.els.petWrapper.style.left=safePetX+'%';
         this._calinLock=true;
         var heartLoop=setInterval(function(){
             var hrt=document.createElement('div');hrt.className='float-item';
             hrt.textContent=['💕','❤️','💗','💖'][Math.floor(Math.random()*4)];
-            // Hearts between hen (left) and pet (right)
-            var hx=5+Math.random()*22;
-            hrt.style.left=hx+'%';hrt.style.top=(28+Math.random()*28)+'%';
+            hrt.style.left=(5+Math.random()*22)+'%';
+            hrt.style.top=(28+Math.random()*28)+'%';
             hrt.style.fontSize='48px';
             self.els.sceneItems.appendChild(hrt);setTimeout(function(){hrt.remove();},1500);
         },800);
-        setTimeout(function(){clearInterval(heartLoop);w.classList.add('hidden');self._calinLock=false;},60000);
+        var timer=this._countdown('💕 Moment de convivialité avec ma poule',60,'#e84393',function(){
+            clearInterval(heartLoop);w.classList.add('hidden');self._calinLock=false;
+            if(onAmourEnd)onAmourEnd();
+        });
     },
 
     petHappyAnimation:function(){this._forceAnim('happy');var s=this;setTimeout(function(){s._forceAnim('idle');},1200);},

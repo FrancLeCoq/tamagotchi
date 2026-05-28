@@ -231,19 +231,38 @@ var Farm = {
         }, 800);
     },
 
-    // ═══ FARM CLEAN ANIMATION — broom sweeps poops ═══
+    // ═══ FARM CLEAN ANIMATION — broom goes to each poop ═══
     showCleanAnimation:function(){
-        if(!this.canvas) return;
-        var scene = document.getElementById('farm-scene');if(!scene) return;
-        var broom = document.createElement('div');
-        broom.className='farm-broom'; broom.textContent='🧹'; broom.style.fontSize='48px';
+        var scene=document.getElementById('farm-scene');if(!scene)return;
+        var self=this;
+        // Find poop elements on canvas (they are drawn, not DOM elements)
+        // We'll place visual broom near bottom and animate toward poop positions
+        var farm=this.ensureData(typeof App!=='undefined'?App.pet:{farm:{}});
+        var poopCount=farm.farmPoops||0;
+        if(poopCount<=0)return;
+        // Clean 20% at a time
+        var toClean=Math.max(1,Math.ceil(poopCount*0.2));
+        var broom=document.createElement('div');
+        broom.style.cssText='position:absolute;font-size:50px;z-index:10;pointer-events:none;bottom:15%;transition:left .8s ease';
+        broom.textContent='🧹';
+        broom.style.left='5%';
         scene.appendChild(broom);
-        var left=5; var dir=1;
+        var idx=0;
         var iv=setInterval(function(){
-            left+=dir*2; broom.style.left=left+'%'; broom.style.bottom='8%';
-            if(left>90){dir=-1;} if(left<5){dir=1;}
-        },50);
-        setTimeout(function(){clearInterval(iv);broom.remove();},10000);
+            if(idx>=toClean){clearInterval(iv);broom.remove();return;}
+            // Move broom to poop position
+            var px=((idx*0.17+0.08)%0.85)*100;
+            broom.style.left=px+'%';
+            broom.style.bottom='15%';
+            // After reaching poop, shake and poop disappears
+            setTimeout(function(){
+                broom.style.transform='rotate(-15deg)';
+                setTimeout(function(){broom.style.transform='rotate(15deg)';
+                    setTimeout(function(){broom.style.transform='rotate(0)';},150);
+                },150);
+                idx++;
+            },900);
+        },1100);
     },
 
     drawFarmPoops:function(){

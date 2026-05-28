@@ -1,53 +1,46 @@
 var Weather={
-    HOUR_MS:120000,startTime:null,startHour:6,
-    canvas:null,ctx:null,clouds:[],raindrops:[],
-    lastBuildingState:null,_running:false,
+    HOUR_MS:120000, startTime:null, startHour:6,
+    canvas:null, ctx:null, clouds:[], raindrops:[],
+    lastBuildingState:null, _running:false,
+    _sunEl:null, _moonEl:null, _cloudEls:[],
     SCHEDULE:{rain:[[3,4],[15,16]]},
-    imgs:{sun:null,moon:null,cloud1:null,cloud2:null},
-    _imgsReady:0,
 
     init:function(){
-        var self=this; // SINGLE self reference
+        var self=this;
         this.startTime=Date.now();
         this.startHour=(typeof App!=='undefined'&&App.pet&&App.pet.startRealHour!==undefined)
             ?App.pet.startRealHour:new Date().getHours();
 
-        // Load base64 images (WeatherImgs defined in weather_imgs.js)
-        if(typeof WeatherImgs!=='undefined'){
-            ['sun','moon','cloud1','cloud2'].forEach(function(key){
-                var img=new Image();
-                img.onload=function(){self.imgs[key]=img;self._imgsReady++;};
-                img.onerror=function(){self._imgsReady++;};
-                img.src=WeatherImgs[key];
-            });
-        }
+        // Get HTML celestial elements
+        this._sunEl=document.getElementById('cel-sun');
+        this._moonEl=document.getElementById('cel-moon');
+        this._initClouds();
 
-        // Sky immediately (no canvas needed)
+        // Apply sky immediately
         this._applySky();this.updateBuilding();this.updateClock();
 
-        // Canvas init with retry
-        var attempts=0;
+        // Canvas for rain only
+        var tries=0;
         function tryCanvas(){
-            attempts++;
+            tries++;
             var c=document.getElementById('weather-canvas');
-            if(!c){if(attempts<20)setTimeout(tryCanvas,300);return;}
+            if(!c){if(tries<20)setTimeout(tryCanvas,300);return;}
             var scene=document.querySelector('.scene');
             var sw=scene?scene.clientWidth:window.innerWidth;
             var sh=scene?scene.clientHeight:600;
-            if(sw<10||sh<10){if(attempts<20)setTimeout(tryCanvas,300);return;}
+            if(sw<10||sh<10){if(tries<20)setTimeout(tryCanvas,300);return;}
             self.canvas=c; c.width=sw; c.height=sh;
             self.ctx=c.getContext('2d');
-            for(var i=0;i<7;i++)self.clouds.push({
-                x:Math.random()*sw, y:8+Math.random()*50,
-                w:100+Math.random()*100, s:0.1+Math.random()*0.35,
-                o:0.45+Math.random()*0.4, type:Math.random()>.5?1:2
-            });
             if(!self._running){self._running=true;self._loop();}
         }
         setTimeout(tryCanvas,400);
 
-        // Sky refresh every 2s
-        setInterval(function(){self._applySky();self.updateBuilding();self.updateClock();},2000);
+        // Update celestial positions every 2s + sky refresh
+        setInterval(function(){
+            self._applySky();self._moveCelestial();
+            self.updateBuilding();self.updateClock();
+        },2000);
+        setTimeout(function(){self._moveCelestial();},200);
     },
 
     getHour:function(){return(this.startHour+(Date.now()-this.startTime)/this.HOUR_MS)%24;},
@@ -68,6 +61,64 @@ var Weather={
         if(ov)ov.style.background='rgba(5,5,30,'+((1-this.getBri())*.3)+')';
     },
 
+    _moveCelestial:function(){
+        var h=this.getHour();
+        var scene=document.querySelector('.scene');
+        if(!scene||!this._sunEl||!this._moonEl)return;
+        var sw=scene.offsetWidth||400, sh=scene.offsetHeight||600;
+
+        // SUN: arc from left to right 6h-20h
+        if(h>=6&&h<20){
+            var p=(h-6)/14;
+            var sx=p*(sw-90)+10;
+            var sy=sh*.08+(1-Math.sin(p*Math.PI))*sh*.18;
+            var al=Math.min(1,Math.min((h-6)/1.5,(20-h)/1.5));
+            this._sunEl.style.display='block';
+            this._sunEl.style.left=sx+'px';
+            this._sunEl.style.top=sy+'px';
+            this._sunEl.style.opacity=al;
+        }else{this._sunEl.style.display='none';}
+
+        // MOON: arc 20h-6h
+        if(h>=20||h<6){
+            var nh=h>=20?h-20:h+4,p2=nh/10;
+            var mx=p2*(sw-65)+8;
+            var my=sh*.05+(1-Math.sin(p2*Math.PI))*sh*.15;
+            var ma=Math.min(1,Math.min(nh,10-nh));
+            this._moonEl.style.display='block';
+            this._moonEl.style.left=mx+'px';
+            this._moonEl.style.top=my+'px';
+            this._moonEl.style.opacity=ma;
+        }else{this._moonEl.style.display='none';}
+    },
+
+    _initClouds:function(){
+        var self=this;
+        var container=document.getElementById('layer-clouds');if(!container)return;
+        container.innerHTML='';
+        this._cloudEls=[];
+        var scene=document.querySelector('.scene');
+        var sw=scene?scene.offsetWidth:400;
+        for(var i=0;i<6;i++){
+            var el=document.createElement('div');
+            el.className='cloud-el';
+            var w=90+Math.random()*110;
+            var h=w*0.38;
+            el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*50)+'px;left:'+(Math.random()*sw)+'px;background:rgba(230,238,252,'+(0.45+Math.random()*0.35)+');border-radius:'+h+'px '+h+'px '+h+'px '+h+'px;';
+            container.appendChild(el);
+            this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.12+Math.random()*0.35,w:w});
+        }
+        // Animate clouds
+        setInterval(function(){
+            var sw2=scene?scene.offsetWidth:400;
+            for(var j=0;j<self._cloudEls.length;j++){
+                var c=self._cloudEls[j];
+                c.x+=c.s;if(c.x>sw2+c.w+20)c.x=-(c.w+20);
+                c.el.style.left=c.x+'px';
+            }
+        },50);
+    },
+
     updateBuilding:function(){
         var d=this.getBri()>.45;
         var l=(typeof App!=='undefined'&&App.pet)?App.pet.housingLevel||0:0;
@@ -76,74 +127,17 @@ var Weather={
         if(this.lastBuildingState!==src){this.lastBuildingState=src;
             var el=document.getElementById('layer-building');if(el)el.innerHTML='<img src="'+src+'">';}
     },
-
     updateClock:function(){
         var h=this.getHour(),hh=Math.floor(h),mm=Math.floor((h-hh)*60);
         var el=document.getElementById('hud-clock');
         if(el)el.textContent=(h>=7&&h<21?'☀️':'🌙')+' '+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
     },
 
+    // Canvas only used for rain now
     _loop:function(){
         if(!this.ctx)return;
         var ctx=this.ctx,cw=this.canvas.width,ch=this.canvas.height,h=this.getHour();
         ctx.clearRect(0,0,cw,ch);
-
-        // ── SUN ──
-        if(h>=6&&h<20){
-            var p=(h-6)/14,ay=Math.sin(p*Math.PI);
-            var sx=p*(cw-120)+20,sy=ch*.18-ay*ch*.15+10;
-            var al=Math.min(1,Math.min((h-6)/1.5,(20-h)/1.5));
-            ctx.save();ctx.globalAlpha=al;
-            // Always draw glow + shape
-            var g=ctx.createRadialGradient(sx+50,sy+50,15,sx+50,sy+50,85);
-            g.addColorStop(0,'rgba(255,215,60,.5)');g.addColorStop(1,'rgba(255,215,60,0)');
-            ctx.fillStyle=g;ctx.fillRect(sx-35,sy-35,170,170);
-            var sunImg=this.imgs.sun;
-            if(sunImg&&sunImg.complete&&sunImg.naturalWidth>0){
-                ctx.drawImage(sunImg,sx,sy,80,80);
-            }else{
-                ctx.fillStyle='#FFD700';ctx.beginPath();ctx.arc(sx+40,sy+40,32,0,6.28);ctx.fill();
-                ctx.fillStyle='#FFF380';ctx.beginPath();ctx.arc(sx+38,sy+38,18,0,6.28);ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        // ── MOON ──
-        if(h>=20||h<6){
-            var nh=h>=20?h-20:h+4,p2=nh/10;
-            var mx=p2*(cw-80)+10,my=ch*.12-Math.sin(p2*3.14)*ch*.12+10;
-            var mal=Math.min(1,Math.min(nh,10-nh));
-            ctx.save();ctx.globalAlpha=mal;
-            var mg=ctx.createRadialGradient(mx+32,my+32,10,mx+32,my+32,55);
-            mg.addColorStop(0,'rgba(180,200,255,.25)');mg.addColorStop(1,'rgba(180,200,255,0)');
-            ctx.fillStyle=mg;ctx.fillRect(mx-20,my-20,104,104);
-            var moonImg=this.imgs.moon;
-            if(moonImg&&moonImg.complete&&moonImg.naturalWidth>0){
-                ctx.drawImage(moonImg,mx,my,64,64);
-            }else{
-                ctx.fillStyle='#E8E8F0';ctx.beginPath();ctx.arc(mx+28,my+28,22,0,6.28);ctx.fill();
-                ctx.fillStyle='rgba(10,10,50,.5)';ctx.beginPath();ctx.arc(mx+38,my+22,17,0,6.28);ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        // ── CLOUDS ──
-        for(var i=0;i<this.clouds.length;i++){
-            var c=this.clouds[i];c.x+=c.s;if(c.x>cw+130)c.x=-(c.w+50);
-            ctx.save();ctx.globalAlpha=c.o;
-            var cimg=c.type===1?this.imgs.cloud1:this.imgs.cloud2;
-            if(cimg&&cimg.complete&&cimg.naturalWidth>0){
-                ctx.drawImage(cimg,c.x,c.y,c.w,c.w*.45);
-            }else{
-                ctx.fillStyle='rgba(230,238,250,.88)';
-                ctx.beginPath();ctx.arc(c.x+c.w*.3,c.y+20,18,0,6.28);
-                ctx.arc(c.x+c.w*.5,c.y+8,24,0,6.28);
-                ctx.arc(c.x+c.w*.7,c.y+18,16,0,6.28);ctx.fill();
-            }
-            ctx.restore();
-        }
-
-        // ── RAIN ──
         var inten=0;
         for(var j=0;j<this.SCHEDULE.rain.length;j++){
             var rs=this.SCHEDULE.rain[j][0],re=this.SCHEDULE.rain[j][1];
@@ -160,8 +154,6 @@ var Weather={
                 ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-2,d.y+d.l);ctx.stroke();
             }
         }
-
-        this._applySky();this.updateBuilding();this.updateClock();
         var self=this;requestAnimationFrame(function(){self._loop();});
     }
 };

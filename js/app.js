@@ -207,18 +207,20 @@ var App={
         if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
         var r=Engine.visit(this.pet);Renderer.toast(r.msg);
         if(r.ok){
-            Renderer.showHenVisit(r.henSprite,Engine.STAGES[this.pet.stade].size);
-            Storage.save(this.pet);
-            // Amour ticks during visit
+            var oldAmour=this.pet.amour||30;
             var self=this;
+            // Amour ticks during visit (+5 every 10s over 60s = +30 max)
             clearInterval(this._visitTimer);
             this._visitTimer=setInterval(function(){
                 if(self.pet)self.pet.amour=Math.min(100,(self.pet.amour||30)+5);
                 Renderer.update(self.pet);Storage.save(self.pet);
             },10000);
-            setTimeout(function(){clearInterval(self._visitTimer);
-                Renderer.showGaugeResult('Amour',self.pet.amour);
-            },60000);
+            Renderer.showHenVisit(r.henSprite,Engine.STAGES[this.pet.stade].size,function(){
+                clearInterval(self._visitTimer);
+                Renderer.animateGauge('amour','Amour',oldAmour,self.pet.amour||30,'#e84393');
+                Renderer.update(self.pet);Storage.save(self.pet);
+            });
+            Storage.save(this.pet);
         }
     },
 

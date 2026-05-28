@@ -361,3 +361,42 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* ═══ FARM GRAYOUT ═══ */
 #farm-feed-row,#farm-clean-row{transition:opacity .3s}
 .farm-gauge-btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+/* Sky canvas - above landscape, below pet */
+.sky-canvas{position:absolute;inset:0;z-index:6;pointer-events:none}
+
+/* ═══ CELESTIAL ELEMENTS — above everything (z-index:4) ═══ */
+.layer-clouds{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+.layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
+.cel-sun{position:absolute;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,#fff8a0 0%,#FFD700 40%,rgba(255,215,0,0) 80%);box-shadow:0 0 30px rgba(255,200,50,.7),0 0 60px rgba(255,200,50,.3);transition:left .5s,top .5s,opacity 1s;display:none}
+.cel-moon{position:absolute;width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f0f0f8 0%,#c8c8dc 60%,rgba(200,200,220,0) 100%);box-shadow:0 0 20px rgba(180,200,255,.5);transition:left .5s,top .5s,opacity 1s;display:none}
+.cel-moon::after{content:'';position:absolute;width:38px;height:38px;border-radius:50%;background:transparent;box-shadow:8px -4px 0 rgba(20,20,60,.35);top:4px;left:4px}
+.cloud-el{position:absolute;pointer-events:none;border-radius:50px;opacity:.82;filter:blur(1px);transition:none}
+
+/* ═══ FARM LAYOUT — bonheur full width, then 2 small ═══ */
+.farm-gauges{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
+.farm-bonheur-row{display:flex;align-items:center;gap:6px;padding:4px 2px}
+.farm-bon-label{font-size:10px;font-weight:800;color:#9b59b6;white-space:nowrap}
+.farm-bon-track{flex:1;height:10px}
+.farm-bon-pct{font-size:10px;font-weight:700;color:#f0c040;min-width:30px;text-align:right}
+.farm-rows-small{display:flex;gap:8px}
+.farm-gauge{flex:1;display:flex;align-items:center;gap:3px;font-size:12px}
+
+/* ═══ FARM FEED ANIMATION ═══ */
+@keyframes farmFoodPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.18)}}
+@keyframes farmCornFall{0%{opacity:1;transform:translate(0,0) scale(1)}70%{opacity:.8;transform:translate(var(--tx,0),var(--ty,60px)) scale(.65)}100%{opacity:0;transform:translate(var(--tx,0),calc(var(--ty,60px) + 25px)) scale(.2)}}
+
+/* ═══ FARM CSS FIXES ═══ */
+.farm-bonheur-main{display:flex;align-items:center;gap:8px;padding:4px 2px}
+.farm-bon-icon{font-size:16px}
+.farm-bon-content{flex:1}
+.farm-bon-header{display:flex;justify-content:space-between;margin-bottom:3px}
+.farm-bon-label{font-size:11px;font-weight:800;color:#9b59b6}
+.farm-bon-pct{font-size:11px;font-weight:700;color:#f0c040}
+.farm-bon-track-wrap{height:10px;background:rgba(255,255,255,.1);border-radius:5px;overflow:hidden;border:1px solid rgba(155,89,182,.2)}
+.farm-bon-fill{height:100%;transition:width .8s ease}
+.farm-sub-gauges{display:flex;gap:8px}
+
+/* ═══ WEATHER CANVAS — rain only, behind celestial ═══ */
+.weather-canvas{position:absolute;inset:0;z-index:1;pointer-events:none}
+.layer-clouds{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
