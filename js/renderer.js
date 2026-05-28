@@ -135,7 +135,7 @@ var Renderer={
     },
 
     tickMovement:function(pet){
-        if(!pet||pet.isSleeping||pet.estMort||this._actionLock||this._calinLock)return;
+        if(!pet||pet.isSleeping||pet.estMort||this._actionLock||this._calinLock||this._showerLock||this._studyLock)return;
         if(Math.random()<.02)this.walkTarget=15+Math.random()*70;
         var dx=this.walkTarget-this.currentPetX;
         if(Math.abs(dx)>2){
@@ -197,7 +197,7 @@ var Renderer={
         var self=this;this._actionLock=true;this._forceAnim('eating');
         var emoji=foodEmoji||'🌾';
         var big=document.createElement('div');big.className='big-food-anim';big.textContent=emoji;
-        big.style.top='8%';
+        big.style.top='50%';big.style.transform='translate(-50%,-50%)';
         this.els.scene.appendChild(big);
         var feedLoop=setInterval(function(){
             var m=document.createElement('div');m.className='food-fly';m.textContent=emoji;
@@ -213,16 +213,27 @@ var Renderer={
         });
     },
 
-    // ═══ LECTURE — book at pet height, 40s ═══
+    // ═══ LECTURE — book at pet HEIGHT, pet looks right at it ───
     showStudyAnimation:function(){
-        var self=this;this._actionLock=true;
-        var pw=this.els.petWrapper;if(!pw){this._actionLock=false;return;}
+        var self=this;this._actionLock=true;this._studyLock=true;
+        var pw=this.els.petWrapper;if(!pw){this._actionLock=false;this._studyLock=false;return;}
         var pr=pw.getBoundingClientRect(),sr=this.els.scene.getBoundingClientRect();
+        // Position book at same vertical level as pet's face (top 30% of pet height)
         var petBottomPct=((sr.bottom-pr.bottom)/sr.height*100);
+        var petHeightPct=(pr.height/sr.height*100);
+        var bookBottomPct=petBottomPct+petHeightPct*0.3;
+        // Book slightly to the right or left depending on pet direction
+        var bookLeft=(self.walkDir>0)?self.currentPetX+16:self.currentPetX-24;
+        bookLeft=Math.max(5,Math.min(75,bookLeft));
         var book=document.createElement('div');book.className='big-book-anim';book.textContent='📖';
-        book.style.bottom=(petBottomPct+2)+'%';
-        book.style.left=(this.currentPetX+8)+'%';
+        book.style.bottom=bookBottomPct+'%';
+        book.style.left=bookLeft+'%';
+        book.style.fontSize='52px';
         this.els.scene.appendChild(book);
+        // Pet faces the book (flip toward it)
+        if(self.walkDir<0) self._applyFlip(false); else self._applyFlip(false);
+        // Pet idle - no walking
+        self._forceAnim('idle');
         var brainLoop=setInterval(function(){
             var b=document.createElement('div');b.className='brain-float';b.textContent='🧠';
             b.style.left=(self.currentPetX-8+Math.random()*16)+'%';
@@ -236,6 +247,8 @@ var Renderer={
 
     // ═══ DOUCHE — 30s, showerhead above pet ═══
     showHeavyShower:function(){
+        // Freeze pet movement during shower
+        this._showerLock=true;
         var self=this;this._actionLock=true;
         var pw=this.els.petWrapper,sc=this.els.scene;if(!pw||!sc){this._actionLock=false;return;}
         var pr=pw.getBoundingClientRect(),sr=sc.getBoundingClientRect();

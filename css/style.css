@@ -60,6 +60,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* Building: half the previous size, centered */
 .layer-building{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;display:flex;align-items:center;justify-content:center}
 .layer-building img{max-height:38vh;max-width:42vw;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35))}
+.layer-building img[src*='brique']{max-height:38vh;max-width:42vw}
+.layer-building img[src*='chateau']{max-height:43.7vh;max-width:48.3vw}
+.layer-building img[src*='palace']{max-height:43.7vh;max-width:48.3vw}
 .hud-weather{position:absolute;top:6px;right:6px;font-size:18px;z-index:8}
 .sleep-zzz{position:absolute;top:15%;left:50%;transform:translateX(-50%);font-size:36px;z-index:6;animation:zzzPulse 2s ease-in-out infinite;text-shadow:0 2px 12px rgba(0,0,0,.5);letter-spacing:8px}
 @keyframes zzzPulse{0%,100%{opacity:.6;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.15)}}

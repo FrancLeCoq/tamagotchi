@@ -1,9 +1,9 @@
 const Engine = {
     STAGES: [
         { id:0, nom:'Poussin',    emoji:'🐣', heures:24,  depletion:1.6, size:104,  sprite:'assets/sprites/poussin.png', spriteSad:'assets/sprites/poussin_triste.png', hen:'assets/sprites/poule_poussin.png', henName:'Poussinette' },
-        { id:1, nom:'Petit Coq',  emoji:'🐤', heures:48,  depletion:1.4, size:260, sprite:'assets/sprites/petit_coq.png', spriteSad:'assets/sprites/petit_coq_triste.png', hen:'assets/sprites/poule_petite.png',  henName:'Cocotte' },
+        { id:1, nom:'Petit Coq',  emoji:'🐤', heures:48,  depletion:1.4, size:182, sprite:'assets/sprites/petit_coq.png', spriteSad:'assets/sprites/petit_coq_triste.png', hen:'assets/sprites/poule_petite.png',  henName:'Cocotte' },
         { id:2, nom:'Coq Ado',    emoji:'🐔', heures:72,  depletion:1.2, size:156, sprite:'assets/sprites/coq_ado.png', spriteSad:'assets/sprites/coq_ado_triste.png', hen:'assets/sprites/poule_ado.png',     henName:'Poulette' },
-        { id:3, nom:'Coq Adulte', emoji:'🐓', heures:168, depletion:1.0, size:182, sprite:'assets/sprites/coq_adulte.png', spriteSad:'assets/sprites/coq_adulte_triste.png', hen:'assets/sprites/poule_adulte.png',  henName:'Françoise' },
+        { id:3, nom:'Coq Adulte', emoji:'🐓', heures:168, depletion:1.0, size:155, sprite:'assets/sprites/coq_adulte.png', spriteSad:'assets/sprites/coq_adulte_triste.png', hen:'assets/sprites/poule_adulte.png',  henName:'Françoise' },
         { id:4, nom:'Coq Vieux',  emoji:'👴', heures:null,depletion:0.7, size:169, sprite:'assets/sprites/coq_vieux.png', spriteSad:'assets/sprites/coq_vieux_triste.png', hen:'assets/sprites/poule_vieille.png', henName:'Mamie Plume' },
     ],
     FOODS: [
@@ -68,7 +68,7 @@ const Engine = {
     isSad(pet) {
         if(!pet) return false;
         // Show sad sprite when bonheur < 40% OR any critical gauge
-        return pet.bonheur < 40 || pet.faim < 10 || pet.energie < 10 || pet.sante < 10 || (pet.hygiene||50) < 10;
+        return pet.bonheur < 50 || pet.faim < 10 || pet.energie < 10 || pet.sante < 10 || (pet.hygiene||50) < 10;
     },
 
     getSpriteForPet(pet) {
@@ -174,7 +174,7 @@ const Engine = {
     setCooldown(pet,action){pet.cooldowns[action]=Date.now()+(this.COOLDOWNS[action]||120)*1000;},
 
     petClick(pet){pet.coins+=1;pet.experience+=2;pet.actions++;},
-    caress(pet){pet.amour=this.cl(pet.amour+8);pet.bonheur=this.cl(pet.bonheur+3);pet.experience+=3;pet.actions++;},
+    caress(pet){pet.amour=this.cl(pet.amour+1);pet.experience+=3;pet.actions++;},
 
     feed(pet,foodId){
         var c=this.canDo(pet,'nourrir');if(!c.ok)return c;

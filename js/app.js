@@ -188,8 +188,9 @@ var App={
     doToilet:function(){
         if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.toilet(this.pet);Renderer.toast(r.msg);
-        if(r.ok){var oldHyg2=this.pet.hygiene||50;Renderer.showBigBroom();Storage.save(this.pet);
-        var self=this;setTimeout(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg2,self.pet.hygiene,'#e8a020');Renderer.update(self.pet);},10000);}
+        if(r.ok){var oldHyg2=this.pet.hygiene||50;var self=this;
+        Renderer.showBigBroom(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg2,self.pet.hygiene,'#e8a020');Renderer.update(self.pet);});
+        Storage.save(this.pet);}
         Renderer.update(this.pet);
     },
 
