@@ -322,8 +322,43 @@ var Renderer={
         var s=this;setTimeout(function(){b.classList.add('hidden');},3000);
     },
     showSleepZ:function(){var z=document.createElement('div');z.className='zzz';z.textContent='Z';z.style.left=(this.currentPetX+5)+'%';z.style.top='35%';this.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);},
-    showHeartAt:function(x,y){var h=document.createElement('div');h.className='touch-heart';h.textContent='💕';h.style.left=x+'px';h.style.top=y+'px';h.style.fontSize='48px';document.body.appendChild(h);setTimeout(function(){h.remove();},1000);},
-    showCoinAt:function(x,y){var c=document.createElement('div');c.className='coin-float';c.textContent='+1 🪙';c.style.left=x+'px';c.style.top=y+'px';document.body.appendChild(c);setTimeout(function(){c.remove();},1200);},
+    showHeartAt:function(x,y){
+        // Flood screen with hearts on caress
+        for(var i=0;i<8;i++){
+            (function(idx){
+                setTimeout(function(){
+                    var h=document.createElement('div');h.className='caress-heart';
+                    h.textContent=['💕','❤️','💗','💖','💝'][Math.floor(Math.random()*5)];
+                    h.style.left=(10+Math.random()*80)+'vw';
+                    h.style.top=(20+Math.random()*60)+'vh';
+                    h.style.setProperty('--rot',(Math.random()*40-20)+'deg');
+                    h.style.fontSize=(28+Math.random()*30)+'px';
+                    document.body.appendChild(h);setTimeout(function(){h.remove();},1500);
+                },idx*80);
+            })(i);
+        }
+        // "+1% amour" label
+        var lbl=document.createElement('div');lbl.className='amour-label';lbl.textContent='+1% 💕';
+        lbl.style.left='50%';lbl.style.top='35%';
+        document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1800);
+    },
+    showCoinAt:function(x,y){
+        // Multiple coins fly up from pet position
+        for(var i=0;i<3;i++){
+            (function(idx){
+                setTimeout(function(){
+                    var c=document.createElement('div');c.className='coin-burst';
+                    c.textContent='🪙';
+                    c.style.left=x+'px';c.style.top=y+'px';
+                    c.style.setProperty('--dx',(Math.random()*60-30)+'px');
+                    document.body.appendChild(c);setTimeout(function(){c.remove();},1000);
+                },idx*100);
+            })(i);
+        }
+        var lbl=document.createElement('div');lbl.className='coin-label';lbl.textContent='+1';
+        lbl.style.left=x+'px';lbl.style.top=(y-20)+'px';
+        document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1200);
+    },
     showFloatingItem:function(e,x,y){var d=document.createElement('div');d.className='float-item';d.textContent=e;d.style.left=(x||50)+'%';d.style.top=(y||60)+'%';this.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},1500);},
     showEvolution:function(o,n){document.getElementById('evo-old').textContent=o.emoji;document.getElementById('evo-new').textContent=n.emoji;document.getElementById('evo-desc').textContent=n.nom;document.getElementById('evolution-screen').classList.remove('hidden');},
     hideEvolution:function(){document.getElementById('evolution-screen').classList.add('hidden');},

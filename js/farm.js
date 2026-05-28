@@ -177,6 +177,12 @@ var Farm = {
         if(cb){cb.style.width=farm.cleanLevel+'%';cb.style.background=farm.cleanLevel>40?'#2ecc71':farm.cleanLevel>15?'#f39c12':'#e74c3c';}
         var info=document.getElementById('farm-info');
         if(info) info.innerHTML='<span>🐔 '+farm.hens+'/'+this.MAX_HENS+'</span><span>🥚 '+farm.totalEggs+'</span><span>🪙 '+pet.coins+'</span>';
+        // Gray out controls when no hens
+        var noHens=farm.hens<=0;
+        var rows=['farm-feed-row','farm-clean-row','farm-bonheur-row'];
+        for(var ri=0;ri<rows.length;ri++){var row=document.getElementById(rows[ri]);if(row)row.style.opacity=noHens?'.35':'1';}
+        var feedBtn=document.getElementById('btn-farm-feed');if(feedBtn)feedBtn.disabled=noHens;
+        var cleanBtn=document.getElementById('btn-farm-clean');if(cleanBtn)cleanBtn.disabled=noHens;
     },
 
     showDeathNotice:function(count){

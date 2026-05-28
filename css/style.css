@@ -345,3 +345,19 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .farm-bon-label{font-size:11px;font-weight:700;white-space:nowrap;color:var(--dim)}
 .farm-bon-track{flex:1;height:9px}
 .farm-bon-pct{font-size:10px;font-weight:700;color:var(--accent);min-width:28px;text-align:right}
+
+/* ═══ COIN BURST on tap ═══ */
+.coin-burst{position:fixed;font-size:22px;pointer-events:none;z-index:200;animation:coinBurst 1s ease-out forwards}
+@keyframes coinBurst{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx,0),-80px) scale(.5)}}
+.coin-label{position:fixed;font-size:22px;font-weight:900;color:#f0c040;pointer-events:none;z-index:200;animation:coinLabel 1.2s ease-out forwards;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+@keyframes coinLabel{0%{opacity:1;transform:translateY(0) scale(1)}50%{opacity:1;transform:translateY(-30px) scale(1.2)}100%{opacity:0;transform:translateY(-60px) scale(.8)}}
+
+/* ═══ CARESS HEARTS flood screen ═══ */
+.caress-heart{position:fixed;pointer-events:none;z-index:200;animation:caressHeart 1.5s ease-out forwards}
+@keyframes caressHeart{0%{opacity:0;transform:rotate(var(--rot,0)) scale(0)}20%{opacity:1;transform:rotate(var(--rot,0)) scale(1.2)}80%{opacity:.8;transform:rotate(var(--rot,0)) translateY(-30px) scale(1)}100%{opacity:0;transform:rotate(var(--rot,0)) translateY(-70px) scale(.6)}}
+.amour-label{position:fixed;left:50%;top:35%;transform:translateX(-50%);font-size:26px;font-weight:900;color:#e84393;pointer-events:none;z-index:200;animation:amourLabel 1.8s ease-out forwards;text-shadow:0 3px 12px rgba(232,67,147,.5)}
+@keyframes amourLabel{0%{opacity:0;transform:translateX(-50%) scale(.5)}30%{opacity:1;transform:translateX(-50%) scale(1.15)}80%{opacity:1;transform:translateX(-50%) scale(1) translateY(-20px)}100%{opacity:0;transform:translateX(-50%) scale(.9) translateY(-50px)}}
+
+/* ═══ FARM GRAYOUT ═══ */
+#farm-feed-row,#farm-clean-row{transition:opacity .3s}
+.farm-gauge-btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
