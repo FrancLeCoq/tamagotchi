@@ -52,6 +52,8 @@ var Farm = {
         var farm=this.ensureData(pet);
         if(farm.hens<=0) return {ok:false,msg:'Pas de poules !'};
         farm.cleanLevel=Math.min(100,farm.cleanLevel+20);pet.coins+=1;
+        // Remove poops proportionally
+        var removed=Math.floor((farm.farmPoops||0)*0.2);farm.farmPoops=Math.max(0,(farm.farmPoops||0)-removed-1);
         return {ok:true,msg:'🧹 Enclos nettoyé !'};
     },
 
@@ -145,11 +147,19 @@ var Farm = {
         if(!this.isOpen||!this.canvas||!this.ctx) return;
         // Travail gauge ticks while in enclos
         if(typeof App!=='undefined'&&App.pet){App.pet.travail=Math.min(100,(App.pet.travail||0)+0.005);}
+        // Poop generation: 2 per 10% decay in cleanLevel
+        var farm=this.ensureData(typeof App!=='undefined'?App.pet:{});
+        if(farm&&farm.hens>0){
+            var poopTarget=Math.floor((100-farm.cleanLevel)/10)*2;
+            farm.farmPoops=farm.farmPoops||0;
+            if(farm.farmPoops<poopTarget&&Math.random()<0.005)farm.farmPoops=Math.min(poopTarget,farm.farmPoops+1);
+        }
         var isDay=Weather.getBri()>0.5;
         this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
         if(!isDay){this.ctx.fillStyle='rgba(10,10,40,0.35)';this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);}
         this.updateHens();
         this.drawHens();
+        this.drawFarmPoops();
         var self=this;
         this.animFrame=requestAnimationFrame(function(){self.animate();});
     },
@@ -158,6 +168,11 @@ var Farm = {
         var farm=this.ensureData(pet);
         var fb=document.getElementById('farm-feed-bar');
         var cb=document.getElementById('farm-clean-bar');
+        var farmBon=Math.round(((farm.feedLevel||0)+(farm.cleanLevel||0))/2);
+        var fbonBar=document.getElementById('farm-bonheur-bar');
+        var fbonPct=document.getElementById('farm-bonheur-pct');
+        if(fbonBar){fbonBar.style.width=farmBon+'%';fbonBar.style.background=farmBon>60?'#44cc66':farmBon>30?'#e8a020':'#e74c3c';}
+        if(fbonPct)fbonPct.textContent=farmBon+'%';
         if(fb){fb.style.width=farm.feedLevel+'%';fb.style.background=farm.feedLevel>40?'#2ecc71':farm.feedLevel>15?'#f39c12':'#e74c3c';}
         if(cb){cb.style.width=farm.cleanLevel+'%';cb.style.background=farm.cleanLevel>40?'#2ecc71':farm.cleanLevel>15?'#f39c12':'#e74c3c';}
         var info=document.getElementById('farm-info');
@@ -225,4 +240,22 @@ var Farm = {
         setTimeout(function(){clearInterval(iv);broom.remove();},10000);
     },
 
+    drawFarmPoops:function(){
+        if(!this.ctx||!this.canvas)return;
+        var farm=this.ensureData(typeof App!=='undefined'?App.pet:{});
+        if(!farm)return;
+        var count=farm.farmPoops||0;
+        if(count<=0)return;
+        // Draw poops spread across bottom of canvas
+        var ctx=this.ctx;
+        ctx.font=(this.canvas.width*0.05)+'px serif';
+        ctx.textAlign='center';
+        for(var i=0;i<count;i++){
+            // Stable positions based on index
+            var x=((i*0.17+0.1)%0.9)*this.canvas.width;
+            var y=this.canvas.height*0.78+((i%3)*this.canvas.height*0.05);
+            ctx.fillText('💩',x,y);
+        }
+        ctx.textAlign='left';
+    }
 };

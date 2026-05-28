@@ -66,7 +66,8 @@ const Engine = {
     // Check if pet should show sad sprite
     isSad(pet) {
         if(!pet) return false;
-        return pet.faim < 10 || pet.bonheur < 10 || pet.energie < 10 || pet.sante < 10 || (pet.hygiene||50) < 10 || (pet.amour||30) < 10;
+        // Show sad sprite when bonheur < 40% OR any critical gauge
+        return pet.bonheur < 40 || pet.faim < 10 || pet.energie < 10 || pet.sante < 10 || (pet.hygiene||50) < 10;
     },
 
     getSpriteForPet(pet) {

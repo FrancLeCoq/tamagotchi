@@ -2,8 +2,6 @@ var Renderer={
     els:{},walkDir:1,walkTarget:50,currentPetX:50,
     _lastMood:null,_lastSprite:'',_lastStade:-1,_curAnim:'idle',_curFlip:false,
     _actionLock:false,
-    // Spritesheet config for poussin walking
-    _sheet:{active:false,el:null,frame:0,total:16,cols:4,rows:4,iv:null},
 
     ANIMS:{
         idle:'spriteIdle 2.5s ease-in-out infinite',
@@ -29,14 +27,9 @@ var Renderer={
         this._curAnim=name;
         var s=this.els.petSprite;if(!s)return;
         s.style.animation=this.ANIMS[name]||this.ANIMS.idle;
-        // Start/stop spritesheet for walking
-        if(name==='walking')this._startSheet();
-        else this._stopSheet();
     },
     _forceAnim:function(name){
         this._curAnim=name;
-        if(name==='walking')this._startSheet();
-        else this._stopSheet();
         var s=this.els.petSprite;if(!s)return;
         s.style.animation='none';var self=this;
         requestAnimationFrame(function(){s.style.animation=self.ANIMS[name]||self.ANIMS.idle;});
@@ -46,40 +39,6 @@ var Renderer={
         this.els.petWrapper.style.transform='translateX(-50%)'+(f?' scaleX(-1)':'');
     },
 
-    // ═══ SPRITESHEET for poussin walking ═══
-    _startSheet:function(){
-        if(this._sheet.active)return;
-        var sprite=this.els.petSprite;
-        // Only activate for poussin stage
-        if(!sprite||this._lastStade!==0)return;
-        this._sheet.active=true;
-        sprite.style.objectFit='none';
-        sprite.style.objectPosition='0 0';
-        sprite.src='assets/sprites/poussin_sheet.png';
-        var self=this;var frame=0;
-        this._sheet.iv=setInterval(function(){
-            frame=(frame+1)%self._sheet.total;
-            var col=frame%self._sheet.cols,row=Math.floor(frame/self._sheet.cols);
-            var fw=256,fh=256;
-            var size=parseInt(self.els.pet.style.width)||104;
-            // Scale: spritesheet frame is 256px, display is `size`px
-            var scale=size/fw;
-            sprite.style.width=(fw*self._sheet.cols*scale)+'px';
-            sprite.style.height=(fh*self._sheet.rows*scale)+'px';
-            sprite.style.objectPosition=(-col*fw*scale)+'px '+(-row*fh*scale)+'px';
-        },120);
-    },
-    _stopSheet:function(){
-        if(!this._sheet.active)return;
-        this._sheet.active=false;clearInterval(this._sheet.iv);
-        var sprite=this.els.petSprite;
-        if(!sprite)return;
-        // Restore normal image
-        sprite.style.objectFit='contain';
-        sprite.style.objectPosition='';
-        sprite.style.width='100%';sprite.style.height='100%';
-        sprite.src=this._lastSprite||'assets/sprites/poussin.png';
-    },
 
     update:function(pet){if(!pet)return;this.updateHUD(pet);this.updateStats(pet);this.updatePetSprite(pet);this.updatePoops(pet);this.updateSleepState(pet);this.updateMoodEmoji(pet);this.updateSleepButton(pet);},
 
@@ -103,7 +62,8 @@ var Renderer={
         pet.bonheur=Math.max(0,Math.min(100,avg));
 
         var bonBar=document.getElementById('stat-bonheur-main');
-        if(bonBar){bonBar.style.width=pet.bonheur+'%';bonBar.style.background=this._gc(pet.bonheur);}
+        if(bonBar){bonBar.style.width=pet.bonheur+'%';bonBar.style.background=this._gc(pet.bonheur);
+            bonBar.classList.toggle('blink-danger',pet.bonheur<20);}
         var bonPct=document.getElementById('pct-bonheur-main');
         if(bonPct)bonPct.textContent=Math.round(pet.bonheur)+'%';
 
@@ -111,7 +71,9 @@ var Renderer={
         var stats=[['faim',pet.faim],['jeu',pet.jeu||0],['energie',pet.energie],['sante',pet.sante],['hygiene',pet.hygiene||50],['amour',pet.amour||30]];
         for(var i=0;i<stats.length;i++){
             var n=stats[i][0],v=Math.max(0,Math.min(100,stats[i][1]));
-            var bar=document.getElementById('stat-'+n);if(bar){bar.style.width=v+'%';bar.style.background=this._gc(v);}
+            var bar=document.getElementById('stat-'+n);
+            if(bar){bar.style.width=v+'%';bar.style.background=this._gc(v);
+                bar.classList.toggle('blink-danger',v<20);}
             var txt=document.getElementById('pct-'+n);if(txt)txt.textContent=Math.round(v)+'%';
         }
         this._showHints(pet);
@@ -132,7 +94,7 @@ var Renderer={
 
     updatePetSprite:function(pet){
         var sprite=Engine.getSpriteForPet(pet);
-        if(this._lastSprite!==sprite&&!this._sheet.active){this._lastSprite=sprite;this.els.petSprite.src=sprite;}
+        if(this._lastSprite!==sprite){this._lastSprite=sprite;this.els.petSprite.src=sprite;}
         var stage=Engine.STAGES[pet.stade];
         if(this._lastStade!==pet.stade){this._lastStade=pet.stade;this.els.pet.style.width=stage.size+'px';this.els.pet.style.height=stage.size+'px';}
         if(!this._actionLock&&this._curAnim!=='walking'){
@@ -173,7 +135,7 @@ var Renderer={
     },
 
     tickMovement:function(pet){
-        if(!pet||pet.isSleeping||pet.estMort||this._actionLock)return;
+        if(!pet||pet.isSleeping||pet.estMort||this._actionLock||this._calinLock)return;
         if(Math.random()<.02)this.walkTarget=15+Math.random()*70;
         var dx=this.walkTarget-this.currentPetX;
         if(Math.abs(dx)>2){
@@ -187,17 +149,38 @@ var Renderer={
         this._applyFlip(this.walkDir<0);
     },
 
-    // ═══ COUNTDOWN with label in top bar ═══
-    _countdown:function(label,seconds,onEnd){
+    // ═══ COUNTDOWN — styled with label + timer ═══
+    _countdown:function(label,seconds,color,onEnd){
+        if(typeof color==='function'){onEnd=color;color='#44cc66';}
         var cd=document.createElement('div');cd.className='countdown-display';
-        cd.innerHTML='<span class="cd-label">'+label+'</span> <span class="cd-num">'+seconds+'s</span>';
+        cd.innerHTML='<div class="cd-label" style="color:'+color+'">'+label+'</div><div class="cd-ring"><svg viewBox="0 0 40 40"><circle class="cd-track" cx="20" cy="20" r="16"/><circle class="cd-fill" cx="20" cy="20" r="16" id="cd-arc-'+Date.now()+'"/></svg><span class="cd-num">'+seconds+'</span></div>';
         this.els.scene.appendChild(cd);
-        var remaining=seconds;
+        var remaining=seconds;var total=seconds;
+        var arc=cd.querySelector('.cd-fill');var circ=100.5;
+        if(arc){arc.style.stroke=color;arc.style.strokeDasharray=circ;arc.style.strokeDashoffset=0;}
         var iv=setInterval(function(){remaining--;
-            var span=cd.querySelector('.cd-num');if(span)span.textContent=remaining+'s';
+            var numEl=cd.querySelector('.cd-num');if(numEl)numEl.textContent=remaining;
+            if(arc)arc.style.strokeDashoffset=(circ*(1-remaining/total));
             if(remaining<=0){clearInterval(iv);cd.remove();if(onEnd)onEnd();}
         },1000);
         return{el:cd,interval:iv};
+    },
+
+    // ═══ GAUGE ANIMATION — animated bar rising +20% ═══
+    animateGauge:function(statName,label,fromPct,toPct,color){
+        var bar=document.getElementById('stat-'+statName);
+        var txt=document.getElementById('pct-'+statName);
+        if(!bar)return;
+        // Create floating result popup
+        var popup=document.createElement('div');popup.className='gauge-popup';
+        popup.innerHTML='<span class="gp-label">'+label+'</span><div class="gp-bar-wrap"><div class="gp-bar-bg"><div class="gp-bar-fill" style="width:'+fromPct+'%;background:'+(color||'#44cc66')+'"></div></div><span class="gp-delta">+20%</span></div>';
+        if(this.els.scene)this.els.scene.appendChild(popup);
+        // Animate bar
+        setTimeout(function(){var fill=popup.querySelector('.gp-bar-fill');if(fill)fill.style.width=toPct+'%';},100);
+        // Also animate the real gauge bar
+        if(bar){bar.style.transition='width 1.5s ease';bar.style.width=toPct+'%';}
+        if(txt)txt.textContent=Math.round(toPct)+'%';
+        setTimeout(function(){popup.remove();},3500);
     },
 
     // ═══ GAUGE RESULT ═══
@@ -303,21 +286,31 @@ var Renderer={
         var timer=this._countdown('🚨 Soin en cours',20,function(){clearInterval(loop);self._actionLock=false;});
     },
 
-    // ═══ CALINER — hen static on left ═══
+    // ═══ CALINER — hen static left, pet locked in place ═══
     showHenVisit:function(henSprite,petSize){
         var w=document.getElementById('hen-wrapper'),img=document.getElementById('hen-sprite');
         img.src=henSprite;img.style.width=(petSize||120)+'px';img.style.height=(petSize||120)+'px';
-        w.style.left='2%';w.style.bottom='10%';w.style.position='absolute';
+        // Hen static at left edge
+        w.style.left='3%';w.style.bottom='10%';w.style.position='absolute';
+        w.style.transition='none';
         w.classList.remove('hidden');
+        // Lock pet movement — keep it at current X or push right if too close to hen
         var self=this;
+        var safePetX=Math.max(30,this.currentPetX); // stay right of hen
+        this.currentPetX=safePetX;
+        this.walkTarget=safePetX;
+        this.els.petWrapper.style.left=safePetX+'%';
+        this._calinLock=true;
         var heartLoop=setInterval(function(){
             var hrt=document.createElement('div');hrt.className='float-item';
             hrt.textContent=['💕','❤️','💗','💖'][Math.floor(Math.random()*4)];
-            hrt.style.left=(8+Math.random()*25)+'%';hrt.style.top=(30+Math.random()*30)+'%';
+            // Hearts between hen (left) and pet (right)
+            var hx=5+Math.random()*22;
+            hrt.style.left=hx+'%';hrt.style.top=(28+Math.random()*28)+'%';
             hrt.style.fontSize='48px';
             self.els.sceneItems.appendChild(hrt);setTimeout(function(){hrt.remove();},1500);
         },800);
-        setTimeout(function(){clearInterval(heartLoop);w.classList.add('hidden');},60000);
+        setTimeout(function(){clearInterval(heartLoop);w.classList.add('hidden');self._calinLock=false;},60000);
     },
 
     petHappyAnimation:function(){this._forceAnim('happy');var s=this;setTimeout(function(){s._forceAnim('idle');},1200);},

@@ -135,13 +135,14 @@ var App={
     openFood:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var c=Engine.canDo(this.pet,'nourrir');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('food-grid').innerHTML=Renderer.renderFoodGrid();document.getElementById('food-screen').classList.remove('hidden');},
     doFeed:function(id){
         var f=Engine.FOODS.find(function(x){return x.id===id;});
+        var oldFaim=this.pet?this.pet.faim:50;
         var r=Engine.feed(this.pet,id);
         document.getElementById('food-screen').classList.add('hidden');
         if(r.ok){
             Renderer.petEatAnimation(f?f.emoji:'🌾',f?f.emoji:'🌾');
             Storage.save(this.pet);
             var self=this;
-            setTimeout(function(){Renderer.showGaugeResult('Faim',self.pet.faim);Renderer.update(self.pet);},10000);
+            setTimeout(function(){Renderer.animateGauge('faim','Faim',oldFaim,self.pet.faim,'#44cc66');Renderer.update(self.pet);},10000);
         }else Renderer.toast(r.msg);
     },
 
@@ -187,8 +188,8 @@ var App={
     doToilet:function(){
         if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.toilet(this.pet);Renderer.toast(r.msg);
-        if(r.ok){Renderer.showBigBroom();Storage.save(this.pet);
-        var self=this;setTimeout(function(){Renderer.showGaugeResult('Hygiène',self.pet.hygiene);Renderer.update(self.pet);},10000);}
+        if(r.ok){var oldHyg2=this.pet.hygiene||50;Renderer.showBigBroom();Storage.save(this.pet);
+        var self=this;setTimeout(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg2,self.pet.hygiene,'#e8a020');Renderer.update(self.pet);},10000);}
         Renderer.update(this.pet);
     },
 
@@ -197,8 +198,8 @@ var App={
         if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
         document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.shower(this.pet);Renderer.toast(r.msg);
-        if(r.ok){Renderer.showHeavyShower();Storage.save(this.pet);
-        var self=this;setTimeout(function(){Renderer.showGaugeResult('Hygiène',self.pet.hygiene);Renderer.update(self.pet);},10000);}
+        if(r.ok){var oldHyg=this.pet.hygiene||50;Renderer.showHeavyShower();Storage.save(this.pet);
+        var self=this;setTimeout(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg,self.pet.hygiene,'#3498db');Renderer.update(self.pet);},30000);}
     },
 
     // ═══ CALINER — 1 min, amour ticks +5 every 10s ═══
