@@ -371,8 +371,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* ═══ CELESTIAL ELEMENTS — above everything (z-index:4) ═══ */
 .layer-clouds{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
 .layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
-.cel-sun{position:absolute;width:72px;height:72px;background:url('../assets/weather/soleil.png') center/contain no-repeat;transition:left .3s,top .3s,opacity 1s;opacity:0}
-.cel-moon{position:absolute;width:60px;height:60px;background:url('../assets/weather/lune.png') center/contain no-repeat;transition:left .3s,top .3s,opacity 1s;opacity:0}
+.cel-sun{position:absolute;width:72px;height:72px;transition:left .3s,top .3s,opacity 1s;opacity:0}
+.cel-sun img{width:100%;height:100%;object-fit:contain;display:block}
+.cel-moon{position:absolute;width:60px;height:60px;transition:left .3s,top .3s,opacity 1s;opacity:0}
+.cel-moon img{width:100%;height:100%;object-fit:contain;display:block}
 
 .cloud-el{position:absolute;pointer-events:none;border-radius:50px;opacity:.88;filter:blur(0px);transition:none;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 
@@ -413,9 +415,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .farm-sun{position:absolute;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,#FFF8A0 0%,#FFD700 45%,rgba(255,165,0,0) 100%);box-shadow:0 0 20px rgba(255,200,50,.7);transition:left .5s,opacity 1s;opacity:0}
 .farm-moon{position:absolute;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#F0F0F8,#C8C8DC);box-shadow:0 0 14px rgba(180,200,255,.6);transition:left .5s,opacity 1s;opacity:0}
 .farm-cloud{position:absolute;background-size:contain;background-repeat:no-repeat}
-.farm-cloud1{width:64px;height:26px;top:10px;left:30%;background-image:url('../assets/weather/nuage1.png');animation:farmCloudDrift 25s linear infinite}
-.farm-cloud2{width:54px;height:22px;top:28px;left:60%;background-image:url('../assets/weather/nuage2.png');animation:farmCloudDrift 32s linear infinite}
-.farm-cloud3{width:58px;height:24px;top:16px;left:80%;background-image:url('../assets/weather/nuage1.png');animation:farmCloudDrift 28s linear infinite}
+.farm-cloud{background:rgba(245,248,255,.82);border-radius:20px;filter:blur(.5px)}
+.farm-cloud1{width:50px;height:18px;top:10px;left:30%;animation:farmCloudDrift 25s linear infinite}
+.farm-cloud2{width:44px;height:16px;top:28px;left:60%;animation:farmCloudDrift 32s linear infinite}
+.farm-cloud3{width:48px;height:18px;top:16px;left:80%;animation:farmCloudDrift 28s linear infinite}
 .farm-scene.raining .farm-cloud{filter:brightness(0.55) saturate(0.7)}
 @keyframes farmCloudDrift{0%{transform:translateX(-120px)}100%{transform:translateX(120vw)}}
 

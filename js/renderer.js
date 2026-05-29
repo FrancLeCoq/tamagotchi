@@ -118,8 +118,19 @@ var Renderer={
         else{btn.classList.remove('sleep-active');if(ic)ic.textContent='💤';if(lb)lb.textContent='Dormir';}
     },
     updateMoodEmoji:function(pet){
-        // Mood emoji disabled — speech bubbles convey mood instead
-        var el=this.els.moodEmoji;if(el)el.classList.add('hidden');
+        var el=this.els.moodEmoji;if(!el)return;
+        var key='',emoji='';
+        if(pet.isSleeping){key='sleep';emoji='';}
+        else if((pet.poops||0)>=2){key='poop';emoji='🤢';}
+        else if((pet.hygiene||50)<30){key='dirty';emoji='🪥';}
+        else if((pet.amour||30)<30){key='lonely';emoji='💔';}
+        else if((pet.faim||50)<30){key='hungry';emoji='😫';}
+        else if((pet.energie||50)<30){key='tired';emoji='😴';}
+        else if((pet.sante||50)<30){key='sick';emoji='🤒';}
+        else{key='ok';}
+        if(key===this._lastMood)return;this._lastMood=key;
+        if(!emoji){el.classList.add('hidden');return;}
+        el.textContent=emoji;el.style.left='58%';el.style.bottom='48%';el.classList.remove('hidden');
     },
     updatePoops:function(pet){
         var c=this.els.poopContainer;if(!c)return;
@@ -188,14 +199,14 @@ var Renderer={
 
     // ═══ NOURRIR — big food pulsing + flies to beak ═══
     // ═══ Fly a small item from origin to pet, fade to 0 on arrival ═══
-    _flyItemToPet:function(emoji,rotate){
+    _flyItemToPet:function(emoji,rotate,startBottomPct){
         var scene=this.els.scene;if(!scene)return;
         var pw=this.els.petWrapper;if(!pw)return;
         var sRect=scene.getBoundingClientRect();
         var pRect=pw.getBoundingClientRect();
-        // Origin: 55% width, 55% from bottom (= 45% from top)
+        var sb=(startBottomPct!==undefined)?startBottomPct:55;
         var startX=sRect.width*0.55;
-        var startY=sRect.height*0.45;
+        var startY=sRect.height*(1-sb/100);
         // Target: center of pet
         var targetX=(pRect.left-sRect.left)+pRect.width/2;
         var targetY=(pRect.top-sRect.top)+pRect.height*0.4;
@@ -291,9 +302,9 @@ var Renderer={
     showBigSyringe:function(onEnd){
         this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('sick');
         var big=document.createElement('div');big.className='big-food-anim';big.textContent='💉';
-        big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
+        big.style.bottom='50%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
         this.els.scene.appendChild(big);
-        var loop=setInterval(function(){self._flyItemToPet('💉',true);},1500);
+        var loop=setInterval(function(){self._flyItemToPet('💉',true,50);},1500);
         var timer=this._countdown('🚨 Soin en cours',20,'#e74c3c',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
@@ -327,8 +338,9 @@ var Renderer={
     },
 
     // ═══ DORMIR — 10s with Zzz, gauge at end ═══
-    showSleepAnimation:function(onEnd){
+    showSleepAnimation:function(onEnd,seconds){
         this._resetLocks();var self=this;this._actionLock=true;
+        seconds=seconds||10;
         this._forceAnim('sleeping');
         var zzzLoop=setInterval(function(){
             var z=document.createElement('div');z.className='zzz';z.textContent='Z';
@@ -336,7 +348,7 @@ var Renderer={
             z.style.fontSize=(20+Math.random()*16)+'px';
             self.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);
         },800);
-        var timer=this._countdown('💤 Francis dort',10,'#9b59b6',function(){
+        var timer=this._countdown('💤 Francis dort',seconds,'#9b59b6',function(){
             clearInterval(zzzLoop);self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },

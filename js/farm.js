@@ -225,7 +225,7 @@ var Farm = {
         var self=this;
         // Big corn at center (40% from bottom), pulsing
         var big=document.createElement('div');
-        big.style.cssText='position:absolute;bottom:40%;left:50%;transform:translateX(-50%);font-size:72px;z-index:12;pointer-events:none;animation:farmFoodPulse 1s ease-in-out infinite';
+        big.style.cssText='position:absolute;bottom:55%;left:50%;transform:translateX(-50%);font-size:72px;z-index:12;pointer-events:none;animation:farmFoodPulse 1s ease-in-out infinite';
         big.textContent='🌽';
         scene.appendChild(big);
         var count=0,maxCount=18;
@@ -239,7 +239,7 @@ var Farm = {
                 tx=h.x;ty=h.y;
             }else{tx=self.canvas?self.canvas.width*(0.3+Math.random()*0.6):200;ty=self.canvas?self.canvas.height*(0.5+Math.random()*0.3):200;}
             var item=document.createElement('div');
-            var startX=self.canvas?self.canvas.width/2:200,startY=self.canvas?self.canvas.height*0.6:150;
+            var startX=self.canvas?self.canvas.width/2:200,startY=self.canvas?self.canvas.height*0.45:150;
             var dx=tx-startX,dy=ty-startY;
             item.style.cssText='position:absolute;font-size:28px;z-index:11;pointer-events:none;left:'+startX+'px;top:'+startY+'px';
             item.textContent='🌽';

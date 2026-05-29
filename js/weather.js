@@ -44,6 +44,16 @@ var Weather={
     },
 
     getHour:function(){return(this.startHour+(Date.now()-this.startTime)/this.HOUR_MS)%24;},
+    jumpHours:function(h){
+        this.startHour=(this.startHour+h)%24;
+        this._applySky();this._moveCelestial();this.updateBuilding();this.updateClock();
+    },
+    setHour:function(targetHour){
+        // Set clock to exact game hour (accounts for elapsed time)
+        var elapsedHours=(Date.now()-this.startTime)/this.HOUR_MS;
+        this.startHour=((targetHour-elapsedHours)%24+24)%24;
+        this._applySky();this._moveCelestial();this.updateBuilding();this.updateClock();
+    },
     getBri:function(){var h=this.getHour();if(h>=8&&h<18)return 1;if(h>=22||h<4)return 0;if(h>=4&&h<8)return(h-4)/4;if(h>=18&&h<22)return 1-(h-18)/4;return .5;},
     getSkyBrightness:function(){return this.getBri();},
 
@@ -103,8 +113,7 @@ var Weather={
             el.className='cloud-el';
             var w=90+Math.random()*110;
             var h=w*0.38;
-            var cloudImg=(i%2===0)?'nuage1.png':'nuage2.png';
-            el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*45)+'px;left:'+(Math.random()*sw)+'px;background:url(\'assets/weather/'+cloudImg+'\') center/contain no-repeat;opacity:'+(0.7+Math.random()*0.25)+';';
+            el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*45)+'px;left:'+(Math.random()*sw)+'px;background:rgba(245,248,255,'+(0.75+Math.random()*0.2)+');border-radius:'+h+'px;box-shadow:'+(w*0.2)+'px 0 0 -'+(h*0.12)+'px rgba(245,248,255,.85),'+(-w*0.2)+'px 2px 0 -'+(h*0.15)+'px rgba(245,248,255,.8);filter:blur(.5px);';
             container.appendChild(el);
             this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.12+Math.random()*0.35,w:w,baseOp:el.style.opacity||'0.85'});
         }
@@ -151,8 +160,7 @@ var Weather={
         var container=document.getElementById('layer-clouds');if(!container)return;
         var el=document.createElement('div');el.className='cloud-el';
         var w=110+Math.random()*90,h=w*0.4;
-        var img=Math.random()>.5?'nuage1.png':'nuage2.png';
-        el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*40)+'px;left:'+(Math.random()*sw)+'px;background:url(\'assets/weather/'+img+'\') center/contain no-repeat;filter:brightness(0.55) saturate(0.7);opacity:0.95;';
+        el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*40)+'px;left:'+(Math.random()*sw)+'px;background:rgba(120,128,140,.85);border-radius:'+h+'px;filter:blur(.5px);opacity:0.95;';
         container.appendChild(el);
         this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.18+Math.random()*0.4,w:w,baseOp:'0.85'});
     },

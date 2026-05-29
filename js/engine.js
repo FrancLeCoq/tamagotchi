@@ -41,11 +41,18 @@ const Engine = {
         'FRANCD': function(p){ p.stade=3; p.derniereEvolution=Date.now(); return '🐓 Coq Adulte !' },
         'FRANCE': function(p){ p.stade=4; p.derniereEvolution=Date.now(); return '👴 Coq Vieux !' },
         'MORT': function(p){ p.sante=0; p.faim=0; p.bonheur=0; p.estMort=true; p.causeMort='Cheat MORT'; return '💀 La faucheuse arrive...' },
+        'JOUR': function(p){ if(typeof Weather!=='undefined')Weather.setHour(13); return '☀️ Jour (13h) !' },
+        'NUIT': function(p){ if(typeof Weather!=='undefined')Weather.setHour(1); return '🌙 Nuit (1h) !' },
     },
 
     applyCheat(pet, code) {
-        var fn = this.CHEATS[code.toUpperCase().trim()];
-        if(fn && pet) return { ok:true, msg:fn(pet) };
+        var buf=code.toUpperCase().trim();
+        // Match if buffer ENDS WITH any cheat code (handles accumulated keystrokes)
+        for(var key in this.CHEATS){
+            if(buf===key||buf.slice(-key.length)===key){
+                if(pet) return { ok:true, msg:this.CHEATS[key](pet) };
+            }
+        }
         return { ok:false, msg:'Code inconnu' };
     },
 
@@ -107,6 +114,8 @@ const Engine = {
         this.migrate(pet);
         var now=Date.now(), elapsed=(now-pet.derniereUpdate)/3600000;
         if(elapsed<0.005) return pet;
+        // Cap offline decay at 30h max (after that the pet may die)
+        if(elapsed>30) elapsed=30;
         var m=this.STAGES[pet.stade].depletion;
         if(pet.isSleeping){
             pet.energie=this.cl(pet.energie+elapsed*15);

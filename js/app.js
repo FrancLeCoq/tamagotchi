@@ -146,6 +146,7 @@ var App={
     },
     showGame:function(){
         this.requestWakeLock();
+        try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission();}catch(e){}
         var self=this;
         if(!this._audioSyncIv)this._audioSyncIv=setInterval(function(){if(self.soundOn)self.updateAudio();},5000);
         document.getElementById('splash-screen').classList.remove('active');
@@ -276,16 +277,17 @@ var App={
         var wasSleeping=this.pet.isSleeping;
         var r=Engine.sleep(this.pet);Renderer.toast(r.msg);
         Storage.save(this.pet);Renderer.update(this.pet);
-        // If just started sleeping, show countdown + energie gauge at end
+        // Countdown = time for energy to reach 100% (10%/game-hour, 1 game-h=120s)
         if(!wasSleeping&&this.pet.isSleeping){
             var oldEnergie=this.pet.energie||50;var self=this;
+            var gameHoursNeeded=(100-oldEnergie)/10; // 10% per game hour
+            var seconds=Math.max(3,Math.round(gameHoursNeeded*120)); // 1 game-h = 120s real
             Renderer.showSleepAnimation(function(){
-                // Wake up and show gauge
-                self.pet.energie=Math.min(100,oldEnergie+20);
+                self.pet.energie=100;
                 self.pet.isSleeping=false;
-                Renderer.animateGauge('energie','Énergie',oldEnergie,self.pet.energie);
+                Renderer.animateGauge('energie','Énergie',oldEnergie,100);
                 Renderer.update(self.pet);Storage.save(self.pet);
-            });
+            },seconds);
         }
     },
 
@@ -293,30 +295,49 @@ var App={
     doHeal:function(){
         if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
         document.getElementById('care-screen').classList.add('hidden');
-        var r=Engine.heal(this.pet);Renderer.toast(r.msg);
-        if(r.ok){var oldSante=this.pet.sante||50;var self=this;
-        Renderer.showBigSyringe(function(){Renderer.animateGauge('sante','Santé',oldSante,self.pet.sante);Renderer.update(self.pet);});
-        Storage.save(this.pet);}
+        var c=Engine.canDo(this.pet,'soigner');if(!c.ok){Renderer.toast(c.msg);return;}
+        var self=this;
+        Engine.setCooldown(this.pet,'soigner');
+        Renderer.showBigSyringe(function(){
+            var before=self.pet.sante||50;
+            self.pet.sante=Engine.cl(self.pet.sante+20);
+            self.pet.experience+=10;self.pet.coins+=3;
+            Renderer.animateGauge('sante','Santé',before,self.pet.sante);
+            Renderer.update(self.pet);Storage.save(self.pet);
+        });
+        Storage.save(this.pet);
     },
 
     // ═══ TOILETTE — +20%, gauge result ═══
     doToilet:function(){
         if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');
-        var r=Engine.toilet(this.pet);Renderer.toast(r.msg);
-        if(r.ok){var oldHyg2=this.pet.hygiene||50;var self=this;
-        Renderer.showBigBroom(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg2,self.pet.hygiene);Renderer.update(self.pet);});
-        Storage.save(this.pet);}
-        Renderer.update(this.pet);
+        if((this.pet.poops||0)<=0&&(this.pet.pipis||0)<=0){Renderer.toast('Rien à nettoyer !');return;}
+        var self=this;var oldHyg2=this.pet.hygiene||50;
+        Renderer.showBigBroom(function(){
+            self.pet.poops=0;self.pet.pipis=0;
+            self.pet.hygiene=Engine.cl(self.pet.hygiene+20);
+            Renderer.animateGauge('hygiene','Hygiène',oldHyg2,self.pet.hygiene);
+            Renderer.update(self.pet);Storage.save(self.pet);
+        });
+        Storage.save(this.pet);
     },
 
     // ═══ DOUCHE — 10s, +20%, gauge result ═══
     doShower:function(){
         if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
         document.getElementById('care-screen').classList.add('hidden');
-        var r=Engine.shower(this.pet);Renderer.toast(r.msg);
-        if(r.ok){var oldHyg=this.pet.hygiene||50;var self=this;
-        Renderer.showHeavyShower(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg,self.pet.hygiene);Renderer.update(self.pet);});
-        Storage.save(this.pet);}
+        var c=Engine.canDo(this.pet,'douche');if(!c.ok){Renderer.toast(c.msg);return;}
+        var self=this;var oldHyg=this.pet.hygiene||50;
+        Engine.setCooldown(this.pet,'douche');
+        Renderer.showHeavyShower(function(){
+            var before=self.pet.hygiene||50;
+            self.pet.hygiene=Engine.cl(self.pet.hygiene+20);
+            self.pet.bonheur=Engine.cl(self.pet.bonheur+5);
+            self.pet.experience+=10;self.pet.coins+=3;
+            Renderer.animateGauge('hygiene','Hygiène',before,self.pet.hygiene);
+            Renderer.update(self.pet);Storage.save(self.pet);
+        });
+        Storage.save(this.pet);
     },
 
     // ═══ CALINER — 1 min, amour ticks +5 every 10s ═══
