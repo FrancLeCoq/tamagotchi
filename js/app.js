@@ -34,7 +34,11 @@ var App={
         document.getElementById('btn-soigner').addEventListener('click',function(){document.getElementById('care-screen').classList.remove('hidden');});
         document.getElementById('btn-stats').addEventListener('click',function(){self.openStats();});
         document.getElementById('btn-housing').addEventListener('click',function(){self.openHousing();});
-        document.getElementById('btn-sound').addEventListener('click',function(){self.soundOn=!self.soundOn;document.getElementById('sound-icon').textContent=self.soundOn?'🔊':'🔇';});
+        document.getElementById('btn-sound').addEventListener('click',function(){
+            self.soundOn=!self.soundOn;
+            document.getElementById('sound-icon').textContent=self.soundOn?'🔊':'🔇';
+            self.updateAudio();
+        });
         document.getElementById('btn-pause').addEventListener('click',function(){self.paused=!self.paused;document.getElementById('pause-icon').textContent=self.paused?'▶️':'⏸️';Renderer.toast(self.paused?'⏸️':'▶️');});
         document.getElementById('btn-nav-more').addEventListener('click',function(){document.getElementById('more-screen').classList.remove('hidden');});
         document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
@@ -57,7 +61,7 @@ var App={
                 self._cheatBuffer+=k;clearTimeout(self._cheatTimer);
                 self._cheatTimer=setTimeout(function(){self._cheatBuffer='';},2000);
                 var r=Engine.applyCheat(self.pet,self._cheatBuffer);
-                if(r.ok){Renderer.toast(r.msg);Storage.save(self.pet);Renderer.update(self.pet);self._cheatBuffer='';}
+                if(r.ok){Renderer.toast(r.msg);Storage.save(self.pet);Renderer.update(self.pet);self._cheatBuffer='';if(self.pet.estMort)Renderer.showDeath(self.pet);}
             }
         });
 
@@ -80,6 +84,29 @@ var App={
     connectWallet:function(){Engine.connectWallet();var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';Renderer.toast('✅ Wallet connecté !');},
 
     newGame:function(){this.pet=Engine.createPet('Francis');Storage.save(this.pet);this.showGame();Renderer.toast('🥚 Francis est né !');},
+    initAudio:function(){
+        if(this._audioReady)return;
+        this._ambientAudio=new Audio('assets/sounds/ferme.mp3');
+        this._ambientAudio.loop=true;this._ambientAudio.volume=0.35;
+        this._rainAudio=new Audio('assets/sounds/rain.mp3');
+        this._rainAudio.loop=true;this._rainAudio.volume=0.5;
+        this._audioReady=true;
+    },
+    updateAudio:function(){
+        this.initAudio();
+        var self=this;
+        if(this.soundOn){
+            // Ambient farm music always plays
+            this._ambientAudio.play().catch(function(){});
+            // Rain sound only when raining
+            var raining=(typeof Weather!=='undefined'&&Weather._isRaining)?Weather._isRaining():false;
+            if(raining)this._rainAudio.play().catch(function(){});
+            else this._rainAudio.pause();
+        }else{
+            this._ambientAudio.pause();
+            this._rainAudio.pause();
+        }
+    },
     requestWakeLock:function(){
         var self=this;
         if('wakeLock' in navigator){
@@ -98,6 +125,8 @@ var App={
     },
     showGame:function(){
         this.requestWakeLock();
+        var self=this;
+        if(!this._audioSyncIv)this._audioSyncIv=setInterval(function(){if(self.soundOn)self.updateAudio();},5000);
         document.getElementById('splash-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
         Storage.save(this.pet);
@@ -180,7 +209,7 @@ var App={
         if(r.ok){
             var self=this;
             Renderer.petEatAnimation(f?f.emoji:'🌾',function(){
-                Renderer.animateGauge('faim','Faim',oldFaim,self.pet.faim,'#44cc66');Renderer.update(self.pet);
+                Renderer.animateGauge('faim','Faim',oldFaim,self.pet.faim);Renderer.update(self.pet);
             });
             Storage.save(this.pet);
         }else Renderer.toast(r.msg);
@@ -193,15 +222,22 @@ var App={
         var self=this;var oldJeu=this.pet.jeu||0;
         Minigames.startPlay(function(b){
             Engine.play(self.pet,b);Renderer.petHappyAnimation();Storage.save(self.pet);
-            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',oldJeu,self.pet.jeu||0,'#9b59b6');Renderer.update(self.pet);},1500);
+            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',oldJeu,self.pet.jeu||0);Renderer.update(self.pet);},1500);
         });
     },
     doStudy:function(){
         document.getElementById('play-screen').classList.add('hidden');
-        var oldJeu=this.pet.jeu||0;var self=this;
-        Engine.studyAuto(this.pet);
+        var c=Engine.canDo(this.pet,'intellect');if(!c.ok){Renderer.toast(c.msg);return;}
+        var self=this;var oldJeu=this.pet.jeu||0;
+        // Set cooldown now but apply gauge gain at END of countdown
+        Engine.setCooldown(this.pet,'intellect');
         Renderer.showStudyAnimation(function(){
-            Renderer.animateGauge('jeu','Jeu',oldJeu,self.pet.jeu||0,'#4a90d9');Renderer.update(self.pet);
+            var before=self.pet.jeu||0;
+            self.pet.intellect=Engine.cl(self.pet.intellect+20);
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+20);
+            self.pet.experience+=10;self.pet.coins+=2;
+            Renderer.animateGauge('jeu','Jeu',before,self.pet.jeu);
+            Renderer.update(self.pet);Storage.save(self.pet);
         });
         Storage.save(this.pet);
     },
@@ -226,7 +262,7 @@ var App={
                 // Wake up and show gauge
                 self.pet.energie=Math.min(100,oldEnergie+20);
                 self.pet.isSleeping=false;
-                Renderer.animateGauge('energie','Énergie',oldEnergie,self.pet.energie,'#9b59b6');
+                Renderer.animateGauge('energie','Énergie',oldEnergie,self.pet.energie);
                 Renderer.update(self.pet);Storage.save(self.pet);
             });
         }
@@ -238,7 +274,7 @@ var App={
         document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.heal(this.pet);Renderer.toast(r.msg);
         if(r.ok){var oldSante=this.pet.sante||50;var self=this;
-        Renderer.showBigSyringe(function(){Renderer.animateGauge('sante','Santé',oldSante,self.pet.sante,'#e74c3c');Renderer.update(self.pet);});
+        Renderer.showBigSyringe(function(){Renderer.animateGauge('sante','Santé',oldSante,self.pet.sante);Renderer.update(self.pet);});
         Storage.save(this.pet);}
     },
 
@@ -247,7 +283,7 @@ var App={
         if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.toilet(this.pet);Renderer.toast(r.msg);
         if(r.ok){var oldHyg2=this.pet.hygiene||50;var self=this;
-        Renderer.showBigBroom(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg2,self.pet.hygiene,'#e8a020');Renderer.update(self.pet);});
+        Renderer.showBigBroom(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg2,self.pet.hygiene);Renderer.update(self.pet);});
         Storage.save(this.pet);}
         Renderer.update(this.pet);
     },
@@ -258,7 +294,7 @@ var App={
         document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.shower(this.pet);Renderer.toast(r.msg);
         if(r.ok){var oldHyg=this.pet.hygiene||50;var self=this;
-        Renderer.showHeavyShower(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg,self.pet.hygiene,'#3498db');Renderer.update(self.pet);});
+        Renderer.showHeavyShower(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg,self.pet.hygiene);Renderer.update(self.pet);});
         Storage.save(this.pet);}
     },
 
@@ -277,7 +313,7 @@ var App={
             },10000);
             Renderer.showHenVisit(r.henSprite,Engine.STAGES[this.pet.stade].size,function(){
                 clearInterval(self._visitTimer);
-                Renderer.animateGauge('amour','Amour',oldAmour,self.pet.amour||30,'#e84393');
+                Renderer.animateGauge('amour','Amour',oldAmour,self.pet.amour||30);
                 Renderer.update(self.pet);Storage.save(self.pet);
             });
             Storage.save(this.pet);

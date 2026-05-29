@@ -171,15 +171,15 @@ var Renderer={
     animateGauge:function(statName,label,fromPct,toPct,color){
         var bar=document.getElementById('stat-'+statName);
         var txt=document.getElementById('pct-'+statName);
-        if(!bar)return;
-        // Create floating result popup
+        // Color based on final value (correct gauge color) unless explicitly given
+        var gColor=color||this._gc(toPct);
+        var delta=Math.round(toPct-fromPct);
+        var deltaStr=(delta>=0?'+':'')+delta+'%';
         var popup=document.createElement('div');popup.className='gauge-popup';
-        popup.innerHTML='<span class="gp-label">'+label+'</span><div class="gp-bar-wrap"><div class="gp-bar-bg"><div class="gp-bar-fill" style="width:'+fromPct+'%;background:'+(color||'#44cc66')+'"></div></div><span class="gp-delta">+20%</span></div>';
+        popup.innerHTML='<span class="gp-label">'+label+'</span><div class="gp-bar-wrap"><div class="gp-bar-bg"><div class="gp-bar-fill" style="width:'+fromPct+'%;background:'+gColor+'"></div></div><span class="gp-delta">'+deltaStr+'</span></div>';
         if(this.els.scene)this.els.scene.appendChild(popup);
-        // Animate bar
         setTimeout(function(){var fill=popup.querySelector('.gp-bar-fill');if(fill)fill.style.width=toPct+'%';},100);
-        // Also animate the real gauge bar
-        if(bar){bar.style.transition='width 1.5s ease';bar.style.width=toPct+'%';}
+        if(bar){bar.style.transition='width 1.5s ease';bar.style.width=toPct+'%';bar.style.background=gColor;}
         if(txt)txt.textContent=Math.round(toPct)+'%';
         setTimeout(function(){popup.remove();},3500);
     },

@@ -40,6 +40,7 @@ const Engine = {
         'FRANCC': function(p){ p.stade=2; p.derniereEvolution=Date.now(); return '🐔 Coq Ado !' },
         'FRANCD': function(p){ p.stade=3; p.derniereEvolution=Date.now(); return '🐓 Coq Adulte !' },
         'FRANCE': function(p){ p.stade=4; p.derniereEvolution=Date.now(); return '👴 Coq Vieux !' },
+        'MORT': function(p){ p.sante=0; p.faim=0; p.bonheur=0; p.estMort=true; p.causeMort='Cheat MORT'; return '💀 La faucheuse arrive...' },
     },
 
     applyCheat(pet, code) {

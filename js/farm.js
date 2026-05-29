@@ -221,32 +221,38 @@ var Farm = {
     },
 
     showFeedAnimation:function(foodEmoji){
-        if(!this.canvas||!this.hens||!this.hens.length) return;
-        var emoji = foodEmoji || '🌾';
-        var scene = document.getElementById('farm-scene');
-        if(!scene) return;
-        var self = this;
-        var duration = 30000; // 30s
-        var startTime = Date.now();
-        var loop = setInterval(function(){
-            if(!self.isOpen || Date.now()-startTime > duration){clearInterval(loop);return;}
-            // Pick a random hen and send food to it
-            var h = self.hens[Math.floor(Math.random()*self.hens.length)];
-            if(!h) return;
-            var item = document.createElement('div');
-            item.className = 'farm-food-fly'; item.textContent = emoji;
-            // Start from top center of canvas, fly to hen
-            var cRect = self.canvas.getBoundingClientRect();
-            var sRect = scene.getBoundingClientRect();
-            var startX = ((cRect.left-sRect.left+cRect.width/2)/sRect.width*100);
-            var henXpct = (h.x/self.canvas.width*100);
-            var henYpct = (h.y/self.canvas.height*100);
-            item.style.left = startX+'%'; item.style.top = '5%';
-            item.style.setProperty('--farm-tx',(henXpct-startX)+'vw');
-            item.style.setProperty('--farm-ty',(henYpct-5)+'vh');
+        var scene=document.getElementById('farm-scene');if(!scene)return;
+        var self=this;
+        // Big corn at center (40% from bottom), pulsing
+        var big=document.createElement('div');
+        big.style.cssText='position:absolute;bottom:40%;left:50%;transform:translateX(-50%);font-size:72px;z-index:12;pointer-events:none;animation:farmFoodPulse 1s ease-in-out infinite';
+        big.textContent='🌽';
+        scene.appendChild(big);
+        var count=0,maxCount=18;
+        var loop=setInterval(function(){
+            if(!self.isOpen||count>=maxCount){clearInterval(loop);setTimeout(function(){if(big.parentNode)big.remove();},600);return;}
+            count++;
+            // Target an actual hen position (or random if none)
+            var tx,ty;
+            if(self.hens&&self.hens.length&&self.canvas){
+                var h=self.hens[Math.floor(Math.random()*self.hens.length)];
+                tx=h.x;ty=h.y;
+            }else{tx=self.canvas?self.canvas.width*(0.3+Math.random()*0.6):200;ty=self.canvas?self.canvas.height*(0.5+Math.random()*0.3):200;}
+            var item=document.createElement('div');
+            var startX=self.canvas?self.canvas.width/2:200,startY=self.canvas?self.canvas.height*0.6:150;
+            var dx=tx-startX,dy=ty-startY;
+            item.style.cssText='position:absolute;font-size:28px;z-index:11;pointer-events:none;left:'+startX+'px;top:'+startY+'px';
+            item.textContent='🌽';
             scene.appendChild(item);
-            setTimeout(function(){if(item.parentNode)item.remove();},2000);
-        }, 800);
+            // Fly to hen + fade to 0 on arrival (same as main scene)
+            if(item.animate){
+                item.animate([
+                    {transform:'translate(0,0) scale(1)',opacity:1},
+                    {transform:'translate('+dx*0.85+'px,'+dy*0.85+'px) scale(.6)',opacity:.85,offset:.7},
+                    {transform:'translate('+dx+'px,'+dy+'px) scale(.2)',opacity:0}
+                ],{duration:1400,easing:'ease-in',fill:'forwards'}).onfinish=function(){if(item.parentNode)item.remove();};
+            }else{setTimeout(function(){if(item.parentNode)item.remove();},1400);}
+        },600);
     },
 
     // ═══ FARM CLEAN ANIMATION — broom goes to each poop ═══
