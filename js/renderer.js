@@ -45,7 +45,8 @@ var Renderer={
     updateHUD:function(pet){
         var stage=Engine.STAGES[pet.stade];
         var el=document.getElementById('hud-stage');if(el)el.textContent=stage.nom;
-        var lv=document.getElementById('hud-level');if(lv)lv.textContent='Nv.'+Math.floor(pet.experience/50+1);
+        var lv=document.getElementById('hud-level');
+        if(lv){var stage=Engine.STAGES[pet.stade];var pct=stage.heures?Math.min(100,Math.round((Date.now()-pet.derniereEvolution)/3600000/stage.heures*100)):100;lv.textContent=stage.nom+' '+pct+'%';}
         var coins=document.getElementById('hud-coins');if(coins)coins.textContent='🪙 '+pet.coins;
         var dot=document.getElementById('alert-dot');if(dot)dot.classList.toggle('hidden',!Engine.hasAlerts(pet));
         var sprite=Engine.getSpriteForPet(pet);
@@ -193,35 +194,35 @@ var Renderer={
     },
 
     // ═══ NOURRIR — big food pulsing + flies to beak ═══
-    petEatAnimation:function(foodEmoji){
+    petEatAnimation:function(foodEmoji,onEnd){
         var self=this;this._actionLock=true;this._forceAnim('eating');
         var emoji=foodEmoji||'🌾';
         var big=document.createElement('div');big.className='big-food-anim';big.textContent=emoji;
-        big.style.top='50%';big.style.transform='translate(-50%,-50%)';
+        big.style.top='35%';big.style.transform='translate(-50%,-50%)';
         this.els.scene.appendChild(big);
         var feedLoop=setInterval(function(){
             var m=document.createElement('div');m.className='food-fly';m.textContent=emoji;
-            m.style.left='50%';m.style.top='16%';
+            m.style.left='50%';m.style.top='30%';
             // Target: pet position
             var petPct=self.currentPetX;
             m.style.setProperty('--tx',(petPct-50)+'vw');
             self.els.sceneItems.appendChild(m);
             setTimeout(function(){m.remove();},1800);
         },1600);
-        var timer=this._countdown('🍽️ Francis mange',10,function(){
-            clearInterval(feedLoop);big.remove();self._actionLock=false;self._forceAnim('idle');
+        var timer=this._countdown('🍽️ Francis mange',10,'#44cc66',function(){
+            clearInterval(feedLoop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
 
     // ═══ LECTURE — book at pet HEIGHT, pet looks right at it ───
-    showStudyAnimation:function(){
+    showStudyAnimation:function(onEnd){
         var self=this;this._actionLock=true;this._studyLock=true;
         var pw=this.els.petWrapper;if(!pw){this._actionLock=false;this._studyLock=false;return;}
         var pr=pw.getBoundingClientRect(),sr=this.els.scene.getBoundingClientRect();
         // Position book at same vertical level as pet's face (top 30% of pet height)
         var petBottomPct=((sr.bottom-pr.bottom)/sr.height*100);
         var petHeightPct=(pr.height/sr.height*100);
-        var bookBottomPct=petBottomPct+petHeightPct*0.3;
+        var bookBottomPct=2; // Bottom of scene, just above buttons
         // Book slightly to the right or left depending on pet direction
         var bookLeft=(self.walkDir>0)?self.currentPetX+16:self.currentPetX-24;
         bookLeft=Math.max(5,Math.min(75,bookLeft));
@@ -246,7 +247,7 @@ var Renderer={
     },
 
     // ═══ DOUCHE — 30s, showerhead above pet ═══
-    showHeavyShower:function(){
+    showHeavyShower:function(onEnd){
         // Freeze pet movement during shower
         this._showerLock=true;
         var self=this;this._actionLock=true;
@@ -290,7 +291,7 @@ var Renderer={
     },
 
     // ═══ SERINGUE — 180°, flies to pet ═══
-    showBigSyringe:function(){
+    showBigSyringe:function(onEnd){
         var self=this;this._actionLock=true;
         var loop=setInterval(function(){
             var s=document.createElement('div');s.className='syringe-fly';s.textContent='💉';
@@ -309,8 +310,8 @@ var Renderer={
         w.classList.remove('hidden');
         // Lock pet — push right
         var self=this;
-        var safePetX=Math.max(30,this.currentPetX);
-        this.currentPetX=safePetX;this.walkTarget=safePetX;
+        var safePetX=Math.max(45,this.currentPetX); // Strong exclusion: pet stays right half
+        this.currentPetX=safePetX;this.walkTarget=Math.max(55,safePetX); // Walk target also stays right
         this.els.petWrapper.style.left=safePetX+'%';
         this._calinLock=true;
         var heartLoop=setInterval(function(){

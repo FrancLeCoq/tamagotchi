@@ -59,6 +59,10 @@ var Farm = {
 
     open:function(pet){
         this.isOpen=true;
+        // Dynamic sky matching time of day
+        this._updateFarmSky();
+        if(this._farmSkyIv)clearInterval(this._farmSkyIv);
+        var selfF=this;this._farmSkyIv=setInterval(function(){selfF._updateFarmSky();},3000);
         var farm=this.ensureData(pet);
         this.update(pet);
         document.getElementById('farm-screen').classList.remove('hidden');
@@ -97,7 +101,7 @@ var Farm = {
                 x:30+Math.random()*(this.canvas.width-80),
                 y:this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4),
                 targetX:30+Math.random()*(this.canvas.width-80),
-                targetY:this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4),
+                targetY:this.canvas.height*0.2+Math.random()*(this.canvas.height*0.45),
                 speed:0.3+Math.random()*0.5, flipX:Math.random()>0.5,
                 state:'idle', stateTimer:Math.random()*200, bob:Math.random()*Math.PI*2
             });
@@ -105,6 +109,19 @@ var Farm = {
     },
 
     updateHens:function(){
+        // Collision avoidance: keep minimum distance between hens
+        for(var a=0;a<this.hens.length;a++){
+            for(var b=a+1;b<this.hens.length;b++){
+                var dx=this.hens[a].x-this.hens[b].x,dy=this.hens[a].y-this.hens[b].y;
+                var dist=Math.sqrt(dx*dx+dy*dy),minDist=80;
+                if(dist<minDist&&dist>0){
+                    var push=(minDist-dist)/2;
+                    var nx=dx/dist,ny=dy/dist;
+                    this.hens[a].x+=nx*push;this.hens[a].y+=ny*push;
+                    this.hens[b].x-=nx*push;this.hens[b].y-=ny*push;
+                }
+            }
+        }
         for(var i=0;i<this.hens.length;i++){
             var h=this.hens[i];
             h.stateTimer--;
@@ -152,7 +169,7 @@ var Farm = {
         if(farm&&farm.hens>0){
             var poopTarget=Math.floor((100-farm.cleanLevel)/10)*2;
             farm.farmPoops=farm.farmPoops||0;
-            if(farm.farmPoops<poopTarget&&Math.random()<0.005)farm.farmPoops=Math.min(poopTarget,farm.farmPoops+1);
+            if(farm.cleanLevel<90&&farm.farmPoops<poopTarget&&Math.random()<0.002)farm.farmPoops=Math.min(poopTarget,farm.farmPoops+1);
         }
         var isDay=Weather.getBri()>0.5;
         this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
@@ -196,7 +213,7 @@ var Farm = {
         this.hens.push({
             x:-40, y:this.canvas.height*0.5+Math.random()*(this.canvas.height*0.3),
             targetX:50+Math.random()*(this.canvas.width-100),
-            targetY:this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4),
+            targetY:this.canvas.height*0.2+Math.random()*(this.canvas.height*0.45),
             speed:0.5+Math.random()*0.5, flipX:false,
             state:'walking', stateTimer:200, bob:Math.random()*Math.PI*2
         });
@@ -282,5 +299,19 @@ var Farm = {
             ctx.fillText('💩',x,y);
         }
         ctx.textAlign='left';
+    }
+,
+
+    _updateFarmSky:function(){
+        var scene=document.getElementById('farm-scene');if(!scene)return;
+        var h=(typeof Weather!=='undefined')?Weather.getHour():12;
+        var top,mid;
+        if(h>=8&&h<17){top='#87CEEB';mid='#b8e4f0';}
+        else if(h>=17&&h<20){top='#FFB347';mid='#FFCC99';}
+        else if(h>=20||h<5){top='#0a1228';mid='#1a2848';}
+        else{top='#FF9966';mid='#FFD4A3';}
+        scene.style.backgroundImage="url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,"+top+" 0%,"+mid+" 48%,#3a6a28 48%,#3a6a28 100%)";
+        scene.style.backgroundSize='cover,100% 100%';
+        scene.style.backgroundPosition='center bottom,center';
     }
 };

@@ -73,11 +73,10 @@ var Weather={
             var sx=p*(sw-90)+10;
             var sy=sh*.08+(1-Math.sin(p*Math.PI))*sh*.18;
             var al=Math.min(1,Math.min((h-6)/1.5,(20-h)/1.5));
-            this._sunEl.style.display='block';
             this._sunEl.style.left=sx+'px';
             this._sunEl.style.top=sy+'px';
             this._sunEl.style.opacity=al;
-        }else{this._sunEl.style.display='none';}
+        }else{this._sunEl.style.opacity='0';}
 
         // MOON: arc 20h-6h
         if(h>=20||h<6){
@@ -85,11 +84,11 @@ var Weather={
             var mx=p2*(sw-65)+8;
             var my=sh*.05+(1-Math.sin(p2*Math.PI))*sh*.15;
             var ma=Math.min(1,Math.min(nh,10-nh));
-            this._moonEl.style.display='block';
+            this._moonEl.style.opacity=ma;
             this._moonEl.style.left=mx+'px';
             this._moonEl.style.top=my+'px';
             this._moonEl.style.opacity=ma;
-        }else{this._moonEl.style.display='none';}
+        }else{this._moonEl.style.opacity='0';}
     },
 
     _initClouds:function(){

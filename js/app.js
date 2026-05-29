@@ -106,20 +106,42 @@ var App={
         if(this.pet.estMort){Renderer.showDeath(this.pet);Storage.save(this.pet);}
     },
 
-    // Alert when any gauge < 20%
+    _lastAlertLevel:100,
     checkAlerts:function(){
         if(!this.pet)return;
-        var p=this.pet,alerts=[];
-        if(p.faim<20)alerts.push('🌾 Faim critique : '+Math.round(p.faim)+'%');
-        if(p.bonheur<20)alerts.push('😢 Bonheur critique : '+Math.round(p.bonheur)+'%');
-        if(p.energie<20)alerts.push('😴 Énergie critique : '+Math.round(p.energie)+'%');
-        if(p.sante<20)alerts.push('❤️ Santé critique : '+Math.round(p.sante)+'%');
-        if((p.hygiene||50)<20)alerts.push('🧼 Hygiène critique : '+Math.round(p.hygiene)+'%');
-        if((p.amour||30)<20)alerts.push('💕 Amour critique : '+Math.round(p.amour)+'%');
+        var p=this.pet,b=Math.round(p.bonheur);
         var dot=document.getElementById('alert-dot');
-        if(dot)dot.classList.toggle('hidden',alerts.length===0);
-        // Show toast for first critical
-        if(alerts.length>0&&Math.random()<0.15)Renderer.toast(alerts[0]);
+        if(dot)dot.classList.toggle('hidden',b>=50);
+        // Threshold notifications
+        var thresholds=[
+            {v:50,msg:'⚠️ Francis ne va pas bien ('+b+'%) !'},
+            {v:25,msg:'🚨 ALERTE : Francis va très mal ('+b+'%) !'},
+            {v:10,msg:'💀 DANGER CRITIQUE : Francis est en danger de mort ('+b+'%) !'},
+            {v:5,msg:'☠️ URGENCE ABSOLUE ! Francis agonise ('+b+'%) !!'},
+            {v:0,msg:'😇 La faucheuse est passée... Toutes nos condoléances.'}
+        ];
+        // Find cause
+        var cause='';
+        if(p.faim<20)cause='Il a super faim !';
+        else if(p.energie<20)cause='Il est épuisé !';
+        else if(p.sante<20)cause='Il est très malade !';
+        else if((p.hygiene||50)<20)cause='Son hygiène est critique !';
+        else if((p.amour||30)<20)cause='Il se sent abandonné !';
+        else if((p.jeu||0)<15)cause='Il s\'ennuie !';
+        for(var i=0;i<thresholds.length;i++){
+            var t=thresholds[i];
+            if(b<=t.v&&this._lastAlertLevel>t.v){
+                this._lastAlertLevel=t.v;
+                var fullMsg=t.msg+(cause?' '+cause:'');
+                Renderer.toast(fullMsg);
+                // Try Telegram notification
+                try{if(window.Telegram&&Telegram.WebApp)Telegram.WebApp.showAlert(fullMsg);}catch(e){}
+                // Try browser notification
+                try{if(window.Notification&&Notification.permission==='granted')new Notification('🐓 Francis le Coq',{body:fullMsg,icon:'assets/sprites/francis.png'});}catch(e){}
+                break;
+            }
+        }
+        if(b>50)this._lastAlertLevel=100;
     },
 
     updateCooldowns:function(){
@@ -139,10 +161,11 @@ var App={
         var r=Engine.feed(this.pet,id);
         document.getElementById('food-screen').classList.add('hidden');
         if(r.ok){
-            Renderer.petEatAnimation(f?f.emoji:'🌾',f?f.emoji:'🌾');
-            Storage.save(this.pet);
             var self=this;
-            setTimeout(function(){Renderer.animateGauge('faim','Faim',oldFaim,self.pet.faim,'#44cc66');Renderer.update(self.pet);},10000);
+            Renderer.petEatAnimation(f?f.emoji:'🌾',function(){
+                Renderer.animateGauge('faim','Faim',oldFaim,self.pet.faim,'#44cc66');Renderer.update(self.pet);
+            });
+            Storage.save(this.pet);
         }else Renderer.toast(r.msg);
     },
 
@@ -159,10 +182,11 @@ var App={
     doStudy:function(){
         document.getElementById('play-screen').classList.add('hidden');
         Engine.studyAuto(this.pet);
-        Renderer.showStudyAnimation();
+        var oldJeu=this.pet.jeu||0;var self=this;
+        Renderer.showStudyAnimation(function(){
+            Renderer.animateGauge('jeu','Jeu',oldJeu,self.pet.jeu||0,'#4a90d9');Renderer.update(self.pet);
+        });
         Storage.save(this.pet);
-        var self=this;
-        setTimeout(function(){Renderer.showGaugeResult('Intellect',self.pet.intellect||30);Renderer.update(self.pet);},10000);
     },
     doStudySudoku:function(){
         document.getElementById('play-screen').classList.add('hidden');
@@ -199,8 +223,9 @@ var App={
         if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
         document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.shower(this.pet);Renderer.toast(r.msg);
-        if(r.ok){var oldHyg=this.pet.hygiene||50;Renderer.showHeavyShower();Storage.save(this.pet);
-        var self=this;setTimeout(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg,self.pet.hygiene,'#3498db');Renderer.update(self.pet);},30000);}
+        if(r.ok){var oldHyg=this.pet.hygiene||50;var self=this;
+        Renderer.showHeavyShower(function(){Renderer.animateGauge('hygiene','Hygiène',oldHyg,self.pet.hygiene,'#3498db');Renderer.update(self.pet);});
+        Storage.save(this.pet);}
     },
 
     // ═══ CALINER — 1 min, amour ticks +5 every 10s ═══

@@ -59,10 +59,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .layer-landscape{position:absolute;inset:0;background:url('../assets/backgrounds/paysage.png') center bottom/cover no-repeat;z-index:2;pointer-events:none}
 /* Building: half the previous size, centered */
 .layer-building{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;display:flex;align-items:center;justify-content:center}
-.layer-building img{max-height:38vh;max-width:42vw;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35))}
-.layer-building img[src*='brique']{max-height:38vh;max-width:42vw}
-.layer-building img[src*='chateau']{max-height:43.7vh;max-width:48.3vw}
-.layer-building img[src*='palace']{max-height:43.7vh;max-width:48.3vw}
+.layer-building img{max-height:50vh;max-width:55vw;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35))}
+.layer-building img[src*='brique']{max-height:50vh;max-width:55vw}
+.layer-building img[src*='chateau']{max-height:57.5vh;max-width:63.3vw}
+.layer-building img[src*='palace']{max-height:57.5vh;max-width:63.3vw}
 .hud-weather{position:absolute;top:6px;right:6px;font-size:18px;z-index:8}
 .sleep-zzz{position:absolute;top:15%;left:50%;transform:translateX(-50%);font-size:36px;z-index:6;animation:zzzPulse 2s ease-in-out infinite;text-shadow:0 2px 12px rgba(0,0,0,.5);letter-spacing:8px}
 @keyframes zzzPulse{0%,100%{opacity:.6;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.15)}}
@@ -370,10 +370,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* ═══ CELESTIAL ELEMENTS — above everything (z-index:4) ═══ */
 .layer-clouds{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
 .layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
-.cel-sun{position:absolute;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,#fff8a0 0%,#FFD700 40%,rgba(255,215,0,0) 80%);box-shadow:0 0 30px rgba(255,200,50,.7),0 0 60px rgba(255,200,50,.3);transition:left .5s,top .5s,opacity 1s;display:none}
-.cel-moon{position:absolute;width:50px;height:50px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f0f0f8 0%,#c8c8dc 60%,rgba(200,200,220,0) 100%);box-shadow:0 0 20px rgba(180,200,255,.5);transition:left .5s,top .5s,opacity 1s;display:none}
+.cel-sun{position:absolute;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,#FFF8A0 0%,#FFD700 30%,#FFA500 60%,rgba(255,165,0,0) 100%);box-shadow:0 0 40px rgba(255,200,50,.8),0 0 80px rgba(255,180,50,.4),0 0 120px rgba(255,160,50,.2);transition:left .3s,top .3s,opacity 1s;opacity:0}
+.cel-moon{position:absolute;width:65px;height:65px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#F0F0F8 0%,#D8D8E8 50%,#B0B0C8 100%);box-shadow:0 0 30px rgba(180,200,255,.7),0 0 60px rgba(160,180,255,.3);transition:left .3s,top .3s,opacity 1s;opacity:0}
 .cel-moon::after{content:'';position:absolute;width:38px;height:38px;border-radius:50%;background:transparent;box-shadow:8px -4px 0 rgba(20,20,60,.35);top:4px;left:4px}
-.cloud-el{position:absolute;pointer-events:none;border-radius:50px;opacity:.82;filter:blur(1px);transition:none}
+.cloud-el{position:absolute;pointer-events:none;border-radius:50px;opacity:.88;filter:blur(0px);transition:none;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 
 /* ═══ FARM LAYOUT — bonheur full width, then 2 small ═══ */
 .farm-gauges{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
@@ -403,3 +403,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .weather-canvas{position:absolute;inset:0;z-index:1;pointer-events:none}
 .layer-clouds{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
 .layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
+
+/* ═══ FARM SKY ═══ */
+.farm-scene{background-image:url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,#87CEEB 0%,#b8e4f0 50%,#3a6a28 50%,#3a6a28 100%)!important;background-size:cover,100% 100%;background-position:center bottom,center}

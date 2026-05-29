@@ -22,13 +22,13 @@ const Engine = {
         { id:4, nom:'Palace',           emoji:'🏛️', cost:20000, bg:'palace' },
     ],
     DIALOGUES: {
-        content:['Cocoricoooo ! 🎵','Je suis le plus beau coq de France !','Mon béret est-il bien droit ?','1 Franc, la belle époque !','Côt côt côt !','Vive la République ! 🇫🇷','Paris vaut bien un grain de maïs !','Moi, je suis Francis. LE coq.','Liberté, égalité, grainité !','Beau temps aujourd\'hui, non ?'],
-        faim:['J\'ai la dalle ! 🌾','Du grain, stp...','Mon ventre gargouille...','Nourris-moi ! Je dépéris !','Je mangerais bien un croissant... 🥐'],
-        triste:['Personne ne me voit... 😢','Un coq sans ami est perdu.','Je me sens bien seul...','Un câlin, ça fait du bien parfois...'],
-        fatigue:['Zzz... même les coqs dorment...','Je pique du bec...','Trop fatigué pour chanter... 😴','Une bonne sieste, vite !'],
-        malade:['Côt côt... *tousse*...','Au secours ! 🏥','J\'ai besoin d\'un médecin... 💉','Je me sens tout flagada...'],
-        sale:['Ça pue ici... C\'est moi ? 🤢','Une douche, et vite !','Mon plumage est dans un état !','Je suis sale comme un cochon... enfin, un coq.'],
-        sale:['Ça pue ici... 🤢','Une douche, svp !'],
+        faim:['J\'ai la dalle ! 🌾','Du grain, stp...','Mon ventre gargouille...','Nourris-moi ! Je dépéris !','Je mangerais bien un croissant... 🥐','Mon estomac crie famine !','Un grain... juste un grain...','Par Toutatis, du maïs !','Même une miette ferait l\'affaire...','Le frigo est vide ou quoi ?'],
+        fatigue:['Zzz... même les coqs dorment...','Je pique du bec...','Trop fatigué pour chanter... 😴','Une bonne sieste, vite !','Mes paupières sont lourdes...','Je tiens plus debout...','Un lit, par pitié !','Je bâille sans arrêt...','Mon énergie est à zéro !','Même les poules dorment mieux...'],
+        sale:['Ça pue ici... C\'est moi ? 🤢','Une douche, et vite !','Mon plumage est dans un état !','Je suis sale comme un cochon...','Beurk, je sens le poulailler...','Mes plumes collent... 🧼','Faut que je me lave, là !','L\'hygiène, c\'est important !','Mon béret est tout crado...','Même les mouches me fuient !'],
+        triste:['Personne ne me voit... 😢','Un coq sans ami est perdu.','Je me sens bien seul...','Un câlin, ça fait du bien...','Où sont mes amis ?','Mon cœur est lourd...','La solitude, c\'est dur...','Quelqu\'un veut bien jouer ?','Je m\'ennuie tout seul...','Un peu d\'amour svp... 💔'],
+        malade:['Côt côt... *tousse*...','Au secours ! 🏥','J\'ai besoin d\'un médecin... 💉','Je me sens tout flagada...','Ma crête est toute pâle...','J\'ai mal partout...','Docteur ! Docteur !','Un cachet, vite !','Je ne me sens pas bien du tout...','Mes plumes tombent...'],
+        jeu:['Je m\'ennuie ! 🎮','On joue à quoi ?','Un sudoku peut-être ?','Rien à faire ici...','Où est ma manette ?','C\'est long sans jeu...','Même un livre ferait l\'affaire 📖','Stimulez mon intellect !','Je vais rouiller sans activité !','On fait un mini-jeu ?'],
+        enclos:['Les poules ont faim !','L\'enclos est sale...','Mes poules ont besoin d\'attention !','Vérifie l\'enclos stp...','Les œufs n\'attendent pas !','L\'hygiène de l\'enclos... 😬','Nourris les poules !'],
     },
     COOLDOWNS: { nourrir:120,jouer:300,dormir:900,soigner:600,toilette:120,douche:300,intellect:300,visite:600 },
     MAX_STAT:100, CRIT:15, POOP_INTERVAL:5400, PIPI_INTERVAL:3600,
@@ -79,7 +79,7 @@ const Engine = {
     createPet(name) {
         var now = Date.now();
         return { nom:name||'Francis', stade:0,
-            faim:80,bonheur:80,energie:80,sante:80,hygiene:90,intellect:50,amour:30,
+            faim:50,bonheur:40,energie:60,sante:70,hygiene:50,intellect:20,amour:15,
             experience:0,actions:0,soinTotal:0,coins:0,housingLevel:0,jeu:0,travail:0,
             neLe:now,derniereUpdate:now,derniereEvolution:now,dernierePoop:now,dernierePipi:now,startRealHour:new Date().getHours(),
             cooldowns:{},poops:0,pipis:0,healthActionCount:0,
@@ -142,10 +142,11 @@ const Engine = {
         if(pet.faim<15) return 'faim';
         if(pet.energie<15) return 'fatigue';
         if(pet.hygiene<20) return 'sale';
+        if((pet.jeu||0)<15) return 'jeu';
         if(pet.bonheur<15) return 'triste';
         return 'ok';
     },
-    getDialogue(pet){var m=this.getMood(pet);var pool=this.DIALOGUES[m]||this.DIALOGUES.content;return pool[Math.floor(Math.random()*pool.length)];},
+    getDialogue(pet){var m=this.getMood(pet);var pool=this.DIALOGUES[m]||this.DIALOGUES.faim;if((pet.jeu||0)<20&&Math.random()<.3)pool=this.DIALOGUES.jeu;return pool[Math.floor(Math.random()*pool.length)];},
     hasAlerts(pet){return pet.faim<10||pet.bonheur<10||pet.energie<10||pet.sante<10||pet.hygiene<10||pet.amour<10;},
     getAge(pet){var ms=Date.now()-pet.neLe,h=ms/3600000;return{days:Math.floor(h/24),hours:Math.floor(h%24)};},
 
