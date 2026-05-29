@@ -205,7 +205,7 @@ var Renderer={
         var sRect=scene.getBoundingClientRect();
         var pRect=pw.getBoundingClientRect();
         var sb=(startBottomPct!==undefined)?startBottomPct:55;
-        var startX=sRect.width*0.55;
+        var startX=sRect.width*0.5;
         var startY=sRect.height*(1-sb/100);
         // Target: center of pet
         var targetX=(pRect.left-sRect.left)+pRect.width/2;
@@ -225,14 +225,15 @@ var Renderer={
         }else{setTimeout(function(){if(item.parentNode)item.remove();},1300);}
     },
 
-    petEatAnimation:function(foodEmoji,onEnd){
+    petEatAnimation:function(foodEmoji,onEnd,seconds){
         this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('eating');
+        seconds=seconds||10;
         var emoji=foodEmoji||'🌾';
         var big=document.createElement('div');big.className='big-food-anim';big.textContent=emoji;
         big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
         var feedLoop=setInterval(function(){self._flyItemToPet(emoji,false);},1500);
-        var timer=this._countdown('🍽️ Francis mange',10,'#44cc66',function(){
+        var timer=this._countdown('🍽️ Francis mange',seconds,'#44cc66',function(){
             clearInterval(feedLoop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
@@ -265,7 +266,7 @@ var Renderer={
     showHeavyShower:function(onEnd){
         this._resetLocks();var self=this;this._actionLock=true;this._showerLock=true;this._forceAnim('idle');
         var big=document.createElement('div');big.className='big-food-anim';big.textContent='🚿';
-        big.style.bottom='62%';big.style.top='auto';big.style.transform='translateX(-50%)';
+        big.style.bottom='52%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
         var loop=setInterval(function(){self._flyItemToPet('💧',false);},450);
         var timer=this._countdown('🚿 Francis se lave',30,'#3498db',function(){
@@ -302,9 +303,9 @@ var Renderer={
     showBigSyringe:function(onEnd){
         this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('sick');
         var big=document.createElement('div');big.className='big-food-anim';big.textContent='💉';
-        big.style.bottom='50%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
+        big.style.bottom='45%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
         this.els.scene.appendChild(big);
-        var loop=setInterval(function(){self._flyItemToPet('💉',true,50);},1500);
+        var loop=setInterval(function(){self._flyItemToPet('💉',true,45);},1500);
         var timer=this._countdown('🚨 Soin en cours',20,'#e74c3c',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
@@ -407,7 +408,25 @@ var Renderer={
         document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1200);
     },
     showFloatingItem:function(e,x,y){var d=document.createElement('div');d.className='float-item';d.textContent=e;d.style.left=(x||50)+'%';d.style.top=(y||60)+'%';this.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},1500);},
-    showEvolution:function(o,n){document.getElementById('evo-old').textContent=o.emoji;document.getElementById('evo-new').textContent=n.emoji;document.getElementById('evo-desc').textContent=n.nom;document.getElementById('evolution-screen').classList.remove('hidden');},
+    showEvolution:function(o,n){document.getElementById('evo-old').textContent=o.emoji;document.getElementById('evo-new').textContent=n.emoji;document.getElementById('evo-desc').textContent=n.nom;document.getElementById('evolution-screen').classList.remove('hidden');this.launchFireworks();},
+    launchFireworks:function(){
+        var host=document.getElementById('evolution-screen')||document.body;
+        var colors=['#ff5252','#ffd740','#69f0ae','#40c4ff','#e040fb','#ffab40'];
+        var bursts=8;
+        for(var b=0;b<bursts;b++){
+            (function(bi){setTimeout(function(){
+                var cx=15+Math.random()*70, cy=15+Math.random()*45;
+                var col=colors[Math.floor(Math.random()*colors.length)];
+                for(var p=0;p<18;p++){
+                    var ang=(p/18)*Math.PI*2, dist=60+Math.random()*70;
+                    var dot=document.createElement('div');
+                    dot.style.cssText='position:fixed;left:'+cx+'vw;top:'+cy+'vh;width:8px;height:8px;border-radius:50%;background:'+col+';z-index:400;pointer-events:none;box-shadow:0 0 8px '+col+';';
+                    host.appendChild(dot);
+                    dot.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},{transform:'translate(calc(-50% + '+Math.cos(ang)*dist+'px),calc(-50% + '+Math.sin(ang)*dist+'px)) scale(.3)',opacity:0}],{duration:1100+Math.random()*400,easing:'cubic-bezier(.2,.6,.3,1)',fill:'forwards'}).onfinish=function(){dot.remove();};
+                }
+            },bi*350);})(b);
+        }
+    },
     hideEvolution:function(){document.getElementById('evolution-screen').classList.add('hidden');},
     showDeath:function(pet){var age=Engine.getAge(pet);document.getElementById('death-desc').textContent=pet.nom+' a vécu '+age.days+'j. Cause: '+(pet.causeMort||'?');document.getElementById('death-stats').innerHTML='<p style="color:#8899bb">XP:'+pet.experience+' 🪙'+pet.coins+'</p>';document.getElementById('death-screen').classList.remove('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.add('dead-scene');},
     hideDeath:function(){document.getElementById('death-screen').classList.add('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.remove('dead-scene');},

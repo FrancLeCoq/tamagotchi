@@ -21,6 +21,7 @@ var App={
             var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);Engine.updateStats(self.pet);self.showGame();Renderer.toast('▶ Reprise !');}
         });
         document.getElementById('btn-new-game').addEventListener('click',function(){self.newGame();});
+        var cw=document.getElementById('btn-connect-wallet');if(cw)cw.addEventListener('click',function(){self.connectWallet();});
         var ho=document.getElementById('splash-holder');if(ho)ho.addEventListener('click',function(){self.connectWallet();});
         document.getElementById('btn-wallet-game').addEventListener('click',function(){self.connectWallet();document.getElementById('more-screen').classList.add('hidden');});
         document.getElementById('btn-wallet-gate').addEventListener('click',function(){self.connectWallet();document.getElementById('wallet-gate').classList.add('hidden');});
@@ -39,7 +40,24 @@ var App={
             document.getElementById('sound-icon').textContent=self.soundOn?'🔊':'🔇';
             self.updateAudio();
         });
-        document.getElementById('btn-pause').addEventListener('click',function(){self.paused=!self.paused;document.getElementById('pause-icon').textContent=self.paused?'▶️':'⏸️';Renderer.toast(self.paused?'⏸️':'▶️');});
+        document.getElementById('btn-pause').addEventListener('click',function(){
+            self.paused=!self.paused;
+            document.getElementById('pause-icon').textContent=self.paused?'▶️':'⏸️';
+            document.getElementById('pause-label')&&(document.getElementById('pause-label').textContent=self.paused?'Reprendre':'Pause');
+            Renderer.toast(self.paused?'⏸️ Pause':'▶️ Reprise');
+            if(self.pet){
+                if(self.paused){self._pauseStart=Date.now();}
+                else if(self._pauseStart){
+                    // Shift timestamps forward by paused duration so no catch-up decay
+                    var pausedMs=Date.now()-self._pauseStart;
+                    self.pet.derniereUpdate=(self.pet.derniereUpdate||Date.now())+pausedMs;
+                    if(self.pet.farm)self.pet.farm.lastUpdate=(self.pet.farm.lastUpdate||Date.now())+pausedMs;
+                    self._pauseStart=null;Storage.save(self.pet);
+                }
+            }
+            // Pause/resume weather clock too
+            if(typeof Weather!=='undefined'){if(self.paused)Weather._pausedAt=Date.now();else if(Weather._pausedAt){Weather.startTime+=(Date.now()-Weather._pausedAt);Weather._pausedAt=null;}}
+        });
         document.getElementById('btn-nav-more').addEventListener('click',function(){document.getElementById('more-screen').classList.remove('hidden');});
         document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
         document.getElementById('btn-toilette').addEventListener('click',function(){self.doToilet();});
@@ -51,6 +69,7 @@ var App={
         document.getElementById('btn-play-game').addEventListener('click',function(){self.doPlay();});
         document.getElementById('btn-play-study').addEventListener('click',function(){self.doStudy();});
         document.getElementById('btn-play-sudoku').addEventListener('click',function(){self.doStudySudoku();});
+        document.getElementById('btn-play-morpion').addEventListener('click',function(){self.doMorpion();});
         document.getElementById('food-grid').addEventListener('click',function(e){var item=e.target.closest('[data-food]');if(item)self.doFeed(item.dataset.food);});
         document.getElementById('btn-reset').addEventListener('click',function(){document.getElementById('more-screen').classList.add('hidden');if(confirm('Reset?')){Storage.clear();self.pet=null;document.getElementById('game-screen').classList.remove('active');document.getElementById('splash-screen').classList.add('active');self.showSplash();}});
 
@@ -225,38 +244,49 @@ var App={
     openFood:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var c=Engine.canDo(this.pet,'nourrir');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('food-grid').innerHTML=Renderer.renderFoodGrid();document.getElementById('food-screen').classList.remove('hidden');},
     doFeed:function(id){
         var f=Engine.FOODS.find(function(x){return x.id===id;});
-        var oldFaim=this.pet?this.pet.faim:50;
-        var r=Engine.feed(this.pet,id);
+        if(!f){return;}
         document.getElementById('food-screen').classList.add('hidden');
-        if(r.ok){
-            var self=this;
-            Renderer.petEatAnimation(f?f.emoji:'🌾',function(){
-                Renderer.animateGauge('faim','Faim',oldFaim,self.pet.faim);Renderer.update(self.pet);
-            });
-            Storage.save(this.pet);
-        }else Renderer.toast(r.msg);
+        var cd=Engine.canDo(this.pet,'nourrir');if(!cd.ok){Renderer.toast(cd.msg);return;}
+        var self=this;var oldFaim=this.pet.faim||0;
+        var gain=f.faim; // 1% = 1 second
+        Engine.setCooldown(this.pet,'nourrir');
+        Renderer.petEatAnimation(f.emoji,function(){
+            var before=self.pet.faim||0;
+            self.pet.faim=Engine.cl(self.pet.faim+f.faim);
+            self.pet.bonheur=Engine.cl(self.pet.bonheur+(f.bonheur||0));
+            self.pet.energie=Engine.cl(self.pet.energie+(f.energie||0));
+            self.pet.sante=Engine.cl(self.pet.sante+(f.sante||0));
+            self.pet.coins+=2;
+            Renderer.animateGauge('faim','Faim',before,self.pet.faim);
+            Renderer.update(self.pet);Storage.save(self.pet);
+        },gain);
+        Storage.save(this.pet);
     },
 
     // ═══ JOUER — panel with mini-jeu + lecture + sudoku ═══
     openPlay:function(){if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;var c=Engine.canDo(this.pet,'jouer');if(!c.ok){Renderer.toast(c.msg);return;}document.getElementById('play-screen').classList.remove('hidden');},
     doPlay:function(){
         document.getElementById('play-screen').classList.add('hidden');
-        var self=this;var oldJeu=this.pet.jeu||0;
+        var self=this;
         Minigames.startPlay(function(b){
-            Engine.play(self.pet,b);Renderer.petHappyAnimation();Storage.save(self.pet);
-            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',oldJeu,self.pet.jeu||0);Renderer.update(self.pet);},1500);
+            var before=self.pet.jeu||0;
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+20);
+            self.pet.bonheur=Engine.cl(self.pet.bonheur+10);
+            self.pet.energie=Engine.cl(self.pet.energie-5);
+            self.pet.coins+=3;
+            Renderer.petHappyAnimation();Storage.save(self.pet);
+            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',before,self.pet.jeu);Renderer.update(self.pet);},800);
         });
     },
     doStudy:function(){
         document.getElementById('play-screen').classList.add('hidden');
         var c=Engine.canDo(this.pet,'intellect');if(!c.ok){Renderer.toast(c.msg);return;}
-        var self=this;var oldJeu=this.pet.jeu||0;
-        // Set cooldown now but apply gauge gain at END of countdown
+        var self=this;
         Engine.setCooldown(this.pet,'intellect');
         Renderer.showStudyAnimation(function(){
             var before=self.pet.jeu||0;
-            self.pet.intellect=Engine.cl(self.pet.intellect+20);
-            self.pet.jeu=Engine.cl((self.pet.jeu||0)+20);
+            self.pet.intellect=Engine.cl(self.pet.intellect+15);
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+15);
             self.pet.experience+=10;self.pet.coins+=2;
             Renderer.animateGauge('jeu','Jeu',before,self.pet.jeu);
             Renderer.update(self.pet);Storage.save(self.pet);
@@ -266,8 +296,26 @@ var App={
     doStudySudoku:function(){
         document.getElementById('play-screen').classList.add('hidden');
         var self=this;
-        Minigames.startSudoku(function(b){Engine.studyGame(self.pet,b);Storage.save(self.pet);
-            setTimeout(function(){Renderer.showGaugeResult('Intellect',self.pet.intellect||30);Renderer.update(self.pet);},1500);
+        Minigames.startSudoku(function(win){
+            var before=self.pet.jeu||0;
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+30);
+            self.pet.intellect=Engine.cl(self.pet.intellect+30);
+            self.pet.coins+=5;
+            Storage.save(self.pet);
+            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',before,self.pet.jeu);Renderer.update(self.pet);},800);
+        });
+    },
+    doMorpion:function(){
+        document.getElementById('play-screen').classList.add('hidden');
+        var self=this;
+        Minigames.startMorpion(function(win){
+            var before=self.pet.jeu||0;
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+30);
+            self.pet.intellect=Engine.cl(self.pet.intellect+20);
+            self.pet.bonheur=Engine.cl(self.pet.bonheur+(win?15:5));
+            self.pet.coins+=(win?8:3);
+            Storage.save(self.pet);
+            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',before,self.pet.jeu);Renderer.update(self.pet);},800);
         });
     },
 

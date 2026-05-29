@@ -14,22 +14,26 @@
     <div id="splash-screen" class="screen active">
         <div class="splash-bg"></div>
         <div class="splash-card">
-            <img src="assets/sprites/francis.png" alt="Francis" class="splash-francis">
-            <h1 class="splash-title">FRANCIS LE COQ</h1>
+            <div class="splash-rooster-wrap"><img src="assets/sprites/francis.png" alt="Francis" class="splash-francis"></div>
+            <h1 class="splash-title">EGG CLICKER</h1>
             <p class="splash-tagline">TAP THE ROOSTER · BUILD THE EMPIRE</p>
             <p class="splash-franc"><span class="franc-highlight">$FRANC</span> HOLDERS PLAY UNLIMITED</p>
-            <button class="btn-play hidden" id="btn-resume"><span class="play-icon">▶</span> REPRENDRE</button>
-            <button class="btn-play btn-play-alt" id="btn-new-game"><span class="play-icon">🥚</span> NOUVELLE PARTIE</button>
-            <div class="splash-holder" id="splash-holder">
-                <div class="holder-left"><span class="holder-lock">🔓</span><span class="holder-text">$FRANC HOLDER ·<br>UNLIMITED</span></div>
-                <div class="holder-right" id="holder-amount">Connecter wallet →</div>
-            </div>
-            <div class="splash-rules">
-                <p class="rules-title">💎 $FRANC RULES</p>
-                <p class="rules-line">💜 Without $FRANC : <span class="rules-hl">POUSSIN ONLY</span></p>
-                <p class="rules-sub">· progress saved</p>
-                <p class="rules-line">💚 Holding $FRANC : <span class="rules-hl">UNLIMITED PLAY</span></p>
-                <p class="rules-sub">+ cloud save + leaderboard</p>
+
+            <button class="eg-play hidden" id="btn-resume"><span class="eg-play-circle">▶</span> REPRENDRE</button>
+            <button class="eg-play" id="btn-new-game"><span class="eg-play-circle">▶</span> NOUVELLE PARTIE</button>
+
+            <button class="eg-holder" id="btn-connect-wallet">
+                <span class="eg-holder-lock">🔒</span>
+                <span class="eg-holder-mid"><span class="eg-coin">①</span> <b>$FRANC HOLDER · UNLIMITED</b></span>
+                <span class="eg-holder-right" id="holder-amount">Connect Wallet →</span>
+            </button>
+
+            <div class="eg-rules">
+                <p class="eg-rules-title">💎 $FRANC RULES</p>
+                <p class="eg-rules-line"><span class="eg-rules-emoji">💜</span> Without <b>$FRANC</b> : <span class="eg-rules-hl">10 MIN SESSION</span></p>
+                <p class="eg-rules-sub">· progress saved</p>
+                <p class="eg-rules-line"><span class="eg-rules-emoji">💚</span> Holding <b>$FRANC</b> : <span class="eg-rules-hl">UNLIMITED PLAY</span></p>
+                <p class="eg-rules-sub">+ cloud save + leaderboard</p>
             </div>
         </div>
     </div>
@@ -128,7 +132,7 @@
     <div id="food-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Nourrir</h2><button class="close-btn" data-close="food-screen">✕</button></div><div class="food-grid" id="food-grid"></div></div></div>
     <div id="stats-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2>Statistiques</h2><button class="close-btn" data-close="stats-screen">✕</button></div><div class="stats-detail" id="stats-detail"></div></div></div>
     <div id="minigame-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2 id="minigame-title">Mini-jeu</h2><button class="close-btn" data-close="minigame-screen">✕</button></div><div class="minigame-area" id="minigame-area"></div></div></div>
-    <div id="play-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Jouer 🎮</h2><button class="close-btn" data-close="play-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-play-game"><span class="care-icon">🎯</span><span>Mini-jeu</span></button><button class="care-item" id="btn-play-study"><span class="care-icon">📖</span><span>Lecture</span></button><button class="care-item" id="btn-play-sudoku"><span class="care-icon">🔢</span><span>Sudoku</span></button></div></div></div>
+    <div id="play-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Jouer 🎮</h2><button class="close-btn" data-close="play-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-play-game"><span class="care-icon">🎯</span><span>Mini-jeu</span></button><button class="care-item" id="btn-play-study"><span class="care-icon">📖</span><span>Lecture</span></button><button class="care-item" id="btn-play-sudoku"><span class="care-icon">🔢</span><span>Sudoku</span></button><button class="care-item" id="btn-play-morpion"><span class="care-icon">⭕</span><span>Morpion</span></button></div></div></div>
     <div id="housing-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2>Boutique 🏗️</h2><button class="close-btn" data-close="housing-screen">✕</button></div><div id="housing-list"></div></div></div>
     <div id="farm-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full" style="max-height:95vh;padding:0"><div class="farm-header"><div class="farm-gauges">
   <div class="farm-bonheur-main" id="farm-bonheur-row">

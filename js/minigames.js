@@ -8,6 +8,75 @@ const Minigames = {
         this.startTapGame();
     },
 
+
+    startMorpion(onComplete) {
+        this.onComplete=onComplete;
+        document.getElementById('minigame-title').textContent='Morpion vs Bot ⭕';
+        document.getElementById('minigame-screen').classList.remove('hidden');
+        this.morpionBoard=['','','','','','','','',''];
+        this.morpionOver=false;
+        this.renderMorpion();
+    },
+    renderMorpion(msg) {
+        var area=document.getElementById('minigame-area');if(!area)return;
+        var self=this;
+        var html='<div class="morpion-msg">'+(msg||'À toi de jouer ! Tu es ❌')+'</div>';
+        html+='<div class="morpion-grid">';
+        for(var i=0;i<9;i++){
+            html+='<div class="morpion-cell" data-i="'+i+'">'+(this.morpionBoard[i]||'')+'</div>';
+        }
+        html+='</div>';
+        area.innerHTML=html;
+        area.querySelectorAll('.morpion-cell').forEach(function(el){
+            el.addEventListener('click',function(){
+                if(self.morpionOver)return;
+                var i=parseInt(el.getAttribute('data-i'));
+                if(self.morpionBoard[i])return;
+                self.morpionBoard[i]='❌';
+                if(self.checkMorpion('❌')){self.endMorpion(true);return;}
+                if(self.morpionBoard.every(function(x){return x;})){self.endMorpion(false,'Match nul !');return;}
+                self.botMove();
+            });
+        });
+    },
+    botMove() {
+        var b=this.morpionBoard,self=this;
+        // Bot is ⭕: win if possible, block if needed, else center/corner/random
+        function tryLine(mark){
+            var wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            for(var w=0;w<wins.length;w++){
+                var L=wins[w],vals=L.map(function(i){return b[i];});
+                var cnt=vals.filter(function(v){return v===mark;}).length;
+                var empty=L.filter(function(i){return !b[i];});
+                if(cnt===2&&empty.length===1)return empty[0];
+            }
+            return -1;
+        }
+        var move=tryLine('⭕');
+        if(move<0)move=tryLine('❌');
+        if(move<0&&!b[4])move=4;
+        if(move<0){var corners=[0,2,6,8].filter(function(i){return !b[i];});if(corners.length)move=corners[Math.floor(Math.random()*corners.length)];}
+        if(move<0){var empty=[];for(var i=0;i<9;i++)if(!b[i])empty.push(i);move=empty[Math.floor(Math.random()*empty.length)];}
+        b[move]='⭕';
+        if(this.checkMorpion('⭕')){this.endMorpion(false,'Le bot a gagné ! 🤖');return;}
+        if(b.every(function(x){return x;})){this.endMorpion(false,'Match nul !');return;}
+        this.renderMorpion();
+    },
+    checkMorpion(mark) {
+        var b=this.morpionBoard;
+        var wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        return wins.some(function(L){return L.every(function(i){return b[i]===mark;});});
+    },
+    endMorpion(win,msg) {
+        this.morpionOver=true;
+        var self=this;
+        this.renderMorpion(win?'🎉 Tu as gagné !':(msg||'Perdu...'));
+        setTimeout(function(){
+            document.getElementById('minigame-screen').classList.add('hidden');
+            if(self.onComplete)self.onComplete(win);
+        },1500);
+    },
+
     startSudoku(onComplete) {
         this.onComplete=onComplete;
         document.getElementById('minigame-title').textContent='Mini Sudoku 🧠';
