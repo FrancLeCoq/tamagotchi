@@ -62,7 +62,7 @@ var Farm = {
         // Dynamic sky matching time of day
         this._updateFarmSky();
         this._initFarmCelestial();
-        if(this._farmSkyIv)clearInterval(this._farmSkyIv);if(this._farmCelIv)clearInterval(this._farmCelIv);
+        if(this._farmSkyIv)clearInterval(this._farmSkyIv);if(this._farmCelIv)clearInterval(this._farmCelIv);if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);
         var selfF=this;this._farmSkyIv=setInterval(function(){selfF._updateFarmSky();},3000);
         var farm=this.ensureData(pet);
         this.update(pet);
@@ -152,7 +152,7 @@ var Farm = {
             var h=this.hens[i];
             var bobY=h.state==='pecking'?Math.sin(t*8+h.bob)*4:Math.sin(t*2+h.bob)*1.5;
             var walkBob=h.state==='walking'?Math.sin(t*6+h.bob)*2:0;
-            var sz=80;
+            var sz=70;
             this.ctx.save();
             this.ctx.translate(h.x+sz/2,h.y+sz/2);
             if(h.flipX) this.ctx.scale(-1,1);
@@ -330,9 +330,20 @@ var Farm = {
         wrap.innerHTML='<div class="farm-sun"></div><div class="farm-moon"></div><div class="farm-cloud farm-cloud1"></div><div class="farm-cloud farm-cloud2"></div><div class="farm-cloud farm-cloud3"></div>';
         scene.insertBefore(wrap,scene.firstChild);
         this._farmCelWrap=wrap;
+        // Rain canvas for enclos
+        var rainC=scene.querySelector('.farm-rain-canvas');
+        if(!rainC){rainC=document.createElement('canvas');rainC.className='farm-rain-canvas';rainC.style.cssText='position:absolute;inset:0;z-index:6;pointer-events:none';scene.appendChild(rainC);}
+        rainC.width=scene.offsetWidth;rainC.height=scene.offsetHeight;
+        this._farmRainCanvas=rainC;this._farmRainCtx=rainC.getContext('2d');
+        this._farmRainDrops=[];this._farmRainInit=true;
+        var selfR=this;
+        if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);
+        var rainLoop=function(){
+            selfR._drawFarmRain();selfR._farmRainIv=requestAnimationFrame(rainLoop);
+        };rainLoop();
         this._updateFarmCelestial();
         var self=this;
-        if(this._farmCelIv)clearInterval(this._farmCelIv);
+        if(this._farmCelIv)clearInterval(this._farmCelIv);if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);
         this._farmCelIv=setInterval(function(){self._updateFarmCelestial();},2000);
     },
 
@@ -349,6 +360,25 @@ var Farm = {
         if(moon){
             if(h>=20||h<6){var nh=h>=20?h-20:h+4,p2=nh/10;moon.style.opacity=Math.min(1,Math.min(nh,10-nh));moon.style.left=(p2*(w-40)+10)+'px';moon.style.top='8px';}
             else moon.style.opacity='0';
+        }
+    }
+,
+
+    _drawFarmRain:function(){
+        if(!this._farmRainCtx||!this._farmRainCanvas)return;
+        var ctx=this._farmRainCtx,cw=this._farmRainCanvas.width,ch=this._farmRainCanvas.height;
+        ctx.clearRect(0,0,cw,ch);
+        var raining=(typeof Weather!=='undefined'&&Weather._isRaining)?Weather._isRaining():false;
+        var tgt=raining?150:0;
+        while(this._farmRainDrops.length<tgt)this._farmRainDrops.push({x:Math.random()*cw,y:Math.random()*-ch,s:5+Math.random()*8,l:10+Math.random()*16});
+        while(this._farmRainDrops.length>tgt)this._farmRainDrops.pop();
+        if(this._farmRainDrops.length){
+            ctx.strokeStyle='rgba(160,196,232,.6)';ctx.lineWidth=1.5;
+            for(var k=0;k<this._farmRainDrops.length;k++){
+                var d=this._farmRainDrops[k];d.y+=d.s;d.x-=1.5;
+                if(d.y>ch){d.y=-20;d.x=Math.random()*cw;}
+                ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-2,d.y+d.l);ctx.stroke();
+            }
         }
     }
 };

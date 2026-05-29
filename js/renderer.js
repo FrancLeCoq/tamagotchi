@@ -198,11 +198,11 @@ var Renderer={
         var self=this;this._actionLock=true;this._forceAnim('eating');
         var emoji=foodEmoji||'🌾';
         var big=document.createElement('div');big.className='big-food-anim';big.textContent=emoji;
-        big.style.bottom='75%';big.style.top='auto';big.style.transform='translateX(-50%)';
+        big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
         var feedLoop=setInterval(function(){
             var m=document.createElement('div');m.className='food-fly';m.textContent=emoji;
-            m.style.left='50%';m.style.bottom='70%';m.style.top='auto';
+            m.style.left='55%';m.style.bottom='55%';m.style.top='auto';
             var petPct=self.currentPetX;
             m.style.setProperty('--tx',(petPct-50)+'vw');
             self.els.sceneItems.appendChild(m);
@@ -220,7 +220,7 @@ var Renderer={
         var bookSide=(this.currentPetX>50)?-18:18; // place book on the side with more room
         var bookX=Math.max(8,Math.min(82,this.currentPetX+bookSide));
         var book=document.createElement('div');book.className='big-food-anim';book.textContent='📖';
-        book.style.top='auto';book.style.bottom='5%';book.style.left=bookX+'%';
+        book.style.top='auto';book.style.bottom='55%';book.style.left='55%';
         // Flip book so open pages face the pet
         var bookFlip=(bookX<this.currentPetX)?'':' scaleX(-1)';
         book.style.transform='translateX(-50%)'+bookFlip;
@@ -229,8 +229,9 @@ var Renderer={
         this._applyFlip(bookX<this.currentPetX);
         var loop=setInterval(function(){
             var m=document.createElement('div');m.className='food-fly';m.textContent='🧠';
-            m.style.left=self.currentPetX+'%';m.style.top='40%';
-            m.style.setProperty('--tx','0vw');
+            // Brains descend from book (55% bas) to pet, fade on arrival - SAME as nourrir
+            m.style.left='55%';m.style.bottom='55%';m.style.top='auto';
+            m.style.setProperty('--tx',(self.currentPetX-55)+'vw');
             self.els.sceneItems.appendChild(m);
             setTimeout(function(){m.remove();},1800);
         },1500);
@@ -243,12 +244,12 @@ var Renderer={
     showHeavyShower:function(onEnd){
         var self=this;this._actionLock=true;this._showerLock=true;this._forceAnim('idle');
         var big=document.createElement('div');big.className='big-food-anim';big.textContent='🚿';
-        big.style.top='28%';big.style.transform='translate(-50%,-50%)';
+        big.style.bottom='62%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
         var loop=setInterval(function(){
             var m=document.createElement('div');m.className='food-fly';m.textContent='💧';
-            m.style.left='50%';m.style.top='26%';
-            m.style.setProperty('--tx',(self.currentPetX-50)+'vw');
+            m.style.left='55%';m.style.bottom='58%';m.style.top='auto';
+            m.style.setProperty('--tx',(self.currentPetX-55)+'vw');
             self.els.sceneItems.appendChild(m);
             setTimeout(function(){m.remove();},1800);
         },500);
@@ -286,12 +287,12 @@ var Renderer={
     showBigSyringe:function(onEnd){
         var self=this;this._actionLock=true;this._forceAnim('sick');
         var big=document.createElement('div');big.className='big-food-anim';big.textContent='💉';
-        big.style.top='35%';big.style.transform='translate(-50%,-50%) rotate(180deg)';
+        big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
         this.els.scene.appendChild(big);
         var loop=setInterval(function(){
             var m=document.createElement('div');m.className='food-fly';m.textContent='💉';
-            m.style.left='50%';m.style.bottom='70%';m.style.top='auto';
-            m.style.setProperty('--tx',(self.currentPetX-50)+'vw');
+            m.style.left='55%';m.style.bottom='55%';m.style.top='auto';
+            m.style.setProperty('--tx',(self.currentPetX-55)+'vw');
             m.style.setProperty('--rot','180deg');
             m.classList.add('rotated180');
             self.els.sceneItems.appendChild(m);
@@ -323,7 +324,7 @@ var Renderer={
             hrt.style.fontSize='48px';
             self.els.sceneItems.appendChild(hrt);setTimeout(function(){hrt.remove();},1500);
         },800);
-        var timer=this._countdown('💕 Moment de convivialité avec ma poule',60,'#e84393',function(){
+        var timer=this._countdown('💕 Moment intime',60,'#e84393',function(){
             clearInterval(heartLoop);w.classList.add('hidden');self._calinLock=false;
             if(onAmourEnd)onAmourEnd();
         });
