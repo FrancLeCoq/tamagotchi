@@ -79,7 +79,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .mood-emoji.hidden{opacity:0;pointer-events:none}
 @keyframes moodFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.06)}}
 .emotion-bubble{position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-size:24px;animation:pop .6s ease;pointer-events:none}
-.speech-bubble{position:absolute;top:-50px;left:50%;transform:translateX(-50%);background:#fff;color:#333;padding:5px 10px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;pointer-events:none;animation:fadeUp .4s;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.speech-bubble{position:absolute;bottom:30%;left:50%;transform:translateX(-50%);background:#fff;color:#333;padding:6px 12px;border-radius:12px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none;z-index:20;animation:fadeUp .4s;box-shadow:0 2px 10px rgba(0,0,0,.25);direction:ltr;max-width:80%}
 .speech-bubble::after{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid #fff}
 
 .scene-items{position:absolute;inset:0;pointer-events:none;z-index:7}.float-item{position:absolute;font-size:28px;animation:floatUp 1.5s ease-out forwards;pointer-events:none}
@@ -370,9 +370,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* ═══ CELESTIAL ELEMENTS — above everything (z-index:4) ═══ */
 .layer-clouds{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
 .layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
-.cel-sun{position:absolute;width:55px;height:55px;border-radius:50%;background:radial-gradient(circle,#FFF8A0 0%,#FFD700 30%,#FFA500 60%,rgba(255,165,0,0) 100%);box-shadow:0 0 40px rgba(255,200,50,.8),0 0 80px rgba(255,180,50,.4),0 0 120px rgba(255,160,50,.2);transition:left .3s,top .3s,opacity 1s;opacity:0}
-.cel-moon{position:absolute;width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#F0F0F8 0%,#D8D8E8 50%,#B0B0C8 100%);box-shadow:0 0 30px rgba(180,200,255,.7),0 0 60px rgba(160,180,255,.3);transition:left .3s,top .3s,opacity 1s;opacity:0}
-.cel-moon::after{content:'';position:absolute;width:25px;height:25px;border-radius:50%;background:transparent;box-shadow:8px -4px 0 rgba(20,20,60,.35);top:4px;left:4px}
+.cel-sun{position:absolute;width:60px;height:60px;background:url('../assets/weather/soleil.png') center/contain no-repeat;filter:drop-shadow(0 0 20px rgba(255,200,50,.7));transition:left .3s,top .3s,opacity 1s;opacity:0}
+.cel-moon{position:absolute;width:48px;height:48px;background:url('../assets/weather/lune.png') center/contain no-repeat;filter:drop-shadow(0 0 16px rgba(180,200,255,.6));transition:left .3s,top .3s,opacity 1s;opacity:0}
+
 .cloud-el{position:absolute;pointer-events:none;border-radius:50px;opacity:.88;filter:blur(0px);transition:none;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 
 /* ═══ FARM LAYOUT — bonheur full width, then 2 small ═══ */

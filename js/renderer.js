@@ -216,52 +216,39 @@ var Renderer={
 
     // ═══ LECTURE — book at pet HEIGHT, pet looks right at it ───
     showStudyAnimation:function(onEnd){
-        var self=this;this._actionLock=true;this._studyLock=true;
-        var pw=this.els.petWrapper;if(!pw){this._actionLock=false;this._studyLock=false;return;}
-        var pr=pw.getBoundingClientRect(),sr=this.els.scene.getBoundingClientRect();
-        // Position book at same vertical level as pet's face (top 30% of pet height)
-        var petBottomPct=((sr.bottom-pr.bottom)/sr.height*100);
-        var petHeightPct=(pr.height/sr.height*100);
-        var bookBottomPct=2; // Bottom of scene, just above buttons
-        // Book slightly to the right or left depending on pet direction
-        var bookLeft=(self.walkDir>0)?self.currentPetX+16:self.currentPetX-24;
-        bookLeft=Math.max(5,Math.min(75,bookLeft));
-        var book=document.createElement('div');book.className='big-book-anim';book.textContent='📖';
-        book.style.bottom=bookBottomPct+'%';
-        book.style.left=bookLeft+'%';
-        book.style.fontSize='52px';
+        var self=this;this._actionLock=true;this._studyLock=true;this._forceAnim('idle');
+        // Book at V height 5% (bottom of scene, pet level)
+        var book=document.createElement('div');book.className='big-food-anim';book.textContent='📖';
+        book.style.top='auto';book.style.bottom='5%';book.style.left=this.currentPetX+'%';
+        book.style.transform='translateX(-50%)';
         this.els.scene.appendChild(book);
-        // Pet faces the book (flip toward it)
-        if(self.walkDir<0) self._applyFlip(false); else self._applyFlip(false);
-        // Pet idle - no walking
-        self._forceAnim('idle');
-        var brainLoop=setInterval(function(){
-            var b=document.createElement('div');b.className='brain-float';b.textContent='🧠';
-            b.style.left=(self.currentPetX-8+Math.random()*16)+'%';
-            b.style.bottom=(petBottomPct+18)+'%';
-            self.els.sceneItems.appendChild(b);setTimeout(function(){b.remove();},2500);
-        },700);
-        var timer=this._countdown('📖 Francis lit',40,function(){
-            clearInterval(brainLoop);book.remove();self._actionLock=false;
+        var loop=setInterval(function(){
+            var m=document.createElement('div');m.className='food-fly';m.textContent='🧠';
+            m.style.left=self.currentPetX+'%';m.style.top='40%';
+            m.style.setProperty('--tx','0vw');
+            self.els.sceneItems.appendChild(m);
+            setTimeout(function(){m.remove();},1800);
+        },1500);
+        var timer=this._countdown('📖 Francis lit',40,'#4a90d9',function(){
+            clearInterval(loop);book.remove();self._actionLock=false;self._studyLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
 
     // ═══ DOUCHE — 30s, showerhead above pet ═══
     showHeavyShower:function(onEnd){
-        // Freeze pet movement during shower
-        this._showerLock=true;
-        var self=this;this._actionLock=true;
-        var pw=this.els.petWrapper,sc=this.els.scene;if(!pw||!sc){this._actionLock=false;return;}
-        var pr=pw.getBoundingClientRect(),sr=sc.getBoundingClientRect();
-        var cx=((pr.left+pr.width/2-sr.left)/sr.width*100),ty=((pr.top-sr.top)/sr.height*100)-8;
-        var head=document.createElement('div');head.className='shower-head';head.textContent='🚿';
-        head.style.left=cx+'%';head.style.top=Math.max(0,ty-3)+'%';
-        this.els.sceneItems.appendChild(head);
-        var dropLoop=setInterval(function(){
-            for(var i=0;i<3;i++){var d=document.createElement('div');d.className='shower-drop';d.textContent='💧';d.style.left=(cx-10+Math.random()*20)+'%';d.style.top=Math.max(0,ty)+'%';self.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},900);}
-        },200);
-        var timer=this._countdown('🚿 Francis se lave',30,function(){
-            clearInterval(dropLoop);head.remove();self._actionLock=false;
+        var self=this;this._actionLock=true;this._showerLock=true;this._forceAnim('idle');
+        var big=document.createElement('div');big.className='big-food-anim';big.textContent='🚿';
+        big.style.top='28%';big.style.transform='translate(-50%,-50%)';
+        this.els.scene.appendChild(big);
+        var loop=setInterval(function(){
+            var m=document.createElement('div');m.className='food-fly';m.textContent='💧';
+            m.style.left='50%';m.style.top='26%';
+            m.style.setProperty('--tx',(self.currentPetX-50)+'vw');
+            self.els.sceneItems.appendChild(m);
+            setTimeout(function(){m.remove();},1800);
+        },500);
+        var timer=this._countdown('🚿 Francis se lave',30,'#3498db',function(){
+            clearInterval(loop);big.remove();self._actionLock=false;self._showerLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
 
@@ -292,13 +279,20 @@ var Renderer={
 
     // ═══ SERINGUE — 180°, flies to pet ═══
     showBigSyringe:function(onEnd){
-        var self=this;this._actionLock=true;
+        var self=this;this._actionLock=true;this._forceAnim('sick');
+        var big=document.createElement('div');big.className='big-food-anim';big.textContent='💉';
+        big.style.top='35%';big.style.transform='translate(-50%,-50%) rotate(180deg)';
+        this.els.scene.appendChild(big);
         var loop=setInterval(function(){
-            var s=document.createElement('div');s.className='syringe-fly';s.textContent='💉';
-            s.style.setProperty('--pet-x',self.currentPetX+'%');
-            self.els.sceneItems.appendChild(s);setTimeout(function(){s.remove();},2000);
-        },2100);
-        var timer=this._countdown('🚨 Soin en cours',20,function(){clearInterval(loop);self._actionLock=false;});
+            var m=document.createElement('div');m.className='food-fly';m.textContent='💉';
+            m.style.left='50%';m.style.top='30%';
+            m.style.setProperty('--tx',(self.currentPetX-50)+'vw');
+            self.els.sceneItems.appendChild(m);
+            setTimeout(function(){m.remove();},1800);
+        },1600);
+        var timer=this._countdown('🚨 Soin en cours',20,'#e74c3c',function(){
+            clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        });
     },
 
     // ═══ CALINER — hen static left, pet locked, countdown ═══
@@ -347,14 +341,16 @@ var Renderer={
     showEmotion:function(e,d){this.els.emotionIcon.textContent=e;this.els.emotionBubble.classList.remove('hidden');var s=this;setTimeout(function(){s.els.emotionBubble.classList.add('hidden');},d||1500);},
     showSpeech:function(t){
         var b=this.els.speechBubble,tx=this.els.speechText;
-        // Force LTR completely
         tx.textContent=t;
-        tx.setAttribute('dir','ltr');
-        tx.style.direction='ltr';tx.style.unicodeBidi='isolate';tx.style.textAlign='center';tx.style.writingMode='horizontal-tb';
         b.setAttribute('dir','ltr');
-        b.style.direction='ltr';b.style.transform='none';
+        // Position above current pet (bubble is now OUTSIDE pet-wrapper, no mirror)
+        var petBottom=8; // pet wrapper bottom %
+        b.style.left=this.currentPetX+'%';
+        b.style.bottom='42%';
+        b.style.transform='translateX(-50%)';
         b.classList.remove('hidden');
-        var s=this;setTimeout(function(){b.classList.add('hidden');},3000);
+        var s=this;clearTimeout(this._speechT);
+        this._speechT=setTimeout(function(){b.classList.add('hidden');},3000);
     },
     showSleepZ:function(){var z=document.createElement('div');z.className='zzz';z.textContent='Z';z.style.left=(this.currentPetX+5)+'%';z.style.top='35%';this.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);},
     showHeartAt:function(x,y){

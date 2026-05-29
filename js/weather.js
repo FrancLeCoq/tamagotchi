@@ -103,7 +103,8 @@ var Weather={
             el.className='cloud-el';
             var w=90+Math.random()*110;
             var h=w*0.38;
-            el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*50)+'px;left:'+(Math.random()*sw)+'px;background:rgba(230,238,252,'+(0.45+Math.random()*0.35)+');border-radius:'+h+'px '+h+'px '+h+'px '+h+'px;';
+            var cloudImg=(i%2===0)?'nuage1.png':'nuage2.png';
+            el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*45)+'px;left:'+(Math.random()*sw)+'px;background:url(\'assets/weather/'+cloudImg+'\') center/contain no-repeat;opacity:'+(0.7+Math.random()*0.25)+';';
             container.appendChild(el);
             this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.12+Math.random()*0.35,w:w});
         }
