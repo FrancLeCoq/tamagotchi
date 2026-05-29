@@ -370,9 +370,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* ═══ CELESTIAL ELEMENTS — above everything (z-index:4) ═══ */
 .layer-clouds{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
 .layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
-.cel-sun{position:absolute;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,#FFF8A0 0%,#FFD700 30%,#FFA500 60%,rgba(255,165,0,0) 100%);box-shadow:0 0 40px rgba(255,200,50,.8),0 0 80px rgba(255,180,50,.4),0 0 120px rgba(255,160,50,.2);transition:left .3s,top .3s,opacity 1s;opacity:0}
-.cel-moon{position:absolute;width:65px;height:65px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#F0F0F8 0%,#D8D8E8 50%,#B0B0C8 100%);box-shadow:0 0 30px rgba(180,200,255,.7),0 0 60px rgba(160,180,255,.3);transition:left .3s,top .3s,opacity 1s;opacity:0}
-.cel-moon::after{content:'';position:absolute;width:38px;height:38px;border-radius:50%;background:transparent;box-shadow:8px -4px 0 rgba(20,20,60,.35);top:4px;left:4px}
+.cel-sun{position:absolute;width:55px;height:55px;border-radius:50%;background:radial-gradient(circle,#FFF8A0 0%,#FFD700 30%,#FFA500 60%,rgba(255,165,0,0) 100%);box-shadow:0 0 40px rgba(255,200,50,.8),0 0 80px rgba(255,180,50,.4),0 0 120px rgba(255,160,50,.2);transition:left .3s,top .3s,opacity 1s;opacity:0}
+.cel-moon{position:absolute;width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#F0F0F8 0%,#D8D8E8 50%,#B0B0C8 100%);box-shadow:0 0 30px rgba(180,200,255,.7),0 0 60px rgba(160,180,255,.3);transition:left .3s,top .3s,opacity 1s;opacity:0}
+.cel-moon::after{content:'';position:absolute;width:25px;height:25px;border-radius:50%;background:transparent;box-shadow:8px -4px 0 rgba(20,20,60,.35);top:4px;left:4px}
 .cloud-el{position:absolute;pointer-events:none;border-radius:50px;opacity:.88;filter:blur(0px);transition:none;box-shadow:0 2px 8px rgba(0,0,0,.05)}
 
 /* ═══ FARM LAYOUT — bonheur full width, then 2 small ═══ */
@@ -406,3 +406,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 
 /* ═══ FARM SKY ═══ */
 .farm-scene{background-image:url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,#87CEEB 0%,#b8e4f0 50%,#3a6a28 50%,#3a6a28 100%)!important;background-size:cover,100% 100%;background-position:center bottom,center}
+
+/* ═══ FARM CELESTIAL (small, top of enclos) ═══ */
+.farm-celestial{pointer-events:none}
+.farm-sun{position:absolute;width:36px;height:36px;border-radius:50%;background:radial-gradient(circle,#FFF8A0 0%,#FFD700 45%,rgba(255,165,0,0) 100%);box-shadow:0 0 20px rgba(255,200,50,.7);transition:left .5s,opacity 1s;opacity:0}
+.farm-moon{position:absolute;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#F0F0F8,#C8C8DC);box-shadow:0 0 14px rgba(180,200,255,.6);transition:left .5s,opacity 1s;opacity:0}
+.farm-cloud{position:absolute;background:rgba(245,248,255,.8);border-radius:30px;filter:blur(1px)}
+.farm-cloud1{width:60px;height:22px;top:12px;left:30%;animation:farmCloudDrift 25s linear infinite}
+.farm-cloud2{width:50px;height:18px;top:30px;left:60%;animation:farmCloudDrift 32s linear infinite}
+@keyframes farmCloudDrift{0%{transform:translateX(-120px)}100%{transform:translateX(120vw)}}

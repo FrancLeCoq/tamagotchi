@@ -94,6 +94,7 @@ const Engine = {
         if(pet.coins===undefined) pet.coins=0;
         if(pet.jeu===undefined) pet.jeu=0;
         if(pet.travail===undefined) pet.travail=0;
+        if(pet.farm){if(pet.farm.farmPoops===undefined)pet.farm.farmPoops=0;if(pet.farm.hens===0){pet.farm.feedLevel=100;pet.farm.cleanLevel=100;pet.farm.farmPoops=0;}}
         if(pet.housingLevel===undefined) pet.housingLevel=0;
         if(pet.pipis===undefined) pet.pipis=0;
         if(pet.dernierePipi===undefined) pet.dernierePipi=Date.now();
@@ -138,12 +139,20 @@ const Engine = {
     cl(v){return Math.max(0,Math.min(100,v));},
     getMood(pet){
         if(pet.isSleeping) return 'sleeping';
+        if(pet.sante<50) return 'malade';
+        if(pet.faim<50) return 'faim';
+        if(pet.energie<50) return 'fatigue';
+        if((pet.hygiene||50)<50) return 'sale';
+        if((pet.jeu||0)<50) return 'jeu';
+        if((pet.amour||30)<50) return 'triste';
+        if(pet.bonheur<50) return 'triste';
+        return 'ok';
+    },
+    // Mood for SPRITE (sad sprite only when really low)
+    getSpriteMood(pet){
+        if(pet.isSleeping) return 'sleeping';
         if(pet.sante<15) return 'malade';
-        if(pet.faim<15) return 'faim';
-        if(pet.energie<15) return 'fatigue';
-        if(pet.hygiene<20) return 'sale';
-        if((pet.jeu||0)<15) return 'jeu';
-        if(pet.bonheur<15) return 'triste';
+        if(pet.faim<15||pet.energie<15||(pet.hygiene||50)<15) return 'sad';
         return 'ok';
     },
     getDialogue(pet){var m=this.getMood(pet);var pool=this.DIALOGUES[m]||this.DIALOGUES.faim;if((pet.jeu||0)<20&&Math.random()<.3)pool=this.DIALOGUES.jeu;return pool[Math.floor(Math.random()*pool.length)];},

@@ -71,7 +71,7 @@ var Weather={
         if(h>=6&&h<20){
             var p=(h-6)/14;
             var sx=p*(sw-90)+10;
-            var sy=sh*.08+(1-Math.sin(p*Math.PI))*sh*.18;
+            var sy=sh*.02+(1-Math.sin(p*Math.PI))*sh*.10;
             var al=Math.min(1,Math.min((h-6)/1.5,(20-h)/1.5));
             this._sunEl.style.left=sx+'px';
             this._sunEl.style.top=sy+'px';
@@ -82,7 +82,7 @@ var Weather={
         if(h>=20||h<6){
             var nh=h>=20?h-20:h+4,p2=nh/10;
             var mx=p2*(sw-65)+8;
-            var my=sh*.05+(1-Math.sin(p2*Math.PI))*sh*.15;
+            var my=sh*.02+(1-Math.sin(p2*Math.PI))*sh*.08;
             var ma=Math.min(1,Math.min(nh,10-nh));
             this._moonEl.style.opacity=ma;
             this._moonEl.style.left=mx+'px';

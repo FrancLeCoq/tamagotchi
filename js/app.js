@@ -91,7 +91,7 @@ var App={
         this.gameLoop=setInterval(function(){self.gameTick();},5000);
         this.moveLoop=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.paused)Renderer.tickMovement(self.pet);},50);
         this.saveInterval=setInterval(function(){Storage.save(self.pet);},60000);
-        this.speechInterval=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.pet.isSleeping&&!self.paused&&Math.random()<.3)Renderer.showSpeech(Engine.getDialogue(self.pet));},15000);
+        this.speechInterval=setInterval(function(){if(self.pet&&!self.pet.estMort&&!self.pet.isSleeping&&!self.paused&&Math.random()<.4){var m=Engine.getMood(self.pet);if(m!=='ok')Renderer.showSpeech(Engine.getDialogue(self.pet));}},12000);
         this.sleepZInterval=setInterval(function(){if(self.pet&&self.pet.isSleeping&&!self.paused)Renderer.showSleepZ();},1500);
     },
     stopLoops:function(){clearInterval(this.gameLoop);clearInterval(this.moveLoop);clearInterval(this.saveInterval);clearInterval(this.speechInterval);clearInterval(this.sleepZInterval);},
@@ -197,15 +197,32 @@ var App={
     },
 
     // ═══ DORMIR ═══
-    doSleep:function(){if(!this.pet||this.pet.estMort)return;var r=Engine.sleep(this.pet);Renderer.toast(r.msg);Storage.save(this.pet);Renderer.update(this.pet);},
+    doSleep:function(){
+        if(!this.pet||this.pet.estMort)return;
+        var wasSleeping=this.pet.isSleeping;
+        var r=Engine.sleep(this.pet);Renderer.toast(r.msg);
+        Storage.save(this.pet);Renderer.update(this.pet);
+        // If just started sleeping, show countdown + energie gauge at end
+        if(!wasSleeping&&this.pet.isSleeping){
+            var oldEnergie=this.pet.energie||50;var self=this;
+            Renderer.showSleepAnimation(function(){
+                // Wake up and show gauge
+                self.pet.energie=Math.min(100,oldEnergie+20);
+                self.pet.isSleeping=false;
+                Renderer.animateGauge('energie','Énergie',oldEnergie,self.pet.energie,'#9b59b6');
+                Renderer.update(self.pet);Storage.save(self.pet);
+            });
+        }
+    },
 
     // ═══ SOIGNER — 10s animation, +20%, gauge result ═══
     doHeal:function(){
         if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
         document.getElementById('care-screen').classList.add('hidden');
         var r=Engine.heal(this.pet);Renderer.toast(r.msg);
-        if(r.ok){Renderer.showBigSyringe();Storage.save(this.pet);
-        var self=this;setTimeout(function(){Renderer.showGaugeResult('Santé',self.pet.sante);Renderer.update(self.pet);},10000);}
+        if(r.ok){var oldSante=this.pet.sante||50;var self=this;
+        Renderer.showBigSyringe(function(){Renderer.animateGauge('sante','Santé',oldSante,self.pet.sante,'#e74c3c');Renderer.update(self.pet);});
+        Storage.save(this.pet);}
     },
 
     // ═══ TOILETTE — +20%, gauge result ═══

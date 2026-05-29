@@ -99,10 +99,10 @@ var Renderer={
         var stage=Engine.STAGES[pet.stade];
         if(this._lastStade!==pet.stade){this._lastStade=pet.stade;this.els.pet.style.width=stage.size+'px';this.els.pet.style.height=stage.size+'px';}
         if(!this._actionLock&&this._curAnim!=='walking'){
-            var mood=Engine.getMood(pet);
-            if(mood==='sleeping')this._applyAnim('sleeping');
-            else if(mood==='malade')this._applyAnim('sick');
-            else if(mood==='triste'||mood==='faim'||mood==='fatigue'||mood==='sale')this._applyAnim('sad');
+            var sm=Engine.getSpriteMood?Engine.getSpriteMood(pet):Engine.getMood(pet);
+            if(sm==='sleeping')this._applyAnim('sleeping');
+            else if(sm==='malade')this._applyAnim('sick');
+            else if(sm==='sad')this._applyAnim('sad');
             else this._applyAnim('idle');
         }
     },
@@ -328,12 +328,32 @@ var Renderer={
         });
     },
 
+    // ═══ DORMIR — 10s with Zzz, gauge at end ═══
+    showSleepAnimation:function(onEnd){
+        var self=this;this._actionLock=true;
+        this._forceAnim('sleeping');
+        var zzzLoop=setInterval(function(){
+            var z=document.createElement('div');z.className='zzz';z.textContent='Z';
+            z.style.left=(self.currentPetX+5+Math.random()*5)+'%';z.style.top=(35+Math.random()*10)+'%';
+            z.style.fontSize=(20+Math.random()*16)+'px';
+            self.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);
+        },800);
+        var timer=this._countdown('💤 Francis dort',10,'#9b59b6',function(){
+            clearInterval(zzzLoop);self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        });
+    },
+
     petHappyAnimation:function(){this._forceAnim('happy');var s=this;setTimeout(function(){s._forceAnim('idle');},1200);},
     showEmotion:function(e,d){this.els.emotionIcon.textContent=e;this.els.emotionBubble.classList.remove('hidden');var s=this;setTimeout(function(){s.els.emotionBubble.classList.add('hidden');},d||1500);},
     showSpeech:function(t){
         var b=this.els.speechBubble,tx=this.els.speechText;
-        tx.textContent=t;tx.style.direction='ltr';tx.style.unicodeBidi='plaintext';
-        b.style.direction='ltr';b.classList.remove('hidden');
+        // Force LTR completely
+        tx.textContent=t;
+        tx.setAttribute('dir','ltr');
+        tx.style.direction='ltr';tx.style.unicodeBidi='isolate';tx.style.textAlign='center';tx.style.writingMode='horizontal-tb';
+        b.setAttribute('dir','ltr');
+        b.style.direction='ltr';b.style.transform='none';
+        b.classList.remove('hidden');
         var s=this;setTimeout(function(){b.classList.add('hidden');},3000);
     },
     showSleepZ:function(){var z=document.createElement('div');z.className='zzz';z.textContent='Z';z.style.left=(this.currentPetX+5)+'%';z.style.top='35%';this.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);},

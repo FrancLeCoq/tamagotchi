@@ -4,7 +4,7 @@ var Farm = {
     henImg:null, bgDayImg:null, bgNightImg:null,
 
     ensureData:function(pet){
-        if(!pet.farm) pet.farm={hens:0,feedLevel:80,cleanLevel:80,lastUpdate:Date.now(),deadRecent:0,totalEggs:0};
+        if(!pet.farm) pet.farm={hens:0,feedLevel:100,cleanLevel:100,lastUpdate:Date.now(),deadRecent:0,totalEggs:0,farmPoops:0};
         return pet.farm;
     },
 
@@ -61,7 +61,8 @@ var Farm = {
         this.isOpen=true;
         // Dynamic sky matching time of day
         this._updateFarmSky();
-        if(this._farmSkyIv)clearInterval(this._farmSkyIv);
+        this._initFarmCelestial();
+        if(this._farmSkyIv)clearInterval(this._farmSkyIv);if(this._farmCelIv)clearInterval(this._farmCelIv);
         var selfF=this;this._farmSkyIv=setInterval(function(){selfF._updateFarmSky();},3000);
         var farm=this.ensureData(pet);
         this.update(pet);
@@ -165,7 +166,7 @@ var Farm = {
         // Travail gauge ticks while in enclos
         if(typeof App!=='undefined'&&App.pet){App.pet.travail=Math.min(100,(App.pet.travail||0)+0.005);}
         // Poop generation: 2 per 10% decay in cleanLevel
-        var farm=this.ensureData(typeof App!=='undefined'?App.pet:{});
+        var farm=(typeof App!=='undefined'&&App.pet)?App.pet.farm:null;
         if(farm&&farm.hens>0){
             var poopTarget=Math.floor((100-farm.cleanLevel)/10)*2;
             farm.farmPoops=farm.farmPoops||0;
@@ -284,8 +285,8 @@ var Farm = {
 
     drawFarmPoops:function(){
         if(!this.ctx||!this.canvas)return;
-        var farm=this.ensureData(typeof App!=='undefined'?App.pet:{});
-        if(!farm)return;
+        if(typeof App==='undefined'||!App.pet||!App.pet.farm)return;
+        var farm=App.pet.farm;
         var count=farm.farmPoops||0;
         if(count<=0)return;
         // Draw poops spread across bottom of canvas
@@ -313,5 +314,38 @@ var Farm = {
         scene.style.backgroundImage="url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,"+top+" 0%,"+mid+" 48%,#3a6a28 48%,#3a6a28 100%)";
         scene.style.backgroundSize='cover,100% 100%';
         scene.style.backgroundPosition='center bottom,center';
+    }
+,
+
+    _initFarmCelestial:function(){
+        var scene=document.getElementById('farm-scene');if(!scene)return;
+        // Remove old
+        var old=scene.querySelector('.farm-celestial');if(old)old.remove();
+        var wrap=document.createElement('div');
+        wrap.className='farm-celestial';
+        wrap.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden';
+        wrap.innerHTML='<div class="farm-sun"></div><div class="farm-moon"></div><div class="farm-cloud farm-cloud1"></div><div class="farm-cloud farm-cloud2"></div>';
+        scene.insertBefore(wrap,scene.firstChild);
+        this._farmCelWrap=wrap;
+        this._updateFarmCelestial();
+        var self=this;
+        if(this._farmCelIv)clearInterval(this._farmCelIv);
+        this._farmCelIv=setInterval(function(){self._updateFarmCelestial();},2000);
+    },
+
+    _updateFarmCelestial:function(){
+        if(!this._farmCelWrap)return;
+        var h=(typeof Weather!=='undefined')?Weather.getHour():12;
+        var sun=this._farmCelWrap.querySelector('.farm-sun');
+        var moon=this._farmCelWrap.querySelector('.farm-moon');
+        var w=this._farmCelWrap.offsetWidth||400;
+        if(sun){
+            if(h>=6&&h<20){var p=(h-6)/14;sun.style.opacity=Math.min(1,Math.min((h-6)/1.5,(20-h)/1.5));sun.style.left=(p*(w-50)+10)+'px';sun.style.top='8px';}
+            else sun.style.opacity='0';
+        }
+        if(moon){
+            if(h>=20||h<6){var nh=h>=20?h-20:h+4,p2=nh/10;moon.style.opacity=Math.min(1,Math.min(nh,10-nh));moon.style.left=(p2*(w-40)+10)+'px';moon.style.top='8px';}
+            else moon.style.opacity='0';
+        }
     }
 };
