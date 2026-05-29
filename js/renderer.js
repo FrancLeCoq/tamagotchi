@@ -118,15 +118,8 @@ var Renderer={
         else{btn.classList.remove('sleep-active');if(ic)ic.textContent='💤';if(lb)lb.textContent='Dormir';}
     },
     updateMoodEmoji:function(pet){
-        var el=this.els.moodEmoji;if(!el)return;
-        var key='',emoji='';
-        if(pet.isSleeping){key='sleep';emoji='💤';}else if((pet.poops||0)>=2){key='poop';emoji='🤢';}
-        else if((pet.hygiene||50)<25){key='dirty';emoji='🪥';}else if((pet.amour||30)<20){key='lonely';emoji='💔';}
-        else if((pet.faim||50)<20){key='hungry';emoji='😫';}else if((pet.energie||50)<20){key='tired';emoji='😴';}
-        else if((pet.sante||50)<25){key='sick';emoji='🤒';}else{key='ok';}
-        if(key===this._lastMood)return;this._lastMood=key;
-        if(!emoji){el.classList.add('hidden');return;}
-        el.textContent=emoji;el.style.left='58%';el.style.bottom='48%';el.classList.remove('hidden');
+        // Mood emoji disabled — speech bubbles convey mood instead
+        var el=this.els.moodEmoji;if(el)el.classList.add('hidden');
     },
     updatePoops:function(pet){
         var c=this.els.poopContainer;if(!c)return;
@@ -194,27 +187,51 @@ var Renderer={
     },
 
     // ═══ NOURRIR — big food pulsing + flies to beak ═══
+    // ═══ Fly a small item from origin to pet, fade to 0 on arrival ═══
+    _flyItemToPet:function(emoji,rotate){
+        var scene=this.els.scene;if(!scene)return;
+        var pw=this.els.petWrapper;if(!pw)return;
+        var sRect=scene.getBoundingClientRect();
+        var pRect=pw.getBoundingClientRect();
+        // Origin: 55% width, 55% from bottom (= 45% from top)
+        var startX=sRect.width*0.55;
+        var startY=sRect.height*0.45;
+        // Target: center of pet
+        var targetX=(pRect.left-sRect.left)+pRect.width/2;
+        var targetY=(pRect.top-sRect.top)+pRect.height*0.4;
+        var dx=targetX-startX, dy=targetY-startY;
+        var item=document.createElement('div');
+        item.style.cssText='position:absolute;font-size:30px;z-index:8;pointer-events:none;left:'+startX+'px;top:'+startY+'px';
+        item.textContent=emoji;
+        scene.appendChild(item);
+        var rot=rotate?' rotate(180deg)':'';
+        if(item.animate){
+            item.animate([
+                {transform:'translate(0,0) scale(1)'+rot,opacity:1},
+                {transform:'translate('+(dx*0.85)+'px,'+(dy*0.85)+'px) scale(.6)'+rot,opacity:.85,offset:.75},
+                {transform:'translate('+dx+'px,'+dy+'px) scale(.15)'+rot,opacity:0}
+            ],{duration:1300,easing:'ease-in',fill:'forwards'}).onfinish=function(){if(item.parentNode)item.remove();};
+        }else{setTimeout(function(){if(item.parentNode)item.remove();},1300);}
+    },
+
     petEatAnimation:function(foodEmoji,onEnd){
-        var self=this;this._actionLock=true;this._forceAnim('eating');
+        this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('eating');
         var emoji=foodEmoji||'🌾';
         var big=document.createElement('div');big.className='big-food-anim';big.textContent=emoji;
         big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
-        var feedLoop=setInterval(function(){
-            var m=document.createElement('div');m.className='food-fly';m.textContent=emoji;
-            m.style.left='55%';m.style.bottom='55%';m.style.top='auto';
-            var petPct=self.currentPetX;
-            m.style.setProperty('--tx',(petPct-50)+'vw');
-            self.els.sceneItems.appendChild(m);
-            setTimeout(function(){m.remove();},1800);
-        },1600);
+        var feedLoop=setInterval(function(){self._flyItemToPet(emoji,false);},1500);
         var timer=this._countdown('🍽️ Francis mange',10,'#44cc66',function(){
             clearInterval(feedLoop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
 
     // ═══ LECTURE — book at pet HEIGHT, pet looks right at it ───
+    _resetLocks:function(){
+        this._actionLock=false;this._studyLock=false;this._showerLock=false;this._calinLock=false;
+    },
     showStudyAnimation:function(onEnd){
+        this._resetLocks();
         var self=this;this._actionLock=true;this._studyLock=true;this._forceAnim('idle');
         // Book beside pet (not overlapping), pages facing pet
         var bookSide=(this.currentPetX>50)?-18:18; // place book on the side with more room
@@ -227,14 +244,7 @@ var Renderer={
         this.els.scene.appendChild(book);
         // Pet faces the book
         this._applyFlip(bookX<this.currentPetX);
-        var loop=setInterval(function(){
-            var m=document.createElement('div');m.className='food-fly';m.textContent='🧠';
-            // Brains descend from book (55% bas) to pet, fade on arrival - SAME as nourrir
-            m.style.left='55%';m.style.bottom='55%';m.style.top='auto';
-            m.style.setProperty('--tx',(self.currentPetX-55)+'vw');
-            self.els.sceneItems.appendChild(m);
-            setTimeout(function(){m.remove();},1800);
-        },1500);
+        var loop=setInterval(function(){self._flyItemToPet('🧠',false);},1400);
         var timer=this._countdown('📖 Francis lit',40,'#4a90d9',function(){
             clearInterval(loop);book.remove();self._actionLock=false;self._studyLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
@@ -242,25 +252,19 @@ var Renderer={
 
     // ═══ DOUCHE — 30s, showerhead above pet ═══
     showHeavyShower:function(onEnd){
-        var self=this;this._actionLock=true;this._showerLock=true;this._forceAnim('idle');
+        this._resetLocks();var self=this;this._actionLock=true;this._showerLock=true;this._forceAnim('idle');
         var big=document.createElement('div');big.className='big-food-anim';big.textContent='🚿';
         big.style.bottom='62%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
-        var loop=setInterval(function(){
-            var m=document.createElement('div');m.className='food-fly';m.textContent='💧';
-            m.style.left='55%';m.style.bottom='58%';m.style.top='auto';
-            m.style.setProperty('--tx',(self.currentPetX-55)+'vw');
-            self.els.sceneItems.appendChild(m);
-            setTimeout(function(){m.remove();},1800);
-        },500);
+        var loop=setInterval(function(){self._flyItemToPet('💧',false);},450);
         var timer=this._countdown('🚿 Francis se lave',30,'#3498db',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._showerLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
 
     // ═══ BALAI — broom sweeps poops, they fade ═══
-    showBigBroom:function(){
-        var self=this;this._actionLock=true;
+    showBigBroom:function(onEnd){
+        this._resetLocks();var self=this;this._actionLock=true;
         // Sweep each poop with broom
         var poops=this.els.poopContainer?this.els.poopContainer.querySelectorAll('.poop'):[];
         var idx=0;
@@ -278,26 +282,18 @@ var Renderer={
                 idx++;
             }
         },1000);
-        var timer=this._countdown('🧹 Nettoyage de Francis',10,function(){
-            clearInterval(sweepLoop);broom.remove();self._actionLock=false;
+        var timer=this._countdown('🧹 Nettoyage de Francis',10,'#e8a020',function(){
+            clearInterval(sweepLoop);broom.remove();self._actionLock=false;if(onEnd)onEnd();
         });
     },
 
     // ═══ SERINGUE — 180°, flies to pet ═══
     showBigSyringe:function(onEnd){
-        var self=this;this._actionLock=true;this._forceAnim('sick');
+        this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('sick');
         var big=document.createElement('div');big.className='big-food-anim';big.textContent='💉';
         big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
         this.els.scene.appendChild(big);
-        var loop=setInterval(function(){
-            var m=document.createElement('div');m.className='food-fly';m.textContent='💉';
-            m.style.left='55%';m.style.bottom='55%';m.style.top='auto';
-            m.style.setProperty('--tx',(self.currentPetX-55)+'vw');
-            m.style.setProperty('--rot','180deg');
-            m.classList.add('rotated180');
-            self.els.sceneItems.appendChild(m);
-            setTimeout(function(){m.remove();},1800);
-        },1600);
+        var loop=setInterval(function(){self._flyItemToPet('💉',true);},1500);
         var timer=this._countdown('🚨 Soin en cours',20,'#e74c3c',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
@@ -332,7 +328,7 @@ var Renderer={
 
     // ═══ DORMIR — 10s with Zzz, gauge at end ═══
     showSleepAnimation:function(onEnd){
-        var self=this;this._actionLock=true;
+        this._resetLocks();var self=this;this._actionLock=true;
         this._forceAnim('sleeping');
         var zzzLoop=setInterval(function(){
             var z=document.createElement('div');z.className='zzz';z.textContent='Z';
@@ -401,8 +397,8 @@ var Renderer={
     showFloatingItem:function(e,x,y){var d=document.createElement('div');d.className='float-item';d.textContent=e;d.style.left=(x||50)+'%';d.style.top=(y||60)+'%';this.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},1500);},
     showEvolution:function(o,n){document.getElementById('evo-old').textContent=o.emoji;document.getElementById('evo-new').textContent=n.emoji;document.getElementById('evo-desc').textContent=n.nom;document.getElementById('evolution-screen').classList.remove('hidden');},
     hideEvolution:function(){document.getElementById('evolution-screen').classList.add('hidden');},
-    showDeath:function(pet){var age=Engine.getAge(pet);document.getElementById('death-desc').textContent=pet.nom+' a vécu '+age.days+'j. Cause: '+(pet.causeMort||'?');document.getElementById('death-stats').innerHTML='<p style="color:#8899bb">XP:'+pet.experience+' 🪙'+pet.coins+'</p>';document.getElementById('death-screen').classList.remove('hidden');},
-    hideDeath:function(){document.getElementById('death-screen').classList.add('hidden');},
+    showDeath:function(pet){var age=Engine.getAge(pet);document.getElementById('death-desc').textContent=pet.nom+' a vécu '+age.days+'j. Cause: '+(pet.causeMort||'?');document.getElementById('death-stats').innerHTML='<p style="color:#8899bb">XP:'+pet.experience+' 🪙'+pet.coins+'</p>';document.getElementById('death-screen').classList.remove('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.add('dead-scene');},
+    hideDeath:function(){document.getElementById('death-screen').classList.add('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.remove('dead-scene');},
     toast:function(m){var el=document.getElementById('toast'),tx=document.getElementById('toast-text');tx.textContent=m;el.classList.remove('hidden');clearTimeout(this._tt);this._tt=setTimeout(function(){el.classList.add('hidden');},2500);},
     haptic:function(){},
     renderFoodGrid:function(){return Engine.FOODS.map(function(f){return'<div class="food-item" data-food="'+f.id+'"><span class="food-icon">'+f.emoji+'</span><span class="food-name">'+f.nom+'</span><span class="food-stats">+'+f.faim+'🌾</span></div>';}).join('');},

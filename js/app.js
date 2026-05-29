@@ -83,7 +83,28 @@ var App={
     _nearPet:function(cx,cy){var pw=document.getElementById('pet-wrapper');if(!pw)return false;var r=pw.getBoundingClientRect(),m=40;return cx>r.left-m&&cx<r.right+m&&cy>r.top-m&&cy<r.bottom+m;},
     connectWallet:function(){Engine.connectWallet();var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';Renderer.toast('✅ Wallet connecté !');},
 
-    newGame:function(){this.pet=Engine.createPet('Francis');Storage.save(this.pet);this.showGame();Renderer.toast('🥚 Francis est né !');},
+    playBirthVideo:function(onDone){
+        var overlay=document.getElementById('birth-video-overlay');
+        var video=document.getElementById('birth-video');
+        var skip=document.getElementById('birth-skip');
+        if(!overlay||!video){if(onDone)onDone();return;}
+        var finished=false;
+        function done(){if(finished)return;finished=true;overlay.classList.add('hidden');try{video.pause();}catch(e){}if(onDone)onDone();}
+        overlay.classList.remove('hidden');
+        video.currentTime=0;
+        var p=video.play();if(p&&p.catch)p.catch(function(){done();});
+        video.onended=done;
+        skip.onclick=done;
+        // Safety timeout in case video fails
+        setTimeout(function(){if(!finished&&(video.ended||video.error||video.readyState===0))done();},12000);
+    },
+    newGame:function(){
+        var self=this;
+        this.pet=Engine.createPet('Francis');Storage.save(this.pet);
+        this.playBirthVideo(function(){
+            self.showGame();Renderer.toast('🥚 Francis est né !');
+        });
+    },
     initAudio:function(){
         if(this._audioReady)return;
         this._ambientAudio=new Audio('assets/sounds/ferme.mp3');

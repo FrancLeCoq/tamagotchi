@@ -30,7 +30,7 @@ const Engine = {
         jeu:['Je m\'ennuie ! 🎮','On joue à quoi ?','Un sudoku peut-être ?','Rien à faire ici...','Où est ma manette ?','C\'est long sans jeu...','Même un livre ferait l\'affaire 📖','Stimulez mon intellect !','Je vais rouiller sans activité !','On fait un mini-jeu ?'],
         enclos:['Les poules ont faim !','L\'enclos est sale...','Mes poules ont besoin d\'attention !','Vérifie l\'enclos stp...','Les œufs n\'attendent pas !','L\'hygiène de l\'enclos... 😬','Nourris les poules !'],
     },
-    COOLDOWNS: { nourrir:120,jouer:300,dormir:900,soigner:600,toilette:120,douche:300,intellect:300,visite:600 },
+    COOLDOWNS: { nourrir:3,jouer:3,dormir:3,soigner:3,toilette:3,douche:3,intellect:3,visite:3 },
     MAX_STAT:100, CRIT:15, POOP_INTERVAL:5400, PIPI_INTERVAL:3600,
 
     // Cheat codes
