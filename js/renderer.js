@@ -338,10 +338,10 @@ var Renderer={
     },
 
     // ═══ CALINER — hen static left, pet locked, countdown ═══
-    showHenVisit:function(henSprite,petSize,onAmourEnd){
+    showHenVisit:function(henSprite,petSize,onAmourEnd,henBottom){
         var w=document.getElementById('hen-wrapper'),img=document.getElementById('hen-sprite');
         img.src=henSprite;img.style.width=(petSize||120)+'px';img.style.height=(petSize||120)+'px';
-        w.style.left='3%';w.style.bottom='10%';w.style.position='absolute';
+        w.style.left='3%';w.style.bottom=(henBottom!==undefined?henBottom:10)+'%';w.style.position='absolute';
         w.style.transition='none';
         w.classList.remove('hidden');
         // Lock pet — push right
@@ -369,15 +369,22 @@ var Renderer={
         this._resetLocks();var self=this;this._actionLock=true;
         seconds=seconds||10;
         this._forceAnim('sleeping');
-        var zzzLoop=setInterval(function(){
+        this._sleepZLoop=setInterval(function(){
             var z=document.createElement('div');z.className='zzz';z.textContent='Z';
             z.style.left=(self.currentPetX+5+Math.random()*5)+'%';z.style.top=(35+Math.random()*10)+'%';
             z.style.fontSize=(20+Math.random()*16)+'px';
             self.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);
         },800);
-        var timer=this._countdown('💤 Francis dort',seconds,'#9b59b6',function(){
-            clearInterval(zzzLoop);self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        this._sleepTimer=this._countdown('💤 Francis dort',seconds,'#9b59b6',function(){
+            clearInterval(self._sleepZLoop);self._sleepZLoop=null;self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
+    },
+    stopSleepAnimation:function(){
+        if(this._sleepZLoop){clearInterval(this._sleepZLoop);this._sleepZLoop=null;}
+        if(this._sleepTimer){if(this._sleepTimer.interval)clearInterval(this._sleepTimer.interval);if(this._sleepTimer.el)this._sleepTimer.el.remove();this._sleepTimer=null;}
+        // Remove lingering zzz
+        if(this.els.sceneItems){var zs=this.els.sceneItems.querySelectorAll('.zzz');for(var i=0;i<zs.length;i++)zs[i].remove();}
+        this._actionLock=false;this._forceAnim('idle');
     },
 
     petHappyAnimation:function(){this._forceAnim('happy');var s=this;setTimeout(function(){s._forceAnim('idle');},1200);},

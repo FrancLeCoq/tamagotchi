@@ -336,11 +336,16 @@ var Farm = {
         var wrap=document.createElement('div');
         wrap.className='farm-celestial';
         wrap.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden';
-        var cloudBg=(typeof Weather!=='undefined'&&Weather._cloudSVG)?Weather._cloudSVG(false):'';
         wrap.innerHTML='<div class="farm-sun"></div><div class="farm-moon"></div>'+
-            '<div class="farm-cloud farm-cloud1" style="background:url(\''+cloudBg+'\') center/contain no-repeat"></div>'+
-            '<div class="farm-cloud farm-cloud2" style="background:url(\''+cloudBg+'\') center/contain no-repeat"></div>'+
-            '<div class="farm-cloud farm-cloud3" style="background:url(\''+cloudBg+'\') center/contain no-repeat"></div>';
+            '<div class="farm-cloud farm-cloud1"></div>'+
+            '<div class="farm-cloud farm-cloud2"></div>'+
+            '<div class="farm-cloud farm-cloud3"></div>';
+        // Set cloud backgrounds via JS (avoids quote-collision in inline HTML)
+        var cloudBg=(typeof Weather!=='undefined'&&Weather._cloudSVG)?Weather._cloudSVG(false):'';
+        if(cloudBg){
+            var fc=wrap.querySelectorAll('.farm-cloud');
+            for(var ci=0;ci<fc.length;ci++){fc[ci].style.backgroundImage='url("'+cloudBg+'")';fc[ci].style.backgroundSize='contain';fc[ci].style.backgroundRepeat='no-repeat';}
+        }
         scene.insertBefore(wrap,scene.firstChild);
         this._farmCelWrap=wrap;
         // Rain canvas for enclos

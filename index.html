@@ -31,9 +31,12 @@
             <div class="eg-rules">
                 <p class="eg-rules-title">💎 $FRANC RULES</p>
                 <p class="eg-rules-line"><span class="eg-rules-emoji">💜</span> Sans <b>$FRANC</b> : <span class="eg-rules-hl">FIN APRÈS LE STADE POUSSIN</span></p>
-                <p class="eg-rules-sub">· progression sauvegardée</p>
-                <p class="eg-rules-line"><span class="eg-rules-emoji">💚</span> Avec <b>$FRANC</b> : <span class="eg-rules-hl">JEU ILLIMITÉ</span></p>
-                <p class="eg-rules-sub">· toutes les évolutions + sauvegarde cloud</p>
+                <p class="eg-rules-line"><span class="eg-rules-emoji">💚</span> Avec <b>$FRANC</b> ou <b>⭐</b> : <span class="eg-rules-hl">JEU ILLIMITÉ</span></p>
+            </div>
+            <div class="eg-leaderboard">
+                <span class="eg-lb-icon">🏆</span>
+                <span class="eg-lb-label">Record de longévité</span>
+                <span class="eg-lb-value" id="lb-record">0 jours</span>
             </div>
         </div>
     </div>
@@ -149,6 +152,13 @@
 </div><div class="farm-info" id="farm-info"></div><div class="farm-actions"><button class="farm-buy-btn" id="btn-farm-buy">🐔 Acheter (50🪙)</button><button class="close-btn" data-close="farm-screen">✕</button></div><div class="farm-death-notice hidden" id="farm-death-notice">💀</div></div><div class="farm-scene" id="farm-scene"><canvas id="farm-canvas" style="width:100%;height:100%"></canvas><div class="farm-francis" id="farm-francis"><img id="farm-francis-img" src="assets/sprites/poussin.png" draggable="false"></div></div></div></div>
     <div id="evolution-screen" class="overlay hidden"><div class="evolution-content"><h2 class="evo-title">✨ Évolution ! ✨</h2><div class="evo-stages"><div class="evo-old" id="evo-old"></div><div class="evo-arrow">→</div><div class="evo-new" id="evo-new"></div></div><p class="evo-desc" id="evo-desc"></p><button class="btn-start" id="btn-evo-ok">Cocorico !</button></div></div>
     <div id="wallet-gate" class="overlay hidden"><div class="wallet-gate-content"><img src="assets/sprites/poussin.png" class="wg-img"><h2>🔒 Mode Poussin terminé !</h2><p>Connecte ton wallet pour débloquer la suite !</p><button class="btn-start" id="btn-wallet-gate">🔗 Connecter Wallet</button><button class="btn-link" id="btn-wallet-skip">Recommencer en poussin →</button></div></div>
+    <div id="pause-overlay" class="pause-overlay hidden">
+        <div class="pause-box">
+            <div class="pause-big-icon">⏸️</div>
+            <div class="pause-text">PAUSE</div>
+            <button class="pause-resume-btn" id="btn-pause-resume">▶ Reprendre</button>
+        </div>
+    </div>
     <div id="birth-video-overlay" class="birth-video-overlay hidden">
         <video id="birth-video" class="birth-video" playsinline muted>
             <source src="assets/video/naissance.mp4" type="video/mp4">

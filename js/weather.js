@@ -129,7 +129,7 @@ var Weather={
             el.className='cloud-el';
             var w=90+Math.random()*110;
             var h=w*0.38;
-            el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(2+Math.random()*38)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+self._cloudSVG(false)+'\') center/contain no-repeat;opacity:'+(0.78+Math.random()*0.18)+';filter:drop-shadow(0 4px 6px rgba(0,0,0,.06));';
+            el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(-4+Math.random()*32)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+self._cloudSVG(false)+'\') center/contain no-repeat;opacity:'+(0.78+Math.random()*0.18)+';filter:drop-shadow(0 4px 6px rgba(0,0,0,.06));';
             container.appendChild(el);
             this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.12+Math.random()*0.35,w:w,baseOp:el.style.opacity||'0.85'});
         }
@@ -182,11 +182,15 @@ var Weather={
         var d=this.getBri()>.45;
         var l=(typeof App!=='undefined'&&App.pet)?App.pet.housingLevel||0:0;
         var ho=(typeof Engine!=='undefined'&&Engine.HOUSING)?Engine.HOUSING[l]||Engine.HOUSING[0]:{bg:'poulailler'};
-        var src='assets/backgrounds/'+ho.bg+(d?'_jour':'_nuit')+'.png';
+        var src='assets/backgrounds/'+ho.bg+'_jour.png';
         // Per-building vertical position from bottom
         var vPos={poulailler:25,bois:25,brique:15,chateau:15,palace:30,spacex:18}[ho.bg]||25;
         var el=document.getElementById('layer-building');
-        if(el)el.style.bottom=vPos+'%';
+        if(el){el.style.bottom=vPos+'%';
+            // Night: dim the building + warm doorway glow
+            if(!d){el.style.filter='brightness(0.62) saturate(0.9)';el.classList.add('night-building');}
+            else{el.style.filter='none';el.classList.remove('night-building');}
+        }
         if(this.lastBuildingState!==src){this.lastBuildingState=src;
             if(el)el.innerHTML='<img src="'+src+'">';}
     },
@@ -201,7 +205,7 @@ var Weather={
         var container=document.getElementById('layer-clouds');if(!container)return;
         var el=document.createElement('div');el.className='cloud-el';
         var w=110+Math.random()*90,h=w*0.4;
-        el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(2+Math.random()*34)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+this._cloudSVG(true)+'\') center/contain no-repeat;opacity:0.92;';
+        el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(-4+Math.random()*30)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+this._cloudSVG(true)+'\') center/contain no-repeat;opacity:0.92;';
         container.appendChild(el);
         this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.18+Math.random()*0.4,w:w,baseOp:'0.85'});
     },
@@ -214,6 +218,7 @@ var Weather={
     },
     _loop:function(){
         if(!this.ctx)return;
+        if(typeof App!=='undefined'&&App.paused){var s=this;requestAnimationFrame(function(){s._loop();});return;}
         var ctx=this.ctx,cw=this.canvas.width,ch=this.canvas.height,h=this.getHour();
         ctx.clearRect(0,0,cw,ch);
         var inten=0;

@@ -12,6 +12,8 @@ var App={
         var data=Storage.loadSync();
         var rb=document.getElementById('btn-resume');
         rb.classList.toggle('hidden',!(data&&!data.estMort));
+        var lbEl=document.getElementById('lb-record');
+        if(lbEl){var rec=this.getRecord();lbEl.textContent=rec>0?(rec<1?Math.round(rec*24)+'h':rec.toFixed(1)+' jours'):'Aucun record';}
         if(Engine.isWalletConnected()){var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';}
     },
 
@@ -40,24 +42,8 @@ var App={
             document.getElementById('sound-icon').textContent=self.soundOn?'🔊':'🔇';
             self.updateAudio();
         });
-        document.getElementById('btn-pause').addEventListener('click',function(){
-            self.paused=!self.paused;
-            document.getElementById('pause-icon').textContent=self.paused?'▶️':'⏸️';
-            document.getElementById('pause-label')&&(document.getElementById('pause-label').textContent=self.paused?'Reprendre':'Pause');
-            Renderer.toast(self.paused?'⏸️ Pause':'▶️ Reprise');
-            if(self.pet){
-                if(self.paused){self._pauseStart=Date.now();}
-                else if(self._pauseStart){
-                    // Shift timestamps forward by paused duration so no catch-up decay
-                    var pausedMs=Date.now()-self._pauseStart;
-                    self.pet.derniereUpdate=(self.pet.derniereUpdate||Date.now())+pausedMs;
-                    if(self.pet.farm)self.pet.farm.lastUpdate=(self.pet.farm.lastUpdate||Date.now())+pausedMs;
-                    self._pauseStart=null;Storage.save(self.pet);
-                }
-            }
-            // Pause/resume weather clock too
-            if(typeof Weather!=='undefined'){if(self.paused)Weather._pausedAt=Date.now();else if(Weather._pausedAt){Weather.startTime+=(Date.now()-Weather._pausedAt);Weather._pausedAt=null;}}
-        });
+        document.getElementById('btn-pause').addEventListener('click',function(){self.togglePause();});
+        var pr=document.getElementById('btn-pause-resume');if(pr)pr.addEventListener('click',function(){self.setPause(false);});
         document.getElementById('btn-nav-more').addEventListener('click',function(){document.getElementById('more-screen').classList.remove('hidden');});
         document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
         document.getElementById('btn-toilette').addEventListener('click',function(){self.doToilet();});
@@ -81,7 +67,7 @@ var App={
                 self._cheatBuffer+=k;clearTimeout(self._cheatTimer);
                 self._cheatTimer=setTimeout(function(){self._cheatBuffer='';},2000);
                 var r=Engine.applyCheat(self.pet,self._cheatBuffer);
-                if(r.ok){Renderer.toast(r.msg);Storage.save(self.pet);Renderer.update(self.pet);self._cheatBuffer='';if(self.pet.estMort)Renderer.showDeath(self.pet);}
+                if(r.ok){Renderer.toast(r.msg);Storage.save(self.pet);Renderer.update(self.pet);self._cheatBuffer='';if(self.pet.estMort){self.saveRecord();Renderer.showDeath(self.pet);}}
             }
         });
 
@@ -166,6 +152,7 @@ var App={
     },
     showGame:function(){
         this.requestWakeLock();
+        if(this.pet&&this.pet.isPaused){var s=this;setTimeout(function(){s.setPause(true);},300);}
         try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission();}catch(e){}
         var self=this;
         if(!this._audioSyncIv)this._audioSyncIv=setInterval(function(){if(self.soundOn)self.updateAudio();},5000);
@@ -184,6 +171,42 @@ var App={
     },
     stopLoops:function(){clearInterval(this.gameLoop);clearInterval(this.moveLoop);clearInterval(this.saveInterval);clearInterval(this.speechInterval);clearInterval(this.sleepZInterval);},
 
+    togglePause:function(){
+        this.setPause(!this.paused);
+    },
+    setPause:function(state){
+        this.paused=state;
+        var icon=document.getElementById('pause-icon');if(icon)icon.textContent=this.paused?'▶️':'⏸️';
+        var lbl=document.getElementById('pause-label');if(lbl)lbl.textContent=this.paused?'Reprendre':'Pause';
+        var ov=document.getElementById('pause-overlay');if(ov)ov.classList.toggle('hidden',!this.paused);
+        if(this.pet){
+            this.pet.isPaused=this.paused;
+            if(this.paused){
+                this.pet._pauseStart=Date.now();
+            }else if(this.pet._pauseStart){
+                var pausedMs=Date.now()-this.pet._pauseStart;
+                this.pet.derniereUpdate=(this.pet.derniereUpdate||Date.now())+pausedMs;
+                if(this.pet.farm)this.pet.farm.lastUpdate=(this.pet.farm.lastUpdate||Date.now())+pausedMs;
+                this.pet._pauseStart=null;
+            }
+            Storage.save(this.pet);
+        }
+        if(typeof Weather!=='undefined'){
+            if(this.paused)Weather._pausedAt=Date.now();
+            else if(Weather._pausedAt){Weather.startTime+=(Date.now()-Weather._pausedAt);Weather._pausedAt=null;}
+        }
+    },
+    saveRecord:function(){
+        if(!this.pet)return;
+        var age=Engine.getAge(this.pet);
+        var days=age.days+age.hours/24;
+        var rec=0;
+        try{rec=parseFloat(localStorage.getItem('francis_record')||'0');}catch(e){}
+        if(days>rec){try{localStorage.setItem('francis_record',days.toFixed(2));}catch(e){}}
+    },
+    getRecord:function(){
+        try{return parseFloat(localStorage.getItem('francis_record')||'0');}catch(e){return 0;}
+    },
     gameTick:function(){
         if(!this.pet||this.pet.estMort||this.paused)return;
         Engine.updateStats(this.pet);Renderer.update(this.pet);this.updateCooldowns();
@@ -191,7 +214,7 @@ var App={
         if(Engine.needsWalletGate(this.pet)){document.getElementById('wallet-gate').classList.remove('hidden');return;}
         if(this.pet.farm&&this.pet.farm.hens>0)Farm.update(this.pet);
         if(Engine.checkEvolution(this.pet)){var old=Engine.STAGES[this.pet.stade];Engine.evolve(this.pet);Renderer.showEvolution(old,Engine.STAGES[this.pet.stade]);Storage.save(this.pet);}
-        if(this.pet.estMort){Renderer.showDeath(this.pet);Storage.save(this.pet);}
+        if(this.pet.estMort){this.saveRecord();Renderer.showDeath(this.pet);Storage.save(this.pet);}
     },
 
     _lastAlertLevel:100,
@@ -326,6 +349,8 @@ var App={
         var wasSleeping=this.pet.isSleeping;
         var r=Engine.sleep(this.pet);Renderer.toast(r.msg);
         Storage.save(this.pet);Renderer.update(this.pet);
+        // If interrupting sleep, stop the animation/countdown/zzz
+        if(wasSleeping&&!this.pet.isSleeping){Renderer.stopSleepAnimation();return;}
         // Countdown = time for energy to reach 100% (10%/game-hour, 1 game-h=120s)
         if(!wasSleeping&&this.pet.isSleeping){
             var oldEnergie=this.pet.energie||50;var self=this;
@@ -418,11 +443,11 @@ var App={
                 if(self.pet)self.pet.amour=Math.min(100,(self.pet.amour||30)+5);
                 Renderer.update(self.pet);Storage.save(self.pet);
             },10000);
-            Renderer.showHenVisit(r.henSprite,Engine.STAGES[this.pet.stade].size,function(){
+            var henSz=Engine.STAGES[this.pet.stade].size;if(this.pet.stade===1)henSz=Math.round(henSz*0.7);var henBot=(this.pet.stade===2)?2:10;Renderer.showHenVisit(r.henSprite,henSz,function(){
                 clearInterval(self._visitTimer);
                 Renderer.animateGauge('amour','Amour',oldAmour,self.pet.amour||30);
                 Renderer.update(self.pet);Storage.save(self.pet);
-            });
+            },henBot);
             Storage.save(this.pet);
         }
     },
