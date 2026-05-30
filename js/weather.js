@@ -129,7 +129,7 @@ var Weather={
             el.className='cloud-el';
             var w=90+Math.random()*110;
             var h=w*0.38;
-            el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(8+Math.random()*45)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+self._cloudSVG(false)+'\') center/contain no-repeat;opacity:'+(0.78+Math.random()*0.18)+';filter:drop-shadow(0 4px 6px rgba(0,0,0,.06));';
+            el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(2+Math.random()*38)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+self._cloudSVG(false)+'\') center/contain no-repeat;opacity:'+(0.78+Math.random()*0.18)+';filter:drop-shadow(0 4px 6px rgba(0,0,0,.06));';
             container.appendChild(el);
             this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.12+Math.random()*0.35,w:w,baseOp:el.style.opacity||'0.85'});
         }
@@ -201,7 +201,7 @@ var Weather={
         var container=document.getElementById('layer-clouds');if(!container)return;
         var el=document.createElement('div');el.className='cloud-el';
         var w=110+Math.random()*90,h=w*0.4;
-        el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(8+Math.random()*40)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+this._cloudSVG(true)+'\') center/contain no-repeat;opacity:0.92;';
+        el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(2+Math.random()*34)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+this._cloudSVG(true)+'\') center/contain no-repeat;opacity:0.92;';
         container.appendChild(el);
         this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.18+Math.random()*0.4,w:w,baseOp:'0.85'});
     },

@@ -197,7 +197,7 @@ var Farm = {
         if(fb){fb.style.width=farm.feedLevel+'%';fb.style.background=farm.feedLevel>40?'#2ecc71':farm.feedLevel>15?'#f39c12':'#e74c3c';}
         if(cb){cb.style.width=farm.cleanLevel+'%';cb.style.background=farm.cleanLevel>40?'#2ecc71':farm.cleanLevel>15?'#f39c12':'#e74c3c';}
         var info=document.getElementById('farm-info');
-        if(info) info.innerHTML='<span>🐔 '+farm.hens+'/'+this.MAX_HENS+'</span><span>🥚 '+farm.totalEggs+'</span><span>🪙 '+pet.coins+'</span>';
+        if(info) info.innerHTML='<span>🐔 '+farm.hens+'/'+this.MAX_HENS+'</span><span>🪙 '+pet.coins+'</span>';
         // Gray out controls when no hens
         var noHens=farm.hens<=0;
         var rows=['farm-feed-row','farm-clean-row','farm-bonheur-row'];
@@ -228,7 +228,7 @@ var Farm = {
         var self=this;
         // Big corn at center (40% from bottom), pulsing
         var big=document.createElement('div');
-        big.style.cssText='position:absolute;bottom:65%;left:50%;transform:translateX(-50%);font-size:72px;z-index:12;pointer-events:none;animation:farmFoodPulse 1s ease-in-out infinite';
+        big.style.cssText='position:absolute;bottom:75%;left:50%;transform:translateX(-50%);font-size:72px;z-index:12;pointer-events:none;animation:farmFoodPulse 1s ease-in-out infinite';
         big.textContent='🌽';
         scene.appendChild(big);
         var count=0,maxCount=18;
@@ -242,7 +242,7 @@ var Farm = {
                 tx=h.x;ty=h.y;
             }else{tx=self.canvas?self.canvas.width*(0.3+Math.random()*0.6):200;ty=self.canvas?self.canvas.height*(0.5+Math.random()*0.3):200;}
             var item=document.createElement('div');
-            var startX=self.canvas?self.canvas.width/2:200,startY=self.canvas?self.canvas.height*0.35:150;
+            var startX=self.canvas?self.canvas.width/2:200,startY=self.canvas?self.canvas.height*0.25:150;
             var dx=tx-startX,dy=ty-startY;
             item.style.cssText='position:absolute;font-size:28px;z-index:11;pointer-events:none;left:'+startX+'px;top:'+startY+'px';
             item.textContent='🌽';
@@ -336,7 +336,11 @@ var Farm = {
         var wrap=document.createElement('div');
         wrap.className='farm-celestial';
         wrap.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden';
-        wrap.innerHTML='<div class="farm-sun"></div><div class="farm-moon"></div><div class="farm-cloud farm-cloud1"></div><div class="farm-cloud farm-cloud2"></div><div class="farm-cloud farm-cloud3"></div>';
+        var cloudBg=(typeof Weather!=='undefined'&&Weather._cloudSVG)?Weather._cloudSVG(false):'';
+        wrap.innerHTML='<div class="farm-sun"></div><div class="farm-moon"></div>'+
+            '<div class="farm-cloud farm-cloud1" style="background:url(\''+cloudBg+'\') center/contain no-repeat"></div>'+
+            '<div class="farm-cloud farm-cloud2" style="background:url(\''+cloudBg+'\') center/contain no-repeat"></div>'+
+            '<div class="farm-cloud farm-cloud3" style="background:url(\''+cloudBg+'\') center/contain no-repeat"></div>';
         scene.insertBefore(wrap,scene.firstChild);
         this._farmCelWrap=wrap;
         // Rain canvas for enclos

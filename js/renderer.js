@@ -117,6 +117,17 @@ var Renderer={
         if(pet.isSleeping){btn.classList.add('sleep-active');btn.classList.remove('on-cooldown');if(ic)ic.textContent='⏹️';if(lb)lb.textContent='Réveiller';}
         else{btn.classList.remove('sleep-active');if(ic)ic.textContent='💤';if(lb)lb.textContent='Dormir';}
     },
+    _positionMoodEmoji:function(){
+        var el=this.els.moodEmoji;if(!el||el.classList.contains('hidden'))return;
+        var pw=this.els.petWrapper;if(!pw||!this.els.scene)return;
+        var sRect=this.els.scene.getBoundingClientRect();
+        var pRect=pw.getBoundingClientRect();
+        var leftPct=((pRect.left-sRect.left)+pRect.width/2)/sRect.width*100;
+        var bottomPct=((sRect.bottom-pRect.top)/sRect.height*100)+5;
+        el.style.left=leftPct+'%';
+        el.style.bottom=bottomPct+'%';
+        el.style.transform='translateX(-50%)';
+    },
     updateMoodEmoji:function(pet){
         var el=this.els.moodEmoji;if(!el)return;
         var key='',emoji='';
@@ -130,7 +141,7 @@ var Renderer={
         else{key='ok';}
         if(key===this._lastMood)return;this._lastMood=key;
         if(!emoji){el.classList.add('hidden');return;}
-        el.textContent=emoji;el.style.left='58%';el.style.bottom='48%';el.classList.remove('hidden');
+        el.textContent=emoji;el.classList.remove('hidden');this._positionMoodEmoji();
     },
     updatePoops:function(pet){
         var c=this.els.poopContainer;if(!c)return;
@@ -140,6 +151,7 @@ var Renderer={
     },
 
     tickMovement:function(pet){
+        this._positionMoodEmoji();
         if(!pet||pet.isSleeping||pet.estMort||this._actionLock||this._calinLock||this._showerLock||this._studyLock)return;
         if(Math.random()<.02)this.walkTarget=15+Math.random()*70;
         var dx=this.walkTarget-this.currentPetX;
@@ -275,27 +287,29 @@ var Renderer={
     },
 
     // ═══ BALAI — broom sweeps poops, they fade ═══
-    showBigBroom:function(onEnd){
+    showBigBroom:function(onEnd,poopCount){
         this._resetLocks();var self=this;this._actionLock=true;
-        // Sweep each poop with broom
-        var poops=this.els.poopContainer?this.els.poopContainer.querySelectorAll('.poop'):[];
-        var idx=0;
-        var broom=document.createElement('div');broom.className='broom-sweeping';broom.textContent='🧹';broom.style.fontSize='56px';
-        this.els.sceneItems.appendChild(broom);
-        var sweepLoop=setInterval(function(){
-            if(idx<poops.length){
-                var poop=poops[idx];
-                if(poop&&poop.parentNode){
-                    var left=parseFloat(poop.style.left)||30;
-                    broom.style.left=(left-5)+'%';broom.style.bottom='8%';
-                    broom.style.animation='broomSwing .4s ease-in-out';
-                    setTimeout(function(p){return function(){p.style.transition='opacity .5s';p.style.opacity='0';setTimeout(function(){if(p.parentNode)p.parentNode.removeChild(p);},500);}}(poop),300);
-                }
-                idx++;
-            }
-        },1000);
-        var timer=this._countdown('🧹 Nettoyage de Francis',10,'#e8a020',function(){
-            clearInterval(sweepLoop);broom.remove();self._actionLock=false;if(onEnd)onEnd();
+        // One broom per poop, placed ON each poop, fading progressively over the countdown
+        var poops=this.els.poopContainer?Array.prototype.slice.call(this.els.poopContainer.querySelectorAll('.poop')):[];
+        var n=poopCount||poops.length||1;
+        var dur=Math.max(3,n*2); // ~2s per poop
+        var brooms=[];
+        for(var i=0;i<poops.length;i++){
+            var poop=poops[i];
+            var left=parseFloat(poop.style.left)||(20+i*20);
+            var bottom=parseFloat(poop.style.bottom)||6;
+            var broom=document.createElement('div');
+            broom.textContent='🧹';
+            broom.style.cssText='position:absolute;font-size:44px;z-index:8;pointer-events:none;left:'+left+'%;bottom:'+(bottom+2)+'%;transform:translateX(-50%);animation:broomSwing .5s ease-in-out infinite';
+            this.els.scene.appendChild(broom);
+            brooms.push(broom);
+            // Fade the poop progressively over the countdown
+            (function(p,delay){p.style.transition='opacity '+dur+'s linear';setTimeout(function(){p.style.opacity='0';},80);})(poop);
+        }
+        var timer=this._countdown('🧹 Nettoyage',dur,'#e8a020',function(){
+            for(var b=0;b<brooms.length;b++)brooms[b].remove();
+            for(var pp=0;pp<poops.length;pp++){if(poops[pp].parentNode)poops[pp].remove();}
+            self._actionLock=false;if(onEnd)onEnd();
         });
     },
 
@@ -307,6 +321,18 @@ var Renderer={
         this.els.scene.appendChild(big);
         var loop=setInterval(function(){self._flyItemToPet('💉',true,45);},1500);
         var timer=this._countdown('🚨 Soin en cours',20,'#e74c3c',function(){
+            clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        });
+    },
+
+    // ═══ BROSSAGE — big toothbrush, small ones fly to pet, 20s +20% ═══
+    showToothbrush:function(onEnd){
+        this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('idle');
+        var big=document.createElement('div');big.className='big-food-anim';big.textContent='🪥';
+        big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%)';
+        this.els.scene.appendChild(big);
+        var loop=setInterval(function(){self._flyItemToPet('🪥',false,55);},1500);
+        var timer=this._countdown('🪥 Francis se brosse',20,'#3498db',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },

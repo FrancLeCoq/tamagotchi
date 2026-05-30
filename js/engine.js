@@ -102,7 +102,7 @@ const Engine = {
         if(pet.coins===undefined) pet.coins=0;
         if(pet.jeu===undefined) pet.jeu=0;
         if(pet.travail===undefined) pet.travail=0;
-        if(pet.farm){if(pet.farm.farmPoops===undefined)pet.farm.farmPoops=0;if(pet.farm.hens===0){pet.farm.feedLevel=100;pet.farm.cleanLevel=100;pet.farm.farmPoops=0;}}
+        if(pet.farm){if(pet.farm.farmPoops===undefined)pet.farm.farmPoops=0;if((pet.farm.hens||0)===0){pet.farm.feedLevel=100;pet.farm.cleanLevel=100;pet.farm.farmPoops=0;pet.farm.pendingEggs=0;pet.farm.eggAccum=0;}}
         if(pet.housingLevel===undefined) pet.housingLevel=0;
         if(pet.pipis===undefined) pet.pipis=0;
         if(pet.dernierePipi===undefined) pet.dernierePipi=Date.now();

@@ -37,7 +37,7 @@ const Minigames = {
                 if(self.morpionBoard.every(function(x){return x;})){self.endMorpion(false,'Match nul !');return;}
                 // Bot thinks for 5 seconds with countdown
                 self.botThinking=true;
-                var sec=5;
+                var sec=3;
                 self.renderMorpion('🤖 Le bot réfléchit... '+sec+'s');
                 self.botTimer=setInterval(function(){
                     sec--;

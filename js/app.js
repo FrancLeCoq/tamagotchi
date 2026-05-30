@@ -62,6 +62,7 @@ var App={
         document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
         document.getElementById('btn-toilette').addEventListener('click',function(){self.doToilet();});
         document.getElementById('btn-douche').addEventListener('click',function(){self.doShower();});
+        document.getElementById('btn-brossage').addEventListener('click',function(){self.doBrossage();});
         document.getElementById('btn-enclos-badge').addEventListener('click',function(e){e.stopPropagation();self.openFarm();});
         document.getElementById('btn-notif').addEventListener('click',function(){Renderer.toast('🔔');});
         document.getElementById('btn-evo-ok').addEventListener('click',function(){Renderer.hideEvolution();});
@@ -359,12 +360,28 @@ var App={
     // ═══ TOILETTE — +20%, gauge result ═══
     doToilet:function(){
         if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');
-        if((this.pet.poops||0)<=0&&(this.pet.pipis||0)<=0){Renderer.toast('Rien à nettoyer !');return;}
+        var poopCount=this.pet.poops||0;
+        if(poopCount<=0){Renderer.toast('Rien à nettoyer !');return;}
         var self=this;var oldHyg2=this.pet.hygiene||50;
+        var gain=poopCount*10; // +10% per poop
         Renderer.showBigBroom(function(){
             self.pet.poops=0;self.pet.pipis=0;
-            self.pet.hygiene=Engine.cl(self.pet.hygiene+20);
+            self.pet.hygiene=Engine.cl(oldHyg2+gain);
             Renderer.animateGauge('hygiene','Hygiène',oldHyg2,self.pet.hygiene);
+            Renderer.update(self.pet);Storage.save(self.pet);
+        },poopCount);
+        Storage.save(this.pet);
+    },
+
+    doBrossage:function(){
+        if(!this.pet||this.pet.estMort||this.pet.isSleeping)return;
+        document.getElementById('care-screen').classList.add('hidden');
+        var self=this;var oldHyg=this.pet.hygiene||50;
+        Renderer.showToothbrush(function(){
+            self.pet.hygiene=Engine.cl(oldHyg+20);
+            self.pet.bonheur=Engine.cl(self.pet.bonheur+3);
+            self.pet.coins+=2;
+            Renderer.animateGauge('hygiene','Hygiène',oldHyg,self.pet.hygiene);
             Renderer.update(self.pet);Storage.save(self.pet);
         });
         Storage.save(this.pet);
