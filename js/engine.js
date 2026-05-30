@@ -44,6 +44,14 @@ const Engine = {
         'MORT': function(p){ p.sante=0; p.faim=0; p.bonheur=0; p.estMort=true; p.causeMort='Cheat MORT'; return '💀 La faucheuse arrive...' },
         'JOUR': function(p){ if(typeof Weather!=='undefined')Weather.setHour(13); return '☀️ Jour (13h) !' },
         'NUIT': function(p){ if(typeof Weather!=='undefined')Weather.setHour(1); return '🌙 Nuit (1h) !' },
+        'EVTRESOR':  function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'tresor');   return '💰 Événement Trésor' },
+        'EVRENARD':  function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'renard');   return '🦊 Événement Renard' },
+        'EVAMI':     function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'ami');      return '🐓 Événement Ami' },
+        'EVTEMPETE': function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'tempete');  return '⛈️ Événement Tempête' },
+        'EVMARCHAND':function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'marchand'); return '🧺 Événement Marchand' },
+        'EVETOILE':  function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'etoile');   return '🌠 Événement Étoile' },
+        'EVMALADE':  function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'malade');   return '🤧 Événement Rhume' },
+        'EVCONCOURS':function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'concours'); return '🏅 Événement Concours' },
     },
 
     applyCheat(pet, code) {

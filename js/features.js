@@ -101,7 +101,28 @@ var Features = {
         this.showEvent(ev,pet);
     },
 
+    forceEvent:function(pet,id){
+        var ev=this.EVENTS.find(function(e){return e.id===id;});
+        if(ev)this.showEvent(ev,pet);
+    },
+    // Petite animation dans la scène quand un événement se déclenche
+    playEventAnimation:function(ev){
+        var scene=document.getElementById('scene');if(!scene)return;
+        var fx=document.createElement('div');
+        fx.textContent=ev.emoji;
+        fx.style.cssText='position:absolute;left:50%;top:30%;font-size:80px;z-index:230;pointer-events:none;transform:translate(-50%,-50%)';
+        scene.appendChild(fx);
+        if(fx.animate){
+            fx.animate([
+                {opacity:0,transform:'translate(-50%,-50%) scale(.3) rotate(-15deg)'},
+                {opacity:1,transform:'translate(-50%,-50%) scale(1.3) rotate(8deg)',offset:.4},
+                {opacity:1,transform:'translate(-50%,-50%) scale(1) rotate(0deg)',offset:.7},
+                {opacity:0,transform:'translate(-50%,-90%) scale(.6)'}
+            ],{duration:1400,easing:'ease-out'}).onfinish=function(){fx.remove();};
+        }else{setTimeout(function(){fx.remove();},1400);}
+    },
     showEvent:function(ev,pet){
+        this.playEventAnimation(ev);
         var self=this;
         var ov=document.getElementById('event-overlay');
         if(!ov)return;

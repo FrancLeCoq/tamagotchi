@@ -44,8 +44,8 @@ var App={
         });
         document.getElementById('btn-pause').addEventListener('click',function(){self.togglePause();});
         var pr=document.getElementById('btn-pause-resume');if(pr)pr.addEventListener('click',function(){self.setPause(false);});
-        var bq=document.getElementById('btn-quests');if(bq)bq.addEventListener('click',function(){Features.renderQuests(self.pet);document.getElementById('quests-screen').classList.remove('hidden');});
-        var bj=document.getElementById('btn-journal');if(bj)bj.addEventListener('click',function(){Features.renderJournal(self.pet);document.getElementById('journal-screen').classList.remove('hidden');});
+        var be=document.getElementById('btn-envelope');if(be)be.addEventListener('click',function(){Features.renderQuests(self.pet);document.getElementById('quests-screen').classList.remove('hidden');});
+        var bj=document.getElementById('btn-journal');if(bj)bj.addEventListener('click',function(){Features.renderJournal(self.pet);document.getElementById('more-screen').classList.add('hidden');document.getElementById('journal-screen').classList.remove('hidden');});
         document.getElementById('btn-nav-more').addEventListener('click',function(){document.getElementById('more-screen').classList.remove('hidden');});
         document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
         document.getElementById('btn-toilette').addEventListener('click',function(){self.doToilet();});
@@ -59,6 +59,8 @@ var App={
         document.getElementById('btn-play-study').addEventListener('click',function(){self.doStudy();});
         document.getElementById('btn-play-sudoku').addEventListener('click',function(){self.doStudySudoku();});
         document.getElementById('btn-play-morpion').addEventListener('click',function(){self.doMorpion();});
+        document.getElementById('btn-play-catch').addEventListener('click',function(){self.doCatch();});
+        document.getElementById('btn-play-roost').addEventListener('click',function(){self.doRoost();});
         document.getElementById('food-grid').addEventListener('click',function(e){var item=e.target.closest('[data-food]');if(item)self.doFeed(item.dataset.food);});
         document.getElementById('btn-reset').addEventListener('click',function(){document.getElementById('more-screen').classList.add('hidden');if(confirm('Reset?')){Storage.clear();self.pet=null;document.getElementById('game-screen').classList.remove('active');document.getElementById('splash-screen').classList.add('active');self.showSplash();}});
 
@@ -232,10 +234,10 @@ var App={
     },
     updateQuestDot:function(){
         if(!this.pet)return;
-        var f=Features.ensure(this.pet);var dot=document.getElementById('quest-dot');
-        if(!dot||!f.quests)return;
+        var f=Features.ensure(this.pet);var env=document.getElementById('btn-envelope');
+        if(!env||!f.quests)return;
         var hasClaim=f.quests.some(function(q){return q.done&&!q.claimed;});
-        dot.classList.toggle('hidden',!hasClaim);
+        env.classList.toggle('hidden',!hasClaim);
     },
 
     _lastAlertLevel:100,
@@ -357,6 +359,33 @@ var App={
             self.pet.coins+=5;
             Storage.save(self.pet);
             setTimeout(function(){Renderer.animateGauge('jeu','Jeu',before,self.pet.jeu);Renderer.update(self.pet);},800);
+        });
+    },
+    doCatch:function(){
+        document.getElementById('play-screen').classList.add('hidden');
+        var self=this;
+        Minigames.startCatch(function(reward){
+            reward=reward||{};
+            var bJeu=self.pet.jeu||0,bFaim=self.pet.faim||0;
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+(reward.jeu||30));
+            self.pet.faim=Engine.cl((self.pet.faim||0)+(reward.faim||0));
+            self.pet.bonheur=Engine.cl(self.pet.bonheur+(reward.bonheur||0));
+            self.pet.coins+=(reward.coins||0);
+            Storage.save(self.pet);
+            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',bJeu,self.pet.jeu);Features.trackQuest(self.pet,'play',1);Renderer.update(self.pet);},800);
+        });
+    },
+    doRoost:function(){
+        document.getElementById('play-screen').classList.add('hidden');
+        var self=this;
+        Minigames.startRoostClicker(function(reward){
+            reward=reward||{};
+            var bJeu=self.pet.jeu||0,bBon=self.pet.bonheur||0;
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+(reward.jeu||15));
+            self.pet.bonheur=Engine.cl(self.pet.bonheur+(reward.bonheur||20));
+            self.pet.coins+=(reward.coins||0);
+            Storage.save(self.pet);
+            setTimeout(function(){Renderer.animateGauge('bonheur','Bonheur',bBon,self.pet.bonheur);Features.trackQuest(self.pet,'play',1);Renderer.update(self.pet);},800);
         });
     },
     doMorpion:function(){

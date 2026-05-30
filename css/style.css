@@ -492,9 +492,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .egg-one{position:absolute;font-size:15px}
 .egg-count{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:12px;font-weight:800;color:#ffd633;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 
-/* ═══ NIGHT BUILDING — warm doorway glow ═══ */
-.layer-building.night-building::after{content:'';position:absolute;left:50%;bottom:8%;transform:translateX(-50%);width:16%;height:22%;background:radial-gradient(ellipse at center,rgba(255,200,90,.9) 0%,rgba(255,170,50,.45) 50%,transparent 75%);border-radius:50% 50% 30% 30%;pointer-events:none;animation:doorFlicker 3s ease-in-out infinite;z-index:1}
-@keyframes doorFlicker{0%,100%{opacity:.85}50%{opacity:1}}
+50%{opacity:1}}
 
 /* ═══ LEADERBOARD (menu) ═══ */
 .eg-leaderboard{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,200,60,.15),rgba(255,170,40,.08));border:1.5px solid rgba(255,200,80,.3)}
@@ -548,3 +546,16 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .journal-entry{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.05);border-radius:10px;padding:9px 12px;border-left:3px solid rgba(160,110,240,.5)}
 .journal-day{font-size:11px;font-weight:900;color:#b388ff;background:rgba(160,110,240,.15);padding:2px 7px;border-radius:8px;white-space:nowrap;flex-shrink:0}
 .journal-txt{font-size:12.5px;color:#d8c8f0;line-height:1.4}
+
+/* ═══ GOLDEN ENVELOPE (quête à réclamer) ═══ */
+.tb-envelope{background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;animation:envBlink 1s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(255,200,60,.9));line-height:1}
+@keyframes envBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.15)}}
+
+/* ═══ JEU ATTRAPE (catch) ═══ */
+.catch-field{position:relative;overflow:hidden;height:340px;background:linear-gradient(180deg,rgba(120,180,255,.12),rgba(80,200,120,.12));border-radius:14px;touch-action:none}
+.catch-coq{position:absolute;bottom:6px;font-size:46px;transform:translateX(-50%);transition:left .05s linear;pointer-events:none;z-index:3}
+.catch-item{position:absolute;font-size:30px;transform:translateX(-50%);pointer-events:none;z-index:2}
+
+/* ═══ ROOST CLICKER ═══ */
+.roost-field{position:relative;overflow:hidden;height:340px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 50%,rgba(255,200,60,.12),transparent 70%);border-radius:14px}
+.roost-coq{font-size:120px;cursor:pointer;user-select:none;transition:transform .08s ease;transform-origin:center bottom}

@@ -9,6 +9,125 @@ const Minigames = {
     },
 
 
+
+    // ═══ JEU 2 : Attrape la nourriture qui tombe (drag coq 60s) ═══
+    startCatch(onComplete) {
+        this.onComplete=onComplete;
+        this.active=false;
+        if(this._interval){clearInterval(this._interval);this._interval=null;}
+        document.getElementById('minigame-title').textContent='Attrape la nourriture ! 🌽';
+        var area=document.getElementById('minigame-area');if(area)area.innerHTML='';
+        document.getElementById('minigame-screen').classList.remove('hidden');
+        this.startCatchGame();
+    },
+    startCatchGame() {
+        this.active=true; this.score=0; var timeLeft=60000;
+        var area=document.getElementById('minigame-area');
+        area.innerHTML='<div class="mini-score" id="mg-score">0</div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field catch-field" id="mg-field"><div class="catch-coq" id="catch-coq">🐔</div></div>';
+        var field=document.getElementById('mg-field'), scoreEl=document.getElementById('mg-score'), timerEl=document.getElementById('mg-timer'), coq=document.getElementById('catch-coq');
+        var self=this;
+        var coqX=50; // percent
+        coq.style.left=coqX+'%';
+        // Drag control
+        function moveTo(clientX){
+            var r=field.getBoundingClientRect();
+            var pct=((clientX-r.left)/r.width)*100;
+            coqX=Math.max(6,Math.min(94,pct));
+            coq.style.left=coqX+'%';
+        }
+        var dragging=false;
+        field.addEventListener('touchstart',function(e){dragging=true;moveTo(e.touches[0].clientX);});
+        field.addEventListener('touchmove',function(e){if(dragging){e.preventDefault();moveTo(e.touches[0].clientX);}},{passive:false});
+        field.addEventListener('touchend',function(){dragging=false;});
+        field.addEventListener('mousedown',function(e){dragging=true;moveTo(e.clientX);});
+        field.addEventListener('mousemove',function(e){if(dragging)moveTo(e.clientX);});
+        field.addEventListener('mouseup',function(){dragging=false;});
+        // Falling food
+        var items=[];
+        this._spawnIv=setInterval(function(){
+            if(!self.active)return;
+            var em=['🌽','🌾','🥖','🧀','🍞','🐛'][Math.floor(Math.random()*6)];
+            var bad=(em==='🐛');
+            var it=document.createElement('div');
+            it.className='catch-item';it.textContent=em;
+            it.style.left=(8+Math.random()*84)+'%';it.style.top='-8%';
+            it.dataset.bad=bad?'1':'0';
+            field.appendChild(it);items.push({el:it,y:-8,x:parseFloat(it.style.left),bad:bad});
+        },700);
+        var st=Date.now();
+        this._interval=setInterval(function(){
+            if(!self.active)return;
+            var e=Date.now()-st, pct=Math.max(0,(1-e/timeLeft)*100);
+            timerEl.style.width=pct+'%';timerEl.style.background=pct>30?'#2ecc71':pct>10?'#f39c12':'#e74c3c';
+            // Move items down
+            for(var i=items.length-1;i>=0;i--){
+                var o=items[i];o.y+=2.2;o.el.style.top=o.y+'%';
+                // Catch detection near bottom (coq at ~88%)
+                if(o.y>=80&&o.y<=95&&Math.abs(o.x-coqX)<12){
+                    if(o.bad){self.score=Math.max(0,self.score-2);}else{self.score++;}
+                    scoreEl.textContent=self.score;o.el.remove();items.splice(i,1);continue;
+                }
+                if(o.y>105){o.el.remove();items.splice(i,1);}
+            }
+            if(e>=timeLeft){self.active=false;clearInterval(self._interval);clearInterval(self._spawnIv);self.endCatchGame();}
+        },50);
+    },
+    endCatchGame() {
+        var area=document.getElementById('minigame-area');
+        var coins=this.score*2;
+        this._reward={coins:coins,faim:Math.min(30,this.score),bonheur:Math.min(15,this.score),jeu:30};
+        area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌽</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">Attrapés : '+this.score+'</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🎮 +30% jeu<br>🪙 +'+coins+' pièces<br>🍽️ +'+Math.min(30,this.score)+'% faim</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>';
+        var self=this;
+        document.getElementById('mg-done').addEventListener('click',function(){self.close();if(self.onComplete)self.onComplete(self._reward);});
+    },
+
+    // ═══ JEU 3 : Roost Clicker (tapote le coq 60s, pièces x2) ═══
+    startRoostClicker(onComplete) {
+        this.onComplete=onComplete;
+        this.active=false;
+        if(this._interval){clearInterval(this._interval);this._interval=null;}
+        document.getElementById('minigame-title').textContent='Roost Clicker ! 👆';
+        var area=document.getElementById('minigame-area');if(area)area.innerHTML='';
+        document.getElementById('minigame-screen').classList.remove('hidden');
+        this.startRoostGame();
+    },
+    startRoostGame() {
+        this.active=true; this.score=0; var timeLeft=60000;
+        var area=document.getElementById('minigame-area');
+        area.innerHTML='<div class="mini-score" id="mg-score">0</div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field roost-field" id="mg-field"><div class="roost-coq" id="roost-coq">🐓</div></div>';
+        var field=document.getElementById('mg-field'), scoreEl=document.getElementById('mg-score'), timerEl=document.getElementById('mg-timer'), coq=document.getElementById('roost-coq');
+        var self=this;
+        function tap(e){
+            if(!self.active)return;
+            e.preventDefault();e.stopPropagation();
+            self.score+=2; // tapotages x2
+            scoreEl.textContent=self.score;
+            coq.style.transform='scale(.82)';
+            setTimeout(function(){coq.style.transform='scale(1)';},80);
+            // floating +2
+            var fl=document.createElement('div');fl.className='float-item';fl.textContent='+2🪙';fl.style.color='#f0c040';
+            fl.style.left=(30+Math.random()*40)+'%';fl.style.top=(30+Math.random()*30)+'%';fl.style.fontWeight='800';
+            field.appendChild(fl);setTimeout(function(){fl.remove();},800);
+            if(Renderer.haptic)Renderer.haptic('light');
+        }
+        coq.addEventListener('touchstart',tap,{passive:false});
+        coq.addEventListener('mousedown',tap);
+        var st=Date.now();
+        this._interval=setInterval(function(){
+            var e=Date.now()-st, pct=Math.max(0,(1-e/timeLeft)*100);
+            timerEl.style.width=pct+'%';timerEl.style.background=pct>30?'#2ecc71':pct>10?'#f39c12':'#e74c3c';
+            if(e>=timeLeft){self.active=false;clearInterval(self._interval);self.endRoostGame();}
+        },50);
+    },
+    endRoostGame() {
+        var area=document.getElementById('minigame-area');
+        // score = déjà x2. Gain pièces = score.
+        this._reward={coins:this.score,faim:0,bonheur:20,jeu:15};
+        area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">👆</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">'+this.score+' pièces (x2 !)</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🪙 +'+this.score+' pièces<br>😊 +20% bonheur</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>';
+        var self=this;
+        document.getElementById('mg-done').addEventListener('click',function(){self.close();if(self.onComplete)self.onComplete(self._reward);});
+    },
+
     startMorpion(onComplete) {
         this.onComplete=onComplete;
         this.active=false;

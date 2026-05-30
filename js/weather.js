@@ -188,8 +188,8 @@ var Weather={
         var el=document.getElementById('layer-building');
         if(el){el.style.bottom=vPos+'%';
             // Night: dim the building + warm doorway glow
-            if(!d){el.style.filter='brightness(0.62) saturate(0.9)';el.classList.add('night-building');}
-            else{el.style.filter='none';el.classList.remove('night-building');}
+            if(!d){el.style.filter='brightness(0.66) saturate(0.92)';}
+            else{el.style.filter='none';}
         }
         if(this.lastBuildingState!==src){this.lastBuildingState=src;
             if(el)el.innerHTML='<img src="'+src+'">';}

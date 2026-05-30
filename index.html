@@ -45,6 +45,7 @@
     <div id="game-screen" class="screen">
         <div class="top-bar" id="top-bar">
             <div class="tb-clock" id="hud-clock">☀️ 07:00</div>
+            <button class="tb-envelope hidden" id="btn-envelope">✉️</button>
             <div class="tb-avatar">
                 <div class="tb-avatar-ring-wrap">
                     <svg class="tb-ring-svg" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -60,8 +61,6 @@
             </div>
             <div class="tb-right">
                 <div class="tb-coins" id="hud-coins">🪙 0</div>
-                <button class="tb-bell" id="btn-quests"><span>🎯</span><span class="alert-dot hidden" id="quest-dot"></span></button>
-                <button class="tb-bell" id="btn-journal"><span>📔</span></button>
                 <button class="tb-bell" id="btn-notif"><span id="notif-icon">🔔</span><span class="alert-dot hidden" id="alert-dot"></span></button>
             </div>
         </div>
@@ -134,11 +133,11 @@
 
     <!-- OVERLAYS -->
     <div id="care-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Soins 💊</h2><button class="close-btn" data-close="care-screen">✕</button></div><div class="care-grid"><button class="care-item care-heal" id="btn-heal-direct"><span class="care-icon">🩺</span><span>Guérir</span></button><button class="care-item" id="btn-toilette"><span class="care-icon">🚽</span><span>Toilette</span></button><button class="care-item" id="btn-douche"><span class="care-icon">🚿</span><span>Douche</span></button><button class="care-item" id="btn-brossage"><span class="care-icon">🪥</span><span>Brossage</span></button></div></div></div>
-    <div id="more-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Paramètres</h2><button class="close-btn" data-close="more-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-wallet-game"><span class="care-icon">🔗</span><span>Wallet</span></button><button class="care-item care-danger" id="btn-reset"><span class="care-icon">🗑️</span><span>Reset</span></button></div></div></div>
+    <div id="more-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Paramètres</h2><button class="close-btn" data-close="more-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-journal"><span class="care-icon">📔</span><span>Journal</span></button><button class="care-item" id="btn-wallet-game"><span class="care-icon">🔗</span><span>Wallet</span></button><button class="care-item care-danger" id="btn-reset"><span class="care-icon">🗑️</span><span>Reset</span></button></div></div></div>
     <div id="food-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Nourrir</h2><button class="close-btn" data-close="food-screen">✕</button></div><div class="food-grid" id="food-grid"></div></div></div>
     <div id="stats-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2>Statistiques</h2><button class="close-btn" data-close="stats-screen">✕</button></div><div class="stats-detail" id="stats-detail"></div></div></div>
     <div id="minigame-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2 id="minigame-title">Mini-jeu</h2><button class="close-btn" data-close="minigame-screen">✕</button></div><div class="minigame-area" id="minigame-area"></div></div></div>
-    <div id="play-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Jouer 🎮</h2><button class="close-btn" data-close="play-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-play-game"><span class="care-icon">🎯</span><span>Mini-jeu</span></button><button class="care-item" id="btn-play-study"><span class="care-icon">📖</span><span>Lecture</span></button><button class="care-item" id="btn-play-sudoku"><span class="care-icon">🔢</span><span>Sudoku</span></button><button class="care-item" id="btn-play-morpion"><span class="care-icon">⭕</span><span>Morpion</span></button></div></div></div>
+    <div id="play-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Jouer 🎮</h2><button class="close-btn" data-close="play-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-play-game"><span class="care-icon">🎯</span><span>Mini-jeu</span></button><button class="care-item" id="btn-play-study"><span class="care-icon">📖</span><span>Lecture</span></button><button class="care-item" id="btn-play-sudoku"><span class="care-icon">🔢</span><span>Sudoku</span></button><button class="care-item" id="btn-play-morpion"><span class="care-icon">⭕</span><span>Morpion</span></button><button class="care-item" id="btn-play-catch"><span class="care-icon">🌽</span><span>Attrape</span></button><button class="care-item" id="btn-play-roost"><span class="care-icon">👆</span><span>Roost Clicker</span></button></div></div></div>
     <div id="housing-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2>Bâtiments 🏗️</h2><button class="close-btn" data-close="housing-screen">✕</button></div><div id="housing-list"></div></div></div>
     <div id="farm-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full" style="max-height:95vh;padding:0"><div class="farm-header"><div class="farm-gauges">
   <div class="farm-bonheur-main" id="farm-bonheur-row">
