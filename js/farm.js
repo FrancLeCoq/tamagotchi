@@ -389,11 +389,14 @@ var Farm = {
         // Rain darkening
         var raining=(typeof Weather!=='undefined'&&Weather._isRaining)?Weather._isRaining():false;
         scene.classList.toggle('raining',raining);
+        // Couleur synchronisée sur l'heure du jeu (cohérente avec la scène principale)
         var top,mid;
-        if(h>=8&&h<17){top='#87CEEB';mid='#b8e4f0';}
-        else if(h>=17&&h<20){top='#FFB347';mid='#FFCC99';}
-        else if(h>=20||h<5){top='#0a1228';mid='#1a2848';}
-        else{top='#FF9966';mid='#FFD4A3';}
+        if(h>=8&&h<17){top='#87CEEB';mid='#b8e4f0';}       // plein jour
+        else if(h>=17&&h<19){top='#FFB347';mid='#FFCC99';} // coucher
+        else if(h>=19&&h<21){top='#7a5a8a';mid='#b88aa0';} // crépuscule
+        else if(h>=21||h<5){top='#0a1228';mid='#1a2848';}  // nuit
+        else if(h>=5&&h<7){top='#3a3a6a';mid='#8a7aa0';}   // aube
+        else{top='#FF9966';mid='#FFD4A3';}                 // lever (7-8h)
         scene.style.backgroundImage="url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,"+top+" 0%,"+mid+" 48%,#3a6a28 48%,#3a6a28 100%)";
         scene.style.backgroundSize='cover,100% 100%';
         scene.style.backgroundPosition='center bottom,center';

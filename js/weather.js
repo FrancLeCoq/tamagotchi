@@ -209,7 +209,9 @@ var Weather={
         container.appendChild(el);
         this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.18+Math.random()*0.4,w:w,baseOp:'0.85'});
     },
+    _forceRain:function(on){this._forcedRain=on;},
     _isRaining:function(){
+        if(this._forcedRain)return true;
         var h=this.getHour();
         for(var j=0;j<this.SCHEDULE.rain.length;j++){
             if(h>=this.SCHEDULE.rain[j][0]&&h<this.SCHEDULE.rain[j][1])return true;

@@ -119,11 +119,11 @@ var Renderer={
     },
     petPulse:function(){
         var s=this.els.petSprite;if(!s)return;
-        s.style.transition='transform .1s ease';
-        s.style.transform='scale(.85)';
-        setTimeout(function(){s.style.transform='scale(1.08)';
-            setTimeout(function(){s.style.transform='scale(1)';},110);
-        },110);
+        s.style.transition='transform .14s ease';
+        s.style.transform='scale(.96)';
+        setTimeout(function(){s.style.transform='scale(1.02)';
+            setTimeout(function(){s.style.transform='scale(1)';},140);
+        },140);
     },
     _positionMoodEmoji:function(){
         var el=this.els.moodEmoji;if(!el||el.classList.contains('hidden'))return;
@@ -432,18 +432,12 @@ var Renderer={
         document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1800);
     },
     showCoinAt:function(x,y){
-        // Multiple coins fly up from pet position
-        for(var i=0;i<3;i++){
-            (function(idx){
-                setTimeout(function(){
-                    var c=document.createElement('div');c.className='coin-burst';
-                    c.textContent='🪙';
-                    c.style.left=x+'px';c.style.top=y+'px';
-                    c.style.setProperty('--dx',(Math.random()*60-30)+'px');
-                    document.body.appendChild(c);setTimeout(function(){c.remove();},1000);
-                },idx*100);
-            })(i);
-        }
+        // Une seule pièce qui s'envole (plus fluide)
+        var c=document.createElement('div');c.className='coin-burst';
+        c.textContent='🪙';
+        c.style.left=x+'px';c.style.top=y+'px';
+        c.style.setProperty('--dx',(Math.random()*30-15)+'px');
+        document.body.appendChild(c);setTimeout(function(){c.remove();},1000);
         var lbl=document.createElement('div');lbl.className='coin-label';lbl.textContent='+1';
         lbl.style.left=x+'px';lbl.style.top=(y-20)+'px';
         document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1200);

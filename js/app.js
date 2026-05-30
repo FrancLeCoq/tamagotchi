@@ -367,12 +367,10 @@ var App={
         Minigames.startCatch(function(reward){
             reward=reward||{};
             var bJeu=self.pet.jeu||0,bFaim=self.pet.faim||0;
-            self.pet.jeu=Engine.cl((self.pet.jeu||0)+(reward.jeu||30));
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+(reward.jeu||0));
             self.pet.faim=Engine.cl((self.pet.faim||0)+(reward.faim||0));
-            self.pet.bonheur=Engine.cl(self.pet.bonheur+(reward.bonheur||0));
-            self.pet.coins+=(reward.coins||0);
             Storage.save(self.pet);
-            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',bJeu,self.pet.jeu);Features.trackQuest(self.pet,'play',1);Renderer.update(self.pet);},800);
+            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',bJeu,self.pet.jeu);if(reward.faim)setTimeout(function(){Renderer.animateGauge('faim','Faim',bFaim,self.pet.faim);},700);Features.trackQuest(self.pet,'play',1);Renderer.update(self.pet);},800);
         });
     },
     doRoost:function(){
@@ -380,12 +378,11 @@ var App={
         var self=this;
         Minigames.startRoostClicker(function(reward){
             reward=reward||{};
-            var bJeu=self.pet.jeu||0,bBon=self.pet.bonheur||0;
-            self.pet.jeu=Engine.cl((self.pet.jeu||0)+(reward.jeu||15));
-            self.pet.bonheur=Engine.cl(self.pet.bonheur+(reward.bonheur||20));
+            var bJeu=self.pet.jeu||0;
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+(reward.jeu||20));
             self.pet.coins+=(reward.coins||0);
             Storage.save(self.pet);
-            setTimeout(function(){Renderer.animateGauge('bonheur','Bonheur',bBon,self.pet.bonheur);Features.trackQuest(self.pet,'play',1);Renderer.update(self.pet);},800);
+            setTimeout(function(){Renderer.animateGauge('jeu','Jeu',bJeu,self.pet.jeu);Features.trackQuest(self.pet,'play',1);Renderer.update(self.pet);},800);
         });
     },
     doMorpion:function(){

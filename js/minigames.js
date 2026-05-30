@@ -46,13 +46,13 @@ const Minigames = {
         var items=[];
         this._spawnIv=setInterval(function(){
             if(!self.active)return;
-            var em=['🌽','🌾','🥖','🧀','🍞','🐛'][Math.floor(Math.random()*6)];
-            var bad=(em==='🐛');
+            var pool=['🌽','🌾','🥖','🧀','🍞','🐛','☠️'];
+            var em=pool[Math.floor(Math.random()*pool.length)];
+            var bad=(em==='🐛');var poison=(em==='☠️');
             var it=document.createElement('div');
             it.className='catch-item';it.textContent=em;
             it.style.left=(8+Math.random()*84)+'%';it.style.top='-8%';
-            it.dataset.bad=bad?'1':'0';
-            field.appendChild(it);items.push({el:it,y:-8,x:parseFloat(it.style.left),bad:bad});
+            field.appendChild(it);items.push({el:it,y:-8,x:parseFloat(it.style.left),bad:bad,poison:poison});
         },700);
         var st=Date.now();
         this._interval=setInterval(function(){
@@ -64,6 +64,11 @@ const Minigames = {
                 var o=items[i];o.y+=2.2;o.el.style.top=o.y+'%';
                 // Catch detection near bottom (coq at ~88%)
                 if(o.y>=80&&o.y<=95&&Math.abs(o.x-coqX)<12){
+                    if(o.poison){
+                        // POISON attrapé = perdu !
+                        self.active=false;clearInterval(self._interval);clearInterval(self._spawnIv);
+                        self._poisoned=true;self.endCatchGame();return;
+                    }
                     if(o.bad){self.score=Math.max(0,self.score-2);}else{self.score++;}
                     scoreEl.textContent=self.score;o.el.remove();items.splice(i,1);continue;
                 }
@@ -74,10 +79,17 @@ const Minigames = {
     },
     endCatchGame() {
         var area=document.getElementById('minigame-area');
-        var coins=this.score*2;
-        this._reward={coins:coins,faim:Math.min(30,this.score),bonheur:Math.min(15,this.score),jeu:30};
-        area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌽</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">Attrapés : '+this.score+'</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🎮 +30% jeu<br>🪙 +'+coins+' pièces<br>🍽️ +'+Math.min(30,this.score)+'% faim</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>';
         var self=this;
+        if(this._poisoned){
+            // Poison attrapé : aucun gain
+            this._poisoned=false;
+            this._reward={coins:0,faim:0,jeu:0};
+            area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">☠️</div><div style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px">Poison attrapé !</div><div style="font-size:14px;color:#c88;margin:8px 0;line-height:1.6">Aucun gain cette fois...<br>Évite le ☠️ la prochaine fois !</div><button class="mini-btn" id="mg-done">Dommage 🐓</button></div>';
+        }else{
+            // Pas de gain de pièces pour ce jeu
+            this._reward={coins:0,faim:Math.min(30,this.score),jeu:30};
+            area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌽</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">Attrapés : '+this.score+'</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🎮 +30% jeu<br>🍽️ +'+Math.min(30,this.score)+'% faim</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>';
+        }
         document.getElementById('mg-done').addEventListener('click',function(){self.close();if(self.onComplete)self.onComplete(self._reward);});
     },
 
@@ -87,15 +99,19 @@ const Minigames = {
         this.active=false;
         if(this._interval){clearInterval(this._interval);this._interval=null;}
         document.getElementById('minigame-title').textContent='Roost Clicker ! 👆';
-        var area=document.getElementById('minigame-area');if(area)area.innerHTML='';
         document.getElementById('minigame-screen').classList.remove('hidden');
-        this.startRoostGame();
+        var area=document.getElementById('minigame-area');
+        var self=this;
+        // Écran de consigne
+        area.innerHTML='<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tapote Francis un max en 60 secondes !<br>Chaque tap rapporte <b>×2 pièces</b> 🪙<br>et tu gagnes <b>+20% dans la jauge Jeu</b> 🎮</p><button class="mini-btn" id="mg-start">C\'est parti ! 🐓</button></div>';
+        document.getElementById('mg-start').addEventListener('click',function(){self.startRoostGame();});
     },
     startRoostGame() {
         this.active=true; this.score=0; var timeLeft=60000;
         var area=document.getElementById('minigame-area');
-        area.innerHTML='<div class="mini-score" id="mg-score">0</div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field roost-field" id="mg-field"><div class="roost-coq" id="roost-coq">🐓</div></div>';
+        area.innerHTML='<div class="mini-score" id="mg-score">0</div><div class="mini-cd-ring" id="mg-cd-ring"><svg viewBox="0 0 40 40"><circle class="mg-cd-track" cx="20" cy="20" r="16"/><circle class="mg-cd-fill" cx="20" cy="20" r="16" id="mg-cd-arc"/></svg><span class="mg-cd-num" id="mg-cd-num">60</span></div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field roost-field" id="mg-field"><div class="roost-coq" id="roost-coq">🐓</div></div>';
         var field=document.getElementById('mg-field'), scoreEl=document.getElementById('mg-score'), timerEl=document.getElementById('mg-timer'), coq=document.getElementById('roost-coq');
+        var arc=document.getElementById('mg-cd-arc'),cdNum=document.getElementById('mg-cd-num');var circ=100.5;if(arc){arc.style.strokeDasharray=circ;arc.style.strokeDashoffset=0;}
         var self=this;
         function tap(e){
             if(!self.active)return;
@@ -116,14 +132,16 @@ const Minigames = {
         this._interval=setInterval(function(){
             var e=Date.now()-st, pct=Math.max(0,(1-e/timeLeft)*100);
             timerEl.style.width=pct+'%';timerEl.style.background=pct>30?'#2ecc71':pct>10?'#f39c12':'#e74c3c';
+            var remain=Math.ceil((timeLeft-e)/1000);if(cdNum)cdNum.textContent=Math.max(0,remain);
+            if(arc)arc.style.strokeDashoffset=(circ*(1-pct/100));
             if(e>=timeLeft){self.active=false;clearInterval(self._interval);self.endRoostGame();}
         },50);
     },
     endRoostGame() {
         var area=document.getElementById('minigame-area');
-        // score = déjà x2. Gain pièces = score.
-        this._reward={coins:this.score,faim:0,bonheur:20,jeu:15};
-        area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">👆</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">'+this.score+' pièces (x2 !)</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🪙 +'+this.score+' pièces<br>😊 +20% bonheur</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>';
+        // score = déjà x2 (pièces). Gain JEU +20%.
+        this._reward={coins:this.score,faim:0,jeu:20};
+        area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">👆</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">'+this.score+' pièces (×2 !)</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🪙 +'+this.score+' pièces<br>🎮 +20% jeu</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>';
         var self=this;
         document.getElementById('mg-done').addEventListener('click',function(){self.close();if(self.onComplete)self.onComplete(self._reward);});
     },

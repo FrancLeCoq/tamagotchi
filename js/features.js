@@ -22,67 +22,45 @@ var Features = {
     // ═══════════════════════════════════════════════════════
     EVENTS:[
         {
-            id:'tresor', emoji:'💰', titre:'Un trésor !',
-            texte:'Francis a déterré une vieille bourse en grattant le sol !',
+            id:'renard', emoji:'🦊', titre:'Les renards attaquent !',
+            texte:'Une horde de renards envahit le poulailler ! Cache Francis et appelle le chasseur (coûte 10% de ta cagnotte).',
+            anim:'renard',
             choix:[
-                {label:'Ramasser 💰', effet:function(p){p.coins+=150;return '+150 pièces !';}},
-                {label:'Partager avec les poules 🐔', effet:function(p){p.coins+=80;p.bonheur=Engine.cl(p.bonheur+15);return '+80 pièces, +15 bonheur';}}
+                {label:'Cacher Francis & appeler le chasseur 🔫', effet:function(p){
+                    var cout=Math.floor((p.coins||0)*0.1);p.coins-=cout;
+                    Features._fearAllGauges(p);
+                    return 'Le chasseur a chassé les renards ! (-'+cout+' 🪙, Francis a eu peur : -5% partout)';
+                }}
             ]
         },
         {
-            id:'renard', emoji:'🦊', titre:'Le renard rôde !',
-            texte:'Un renard affamé s\'approche du poulailler...',
+            id:'tempete', emoji:'⛈️', titre:'Tempête !',
+            texte:'Une violente tempête arrive ! Cache Francis, vite !',
+            anim:'tempete',
             choix:[
-                {label:'Cacher Francis 🙈', effet:function(p){p.energie=Engine.cl(p.energie-10);return 'Sauvé ! -10 énergie';}},
-                {label:'Le chasser ! 💪', effet:function(p){if(Math.random()<0.6){p.bonheur=Engine.cl(p.bonheur+20);return 'Héros ! +20 bonheur';}else{p.sante=Engine.cl(p.sante-20);return 'Aïe ! Mordu, -20 santé';}}}
+                {label:'Cacher Francis 🏠', effet:function(p){
+                    Features._fearAllGauges(p);
+                    Features._runTempete();
+                    return 'Francis se met à l\'abri 30s... (-5% partout, il a eu peur)';
+                }}
             ]
         },
         {
-            id:'ami', emoji:'🐓', titre:'Visite d\'un ami',
-            texte:'Coquardo, le coq du village voisin, vient dire bonjour !',
+            id:'malade', emoji:'🦠', titre:'PANDÉMIE — Covid19 !',
+            texte:'Une pandémie frappe le poulailler ! Il faut vacciner Francis immédiatement !',
+            anim:'malade',
             choix:[
-                {label:'Faire la fête 🎉', effet:function(p){p.bonheur=Engine.cl(p.bonheur+25);p.energie=Engine.cl(p.energie-10);return '+25 bonheur, -10 énergie';}},
-                {label:'Discuter calmement ☕', effet:function(p){p.bonheur=Engine.cl(p.bonheur+12);p.intellect=Engine.cl(p.intellect+10);return '+12 bonheur, +10 intellect';}}
+                {label:'Vacciner 💉', effet:function(p){p.sante=100;return 'Vacciné ! Santé à 100% 💪';}},
+                {label:'Pas de vaccin 🚫', effet:function(p){p.sante=0;return 'Catastrophe... Santé tombée à 0% !';}}
             ]
         },
         {
-            id:'tempete', emoji:'⛈️', titre:'Tempête soudaine !',
-            texte:'De gros nuages noirs arrivent. Le vent se lève !',
+            id:'ami', emoji:'👩\u200d🌾', titre:'Visite de Chantal',
+            texte:'Chantal, son éleveuse, vient lui rendre visite avec son panier !',
+            anim:'ami',
             choix:[
-                {label:'Rentrer à l\'abri 🏠', effet:function(p){p.hygiene=Engine.cl(p.hygiene-5);return 'À l\'abri ! -5 hygiène';}},
-                {label:'Danser sous la pluie 💃', effet:function(p){p.bonheur=Engine.cl(p.bonheur+18);p.hygiene=Engine.cl(p.hygiene-15);p.sante=Engine.cl(p.sante-8);return 'Fun mais risqué !';}}
-            ]
-        },
-        {
-            id:'marchand', emoji:'🧺', titre:'Marchand ambulant',
-            texte:'Un marchand propose un sac de grains premium à moitié prix !',
-            choix:[
-                {label:'Acheter (50 🪙)', effet:function(p){if(p.coins>=50){p.coins-=50;p.faim=Engine.cl(p.faim+40);return 'Bien nourri ! +40 faim';}return 'Pas assez de pièces...';}},
-                {label:'Refuser poliment', effet:function(p){return 'Une autre fois !';}}
-            ]
-        },
-        {
-            id:'etoile', emoji:'🌠', titre:'Étoile filante',
-            texte:'Une étoile filante traverse le ciel ! Fais un vœu...',
-            choix:[
-                {label:'Vœu de richesse 💰', effet:function(p){p.coins+=100;return 'Le ciel t\'entend ! +100 pièces';}},
-                {label:'Vœu de bonheur ✨', effet:function(p){p.bonheur=Engine.cl(p.bonheur+30);return 'Cœur léger ! +30 bonheur';}}
-            ]
-        },
-        {
-            id:'malade', emoji:'🤧', titre:'Petit rhume',
-            texte:'Francis éternue... il a attrapé un coup de froid !',
-            choix:[
-                {label:'Soigner tout de suite 💊', effet:function(p){p.sante=Engine.cl(p.sante-5);return 'Pris à temps ! -5 santé';}},
-                {label:'Laisser passer 🛌', effet:function(p){p.sante=Engine.cl(p.sante-18);p.energie=Engine.cl(p.energie-10);return 'Empiré... -18 santé';}}
-            ]
-        },
-        {
-            id:'concours', emoji:'🏅', titre:'Concours du plus beau coq',
-            texte:'Le concours annuel du village commence ! Francis participe ?',
-            choix:[
-                {label:'Participer 🏅', effet:function(p){if((p.hygiene||0)>60&&(p.bonheur||0)>60){p.coins+=120;p.bonheur=Engine.cl(p.bonheur+15);return '🥇 GAGNÉ ! +120 pièces';}else{p.bonheur=Engine.cl(p.bonheur+5);return 'Participé ! Soigne-le mieux la prochaine fois';}}},
-                {label:'Rester à la maison', effet:function(p){return 'Timide aujourd\'hui';}}
+                {label:'Faire un câlin 🤗', effet:function(p){p.amour=Engine.cl((p.amour||0)+40);Features._showHearts();return 'Que d\'amour ! +40% amour 💕';}},
+                {label:'Récupérer les œufs 🥚', effet:function(p){if(!p.farm)p.farm={};p.farm.pendingEggs=(p.farm.pendingEggs||0)+50;p.farm.totalEggs=(p.farm.totalEggs||0)+50;return '+50 œufs dans le panier ! 🥚';}}
             ]
         }
     ],
@@ -90,6 +68,7 @@ var Features = {
     EVENT_INTERVAL: 3*60*1000, // ~3 min réelles entre événements possibles
     EVENT_CHANCE: 0.35,
 
+    EVENT_QUOTA:{renard:1,tempete:2,malade:1,ami:2},
     maybeTriggerEvent:function(pet){
         if(!pet||pet.estMort||pet.isSleeping)return;
         if(App.paused)return;
@@ -97,7 +76,18 @@ var Features = {
         if(Date.now()-f.lastEventAt < this.EVENT_INTERVAL)return;
         f.lastEventAt=Date.now();
         if(Math.random()>this.EVENT_CHANCE)return;
-        var ev=this.EVENTS[Math.floor(Math.random()*this.EVENTS.length)];
+        // Recurrence par statut (stade)
+        if(f.eventStage!==pet.stade){f.eventStage=pet.stade;f.eventDone={};}
+        if(!f.eventDone)f.eventDone={};
+        // Événements encore disponibles pour ce stade
+        var self=this;
+        var avail=this.EVENTS.filter(function(e){
+            var quota=self.EVENT_QUOTA[e.id]||1;
+            return (f.eventDone[e.id]||0)<quota;
+        });
+        if(!avail.length)return;
+        var ev=avail[Math.floor(Math.random()*avail.length)];
+        f.eventDone[ev.id]=(f.eventDone[ev.id]||0)+1;
         this.showEvent(ev,pet);
     },
 
@@ -105,27 +95,117 @@ var Features = {
         var ev=this.EVENTS.find(function(e){return e.id===id;});
         if(ev)this.showEvent(ev,pet);
     },
-    // Petite animation dans la scène quand un événement se déclenche
+    // Animations spécifiques par événement
     playEventAnimation:function(ev){
         var scene=document.getElementById('scene');if(!scene)return;
-        var fx=document.createElement('div');
-        fx.textContent=ev.emoji;
-        fx.style.cssText='position:absolute;left:50%;top:30%;font-size:80px;z-index:230;pointer-events:none;transform:translate(-50%,-50%)';
-        scene.appendChild(fx);
-        if(fx.animate){
-            fx.animate([
-                {opacity:0,transform:'translate(-50%,-50%) scale(.3) rotate(-15deg)'},
-                {opacity:1,transform:'translate(-50%,-50%) scale(1.3) rotate(8deg)',offset:.4},
-                {opacity:1,transform:'translate(-50%,-50%) scale(1) rotate(0deg)',offset:.7},
-                {opacity:0,transform:'translate(-50%,-90%) scale(.6)'}
-            ],{duration:1400,easing:'ease-out'}).onfinish=function(){fx.remove();};
-        }else{setTimeout(function(){fx.remove();},1400);}
+        if(ev.anim==='renard')return this._animRenard(scene);
+        if(ev.anim==='tempete')return this._animTempeteIntro(scene);
+        if(ev.anim==='malade')return this._animVirus(scene);
+        if(ev.anim==='ami')return; // l'éleveuse s'affiche via le choix
+    },
+    _animRenard:function(scene){
+        // Sirène police bleu/rouge + renards envahissent
+        var siren=document.createElement('div');siren.className='evt-siren';siren.id='evt-siren';
+        scene.appendChild(siren);
+        for(var i=0;i<10;i++){
+            (function(idx){
+                var fox=document.createElement('img');
+                fox.src='assets/events/renards.png';fox.className='evt-fox';
+                var fromLeft=Math.random()<.5;
+                fox.style.cssText='position:absolute;width:90px;z-index:232;pointer-events:none;top:'+(40+Math.random()*45)+'%;left:'+(fromLeft?-15:110)+'%';
+                scene.appendChild(fox);
+                if(fox.animate){fox.animate([
+                    {left:(fromLeft?-15:110)+'%',opacity:0},
+                    {left:(20+Math.random()*60)+'%',opacity:1,offset:.4},
+                    {left:(20+Math.random()*60)+'%',opacity:1,offset:.8},
+                    {opacity:0}
+                ],{duration:3500,delay:idx*120,easing:'ease-out'}).onfinish=function(){fox.remove();};}
+                setTimeout(function(){if(fox.parentNode)fox.remove();},4000);
+            })(i);
+        }
+        setTimeout(function(){var s=document.getElementById('evt-siren');if(s)s.remove();},4000);
+    },
+    _animTempeteIntro:function(scene){
+        var dark=document.createElement('div');dark.className='evt-storm-dark';dark.id='evt-storm-dark';
+        scene.appendChild(dark);
+        setTimeout(function(){var d=document.getElementById('evt-storm-dark');if(d&&!d.dataset.keep)d.remove();},2000);
+    },
+    _animVirus:function(scene){
+        for(var i=0;i<16;i++){
+            (function(idx){
+                var v=document.createElement('div');v.textContent='🦠';v.className='evt-virus';
+                v.style.cssText='position:absolute;font-size:'+(28+Math.random()*24)+'px;z-index:232;pointer-events:none;left:'+(Math.random()*90)+'%;top:'+(Math.random()*80)+'%';
+                scene.appendChild(v);
+                if(v.animate){v.animate([
+                    {opacity:0,transform:'scale(0) rotate(0deg)'},
+                    {opacity:.9,transform:'scale(1) rotate(180deg)',offset:.3},
+                    {opacity:.9,transform:'scale(1.1) rotate(300deg)',offset:.8},
+                    {opacity:0,transform:'scale(.5) rotate(360deg)'}
+                ],{duration:3000,delay:idx*80}).onfinish=function(){v.remove();};}
+                setTimeout(function(){if(v.parentNode)v.remove();},3200);
+            })(i);
+        }
+    },
+    // Toutes les jauges -5% (Francis a eu peur)
+    _fearAllGauges:function(p){
+        ['faim','energie','sante','hygiene','amour','intellect','jeu'].forEach(function(g){
+            if(p[g]!==undefined)p[g]=Engine.cl(p[g]-5);
+        });
+    },
+    // Tempête : Francis disparaît 30s + rain.mp3
+    _runTempete:function(){
+        var scene=document.getElementById('scene');if(!scene)return;
+        var dark=document.getElementById('evt-storm-dark');
+        if(!dark){dark=document.createElement('div');dark.className='evt-storm-dark';dark.id='evt-storm-dark';scene.appendChild(dark);}
+        dark.dataset.keep='1';
+        // Bandeau
+        var band=document.createElement('div');band.className='evt-storm-band';band.id='evt-storm-band';band.textContent='⛈️ Cache Francis !';
+        scene.appendChild(band);
+        // Cacher Francis
+        var pw=document.getElementById('pet-wrapper');if(pw)pw.style.visibility='hidden';
+        // Pluie forte + son
+        if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(true);
+        try{if(typeof App!=='undefined'&&App._rainAudio){App._rainAudio.currentTime=0;App._rainAudio.play();}}catch(e){}
+        setTimeout(function(){
+            var d=document.getElementById('evt-storm-dark');if(d)d.remove();
+            var b=document.getElementById('evt-storm-band');if(b)b.remove();
+            if(pw)pw.style.visibility='visible';
+            if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(false);
+            try{if(typeof App!=='undefined'&&App._rainAudio)App._rainAudio.pause();}catch(e){}
+            if(typeof Renderer!=='undefined')Renderer.toast('☀️ La tempête est passée !');
+        },30000);
+    },
+    _showChantal:function(){
+        var scene=document.getElementById('scene');if(!scene)return;
+        var old=document.getElementById('evt-chantal');if(old)old.remove();
+        var img=document.createElement('img');
+        img.src='assets/events/chantal.png';img.id='evt-chantal';img.className='evt-chantal';
+        // Même position que la poule du câlin : gauche, bas 10%
+        img.style.cssText='position:absolute;left:3%;bottom:10%;width:150px;z-index:14;pointer-events:none';
+        scene.appendChild(img);
+    },
+    // Pluie de cœurs (câlin éleveuse)
+    _showHearts:function(){
+        var scene=document.getElementById('scene');if(!scene)return;
+        for(var i=0;i<18;i++){
+            (function(idx){
+                var ht=document.createElement('div');ht.textContent='💕';
+                ht.style.cssText='position:absolute;font-size:'+(22+Math.random()*22)+'px;z-index:233;pointer-events:none;left:'+(10+Math.random()*80)+'%;top:100%';
+                scene.appendChild(ht);
+                if(ht.animate){ht.animate([
+                    {top:'100%',opacity:1},
+                    {top:(10+Math.random()*30)+'%',opacity:0}
+                ],{duration:2200,delay:idx*90,easing:'ease-out'}).onfinish=function(){ht.remove();};}
+                setTimeout(function(){if(ht.parentNode)ht.remove();},2400);
+            })(i);
+        }
     },
     showEvent:function(ev,pet){
         this.playEventAnimation(ev);
         var self=this;
         var ov=document.getElementById('event-overlay');
         if(!ov)return;
+        if(ev.anim==='ami')this._showChantal();
         document.getElementById('event-emoji').textContent=ev.emoji;
         document.getElementById('event-title').textContent=ev.titre;
         document.getElementById('event-text').textContent=ev.texte;
@@ -139,6 +219,7 @@ var Features = {
                 var res=ch.effet(pet);
                 self.addJournal(pet,ev.emoji+' '+ev.titre+' — '+res);
                 ov.classList.add('hidden');
+                if(ev.anim==='ami'){var ch2=document.getElementById('evt-chantal');if(ch2)setTimeout(function(){ch2.remove();},2000);}
                 if(typeof Renderer!=='undefined'){Renderer.toast(ev.emoji+' '+res);Renderer.update(pet);}
                 if(typeof Storage!=='undefined')Storage.save(pet);
             });
