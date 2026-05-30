@@ -117,6 +117,14 @@ var Renderer={
         if(pet.isSleeping){btn.classList.add('sleep-active');btn.classList.remove('on-cooldown');if(ic)ic.textContent='⏹️';if(lb)lb.textContent='Réveiller';}
         else{btn.classList.remove('sleep-active');if(ic)ic.textContent='💤';if(lb)lb.textContent='Dormir';}
     },
+    petPulse:function(){
+        var s=this.els.petSprite;if(!s)return;
+        s.style.transition='transform .1s ease';
+        s.style.transform='scale(.85)';
+        setTimeout(function(){s.style.transform='scale(1.08)';
+            setTimeout(function(){s.style.transform='scale(1)';},110);
+        },110);
+    },
     _positionMoodEmoji:function(){
         var el=this.els.moodEmoji;if(!el||el.classList.contains('hidden'))return;
         var pw=this.els.petWrapper;if(!pw||!this.els.scene)return;

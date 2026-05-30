@@ -184,7 +184,7 @@ var Weather={
         var ho=(typeof Engine!=='undefined'&&Engine.HOUSING)?Engine.HOUSING[l]||Engine.HOUSING[0]:{bg:'poulailler'};
         var src='assets/backgrounds/'+ho.bg+'_jour.png';
         // Per-building vertical position from bottom
-        var vPos={poulailler:25,bois:25,brique:15,chateau:15,palace:30,spacex:18}[ho.bg]||25;
+        var vPos={poulailler:25,bois:25,brique:10,chateau:15,palace:30,spacex:18}[ho.bg]||25;
         var el=document.getElementById('layer-building');
         if(el){el.style.bottom=vPos+'%';
             // Night: dim the building + warm doorway glow

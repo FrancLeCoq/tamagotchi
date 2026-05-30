@@ -11,10 +11,14 @@ const Minigames = {
 
     startMorpion(onComplete) {
         this.onComplete=onComplete;
+        this.active=false;
+        if(this._interval){clearInterval(this._interval);this._interval=null;}
+        if(this.timer){clearTimeout(this.timer);this.timer=null;}
         document.getElementById('minigame-title').textContent='Morpion vs Bot ⭕';
+        var area=document.getElementById('minigame-area');if(area)area.innerHTML='';
         document.getElementById('minigame-screen').classList.remove('hidden');
         this.morpionBoard=['','','','','','','','',''];
-        this.morpionOver=false;
+        this.morpionOver=false;this.botThinking=false;
         this.renderMorpion();
     },
     renderMorpion(msg) {
@@ -37,7 +41,7 @@ const Minigames = {
                 if(self.morpionBoard.every(function(x){return x;})){self.endMorpion(false,'Match nul !');return;}
                 // Bot thinks for 5 seconds with countdown
                 self.botThinking=true;
-                var sec=3;
+                var sec=2;
                 self.renderMorpion('🤖 Le bot réfléchit... '+sec+'s');
                 self.botTimer=setInterval(function(){
                     sec--;
@@ -137,9 +141,12 @@ const Minigames = {
         spawn();
     },
     endTapGame() {
-        const area=document.getElementById('minigame-area'), bonus=Math.min(20,this.score*2);
-        area.innerHTML=`<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌾</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:8px">Score : ${this.score}</div><div style="font-size:14px;color:#8888aa;margin-bottom:16px">Bonus bonheur : +${bonus}</div><button class="mini-btn" id="mg-done">Super ! 🐓</button></div>`;
-        document.getElementById('mg-done').addEventListener('click',()=>{this.close();if(this.onComplete)this.onComplete(bonus);});
+        const area=document.getElementById('minigame-area');
+        // Économie : chaque grain attrapé = 2 pièces + 1% faim, + bonus bonheur
+        const coins=this.score*2, faim=Math.min(40,this.score), bonus=Math.min(20,this.score);
+        this._reward={coins:coins,faim:faim,bonheur:bonus,jeu:20};
+        area.innerHTML=`<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌾</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">Score : ${this.score}</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🪙 +${coins} pièces<br>🍽️ +${faim}% faim<br>😊 +${bonus}% bonheur</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>`;
+        document.getElementById('mg-done').addEventListener('click',()=>{this.close();if(this.onComplete)this.onComplete(this._reward);});
     },
 
     // ─── Mini Sudoku 4×4 ───────────────────────────────

@@ -60,11 +60,12 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* Building: half the previous size, centered */
 .layer-building{position:absolute;bottom:35%;left:50%;transform:translateX(-50%);z-index:3;pointer-events:none;display:flex;align-items:flex-end;justify-content:center}
 .layer-building img{max-height:40vh;max-width:45vw;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35))}
+.layer-building img[src*='poulailler']{max-height:40vh;max-width:45vw}
 .layer-building img[src*='bois']{max-height:40vh;max-width:45vw}
-.layer-building img[src*='brique']{max-height:90vh;max-width:95vw}
-.layer-building img[src*='chateau']{max-height:54.5vh;max-width:60.3vw}
+.layer-building img[src*='brique']{max-height:95vh;max-width:100vw}
+.layer-building img[src*='chateau']{max-height:64.5vh;max-width:70.3vw}
 .layer-building img[src*='palace']{max-height:54.5vh;max-width:60.3vw}
-.layer-building img[src*='spacex']{max-height:60vh;max-width:62vw}
+.layer-building img[src*='spacex']{max-height:120vh;max-width:124vw}
 .hud-weather{position:absolute;top:6px;right:6px;font-size:18px;z-index:8}
 .sleep-zzz{position:absolute;top:15%;left:50%;transform:translateX(-50%);font-size:36px;z-index:6;animation:zzzPulse 2s ease-in-out infinite;text-shadow:0 2px 12px rgba(0,0,0,.5);letter-spacing:8px}
 @keyframes zzzPulse{0%,100%{opacity:.6;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.15)}}
@@ -492,8 +493,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .egg-count{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:12px;font-weight:800;color:#ffd633;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 
 /* ═══ NIGHT BUILDING — warm doorway glow ═══ */
-.layer-building.night-building{position:relative}
-.layer-building.night-building::after{content:'';position:absolute;left:50%;bottom:6%;transform:translateX(-50%);width:18%;height:24%;background:radial-gradient(ellipse at center,rgba(255,200,90,.85) 0%,rgba(255,170,50,.4) 50%,transparent 75%);border-radius:50% 50% 30% 30%;pointer-events:none;animation:doorFlicker 3s ease-in-out infinite;z-index:1}
+.layer-building.night-building::after{content:'';position:absolute;left:50%;bottom:8%;transform:translateX(-50%);width:16%;height:22%;background:radial-gradient(ellipse at center,rgba(255,200,90,.9) 0%,rgba(255,170,50,.45) 50%,transparent 75%);border-radius:50% 50% 30% 30%;pointer-events:none;animation:doorFlicker 3s ease-in-out infinite;z-index:1}
 @keyframes doorFlicker{0%,100%{opacity:.85}50%{opacity:1}}
 
 /* ═══ LEADERBOARD (menu) ═══ */
@@ -510,3 +510,41 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .pause-text{font-size:34px;font-weight:900;letter-spacing:6px;color:#fff;margin:8px 0 20px;text-shadow:0 0 18px rgba(150,100,230,.7)}
 .pause-resume-btn{background:linear-gradient(180deg,#3ddc6e,#27b357);color:#fff;border:none;border-radius:16px;padding:14px 32px;font-size:18px;font-weight:900;cursor:pointer;box-shadow:0 0 20px rgba(60,210,110,.5)}
 .pause-resume-btn:active{transform:scale(.96)}
+
+/* ═══════════ FEATURES UI ═══════════ */
+
+/* Weather banner */
+.weather-banner{position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:18;background:rgba(10,16,32,.72);color:#e8eefc;font-size:11px;font-weight:700;padding:5px 14px;border-radius:14px;white-space:nowrap;pointer-events:none;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1)}
+
+/* Event overlay */
+.event-overlay{position:fixed;inset:0;z-index:240;background:rgba(8,6,22,.78);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px}
+.event-box{width:100%;max-width:380px;background:linear-gradient(180deg,#241640,#1a1030);border:1.5px solid rgba(160,110,240,.4);border-radius:22px;padding:24px;text-align:center;box-shadow:0 0 40px rgba(130,80,220,.35);animation:eventPop .4s cubic-bezier(.2,.8,.3,1.2)}
+@keyframes eventPop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+.event-emoji{font-size:64px;animation:eventBob 2s ease-in-out infinite}
+@keyframes eventBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.event-title{font-size:22px;font-weight:900;color:#ffd633;margin:8px 0 6px;text-shadow:0 0 12px rgba(255,214,51,.5)}
+.event-text{font-size:14px;color:#d8c8f0;line-height:1.5;margin:0 0 18px}
+.event-choices{display:flex;flex-direction:column;gap:10px}
+.event-choice-btn{padding:14px;border:none;border-radius:14px;background:linear-gradient(180deg,#6a4fd0,#4a32a8);color:#fff;font-size:15px;font-weight:800;cursor:pointer;transition:transform .12s;box-shadow:0 4px 0 rgba(40,20,100,.5)}
+.event-choice-btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(40,20,100,.5)}
+
+/* Quests */
+.quests-list{display:flex;flex-direction:column;gap:12px;padding:6px 2px;max-height:60vh;overflow-y:auto}
+.quest-item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 14px}
+.quest-item.quest-done{border-color:rgba(80,210,120,.5);background:rgba(60,180,100,.12)}
+.quest-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.quest-text{font-size:13px;font-weight:700;color:#e8eefc}
+.quest-reward{font-size:12px;font-weight:800;color:#ffd633;white-space:nowrap}
+.quest-claimed{font-size:12px;font-weight:800;color:#5fe08a;white-space:nowrap}
+.quest-claim{padding:6px 12px;border:none;border-radius:10px;background:linear-gradient(180deg,#3ddc6e,#27b357);color:#fff;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;animation:questGlow 1.5s ease-in-out infinite}
+@keyframes questGlow{0%,100%{box-shadow:0 0 6px rgba(60,210,110,.5)}50%{box-shadow:0 0 16px rgba(60,210,110,.9)}}
+.quest-bar{height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
+.quest-fill{height:100%;background:linear-gradient(90deg,#4a90d9,#5fe08a);border-radius:4px;transition:width .4s ease}
+.quest-prog{font-size:10px;color:#9a85c0;margin-top:4px;text-align:right}
+
+/* Journal */
+.journal-list{display:flex;flex-direction:column;gap:8px;padding:6px 2px;max-height:62vh;overflow-y:auto}
+.journal-empty{text-align:center;color:#9a85c0;font-size:13px;padding:30px 10px;line-height:1.5}
+.journal-entry{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.05);border-radius:10px;padding:9px 12px;border-left:3px solid rgba(160,110,240,.5)}
+.journal-day{font-size:11px;font-weight:900;color:#b388ff;background:rgba(160,110,240,.15);padding:2px 7px;border-radius:8px;white-space:nowrap;flex-shrink:0}
+.journal-txt{font-size:12.5px;color:#d8c8f0;line-height:1.4}

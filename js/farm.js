@@ -8,6 +8,77 @@ var Farm = {
         return pet.farm;
     },
 
+    showHenDeathAnimation:function(deaths){
+        var scene=document.getElementById('farm-scene');if(!scene)return;
+        var self=this;
+        // La faucheuse traverse l'écran
+        var reaper=document.createElement('div');
+        reaper.textContent='💀';
+        reaper.style.cssText='position:absolute;left:-60px;top:35%;font-size:54px;z-index:30;pointer-events:none;filter:drop-shadow(0 0 10px rgba(120,0,0,.8))';
+        scene.appendChild(reaper);
+        if(reaper.animate){
+            reaper.animate([
+                {left:'-60px',opacity:0},
+                {left:'40%',opacity:1,offset:.5},
+                {left:'110%',opacity:0}
+            ],{duration:2200,easing:'ease-in-out'}).onfinish=function(){reaper.remove();};
+        }else{setTimeout(function(){reaper.remove();},2200);}
+        // Petite tête de mort sur chaque poule disparue
+        (deaths||[]).forEach(function(d){
+            if(d.x===undefined)return;
+            var rect=self.canvas?self.canvas.getBoundingClientRect():null;
+            var sk=document.createElement('div');
+            sk.textContent='☠️';
+            var leftPct=self.canvas?(d.x/self.canvas.width*100):50;
+            var topPct=self.canvas?(d.y/self.canvas.height*100):50;
+            sk.style.cssText='position:absolute;left:'+leftPct+'%;top:'+topPct+'%;font-size:32px;z-index:31;pointer-events:none;transform:translate(-50%,-50%)';
+            scene.appendChild(sk);
+            if(sk.animate){
+                sk.animate([
+                    {opacity:0,transform:'translate(-50%,-50%) scale(.3)'},
+                    {opacity:1,transform:'translate(-50%,-80%) scale(1.2)',offset:.4},
+                    {opacity:0,transform:'translate(-50%,-160%) scale(.8)'}
+                ],{duration:2500,easing:'ease-out'}).onfinish=function(){sk.remove();};
+            }else{setTimeout(function(){sk.remove();},2500);}
+        });
+    },
+
+    // Décès de poules selon le bonheur de Francis
+    checkBonheurDeaths:function(pet){
+        var farm=this.ensureData(pet);
+        if(farm.hens<=0)return 0;
+        var b=pet.bonheur||100;
+        var target=0;
+        if(b<=0)target=farm.hens;
+        else if(b<5)target=4;
+        else if(b<10)target=3;
+        else if(b<15)target=2;
+        else if(b<20)target=1;
+        // Combien on a déjà tué pour ce palier
+        if(farm._bonheurDeaths===undefined)farm._bonheurDeaths=0;
+        // Reset si le bonheur remonte au dessus de 20
+        if(b>=20){farm._bonheurDeaths=0;return 0;}
+        var toKill=target-farm._bonheurDeaths;
+        if(toKill>0){
+            toKill=Math.min(toKill,farm.hens);
+            // Positions des poules qui meurent (pour l'animation)
+            var deaths=[];
+            for(var i=0;i<toKill;i++){
+                if(this.hens&&this.hens.length>0){
+                    var idx=Math.floor(Math.random()*this.hens.length);
+                    deaths.push({x:this.hens[idx].x,y:this.hens[idx].y});
+                    this.hens.splice(idx,1);
+                }
+            }
+            farm.hens-=toKill;
+            farm._bonheurDeaths+=toKill;
+            if(this.isOpen)this.showHenDeathAnimation(deaths);
+            if(typeof Renderer!=='undefined')Renderer.toast('💀 '+toKill+' poule(s) ont succombé au chagrin de Francis !');
+            return toKill;
+        }
+        return 0;
+    },
+
     update:function(pet){
         var farm=this.ensureData(pet);
         if(farm.hens<=0) return farm;
@@ -439,6 +510,7 @@ var Farm = {
         if(n<=0){if(typeof Renderer!=='undefined')Renderer.toast('Aucun œuf à ramasser');return;}
         App.pet.coins+=n; // 1 œuf = 1 pièce
         App.pet.farm.pendingEggs=0;
+        if(typeof Features!=='undefined')Features.trackQuest(App.pet,'eggs',n);
         if(typeof Renderer!=='undefined')Renderer.toast('🥚→🪙 +'+n+' pièces !');
         // Coin burst animation
         var corner=this._eggCorner;

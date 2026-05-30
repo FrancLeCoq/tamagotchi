@@ -19,7 +19,8 @@ const Engine = {
         { id:1, nom:'Maison en bois',   emoji:'🏡', cost:1000,  bg:'bois' },
         { id:2, nom:'Maison en brique', emoji:'🏠', cost:10000, bg:'brique' },
         { id:3, nom:'Château',          emoji:'🏰', cost:15000, bg:'chateau' },
-        { id:4, nom:'SpaceX',           emoji:'🚀', cost:50000, bg:'spacex' },
+        { id:4, nom:'Palace',           emoji:'🏛️', cost:30000, bg:'palace' },
+        { id:5, nom:'SpaceX',           emoji:'🚀', cost:50000, bg:'spacex' },
     ],
     DIALOGUES: {
         faim:['J\'ai la dalle ! 🌾','Du grain, stp...','Mon ventre gargouille...','Nourris-moi ! Je dépéris !','Je mangerais bien un croissant... 🥐','Mon estomac crie famine !','Un grain... juste un grain...','Par Toutatis, du maïs !','Même une miette ferait l\'affaire...','Le frigo est vide ou quoi ?'],
