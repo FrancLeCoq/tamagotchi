@@ -29,13 +29,26 @@ const Minigames = {
         area.innerHTML=html;
         area.querySelectorAll('.morpion-cell').forEach(function(el){
             el.addEventListener('click',function(){
-                if(self.morpionOver)return;
+                if(self.morpionOver||self.botThinking)return;
                 var i=parseInt(el.getAttribute('data-i'));
                 if(self.morpionBoard[i])return;
                 self.morpionBoard[i]='❌';
                 if(self.checkMorpion('❌')){self.endMorpion(true);return;}
                 if(self.morpionBoard.every(function(x){return x;})){self.endMorpion(false,'Match nul !');return;}
-                self.botMove();
+                // Bot thinks for 5 seconds with countdown
+                self.botThinking=true;
+                var sec=5;
+                self.renderMorpion('🤖 Le bot réfléchit... '+sec+'s');
+                self.botTimer=setInterval(function(){
+                    sec--;
+                    if(sec<=0){
+                        clearInterval(self.botTimer);
+                        self.botThinking=false;
+                        self.botMove();
+                    }else{
+                        self.renderMorpion('🤖 Le bot réfléchit... '+sec+'s');
+                    }
+                },1000);
             });
         });
     },
@@ -68,7 +81,7 @@ const Minigames = {
         return wins.some(function(L){return L.every(function(i){return b[i]===mark;});});
     },
     endMorpion(win,msg) {
-        this.morpionOver=true;
+        this.morpionOver=true;this.botThinking=false;if(this.botTimer)clearInterval(this.botTimer);
         var self=this;
         this.renderMorpion(win?'🎉 Tu as gagné !':(msg||'Perdu...'));
         setTimeout(function(){

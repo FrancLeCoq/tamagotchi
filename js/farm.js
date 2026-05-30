@@ -4,7 +4,7 @@ var Farm = {
     henImg:null, bgDayImg:null, bgNightImg:null,
 
     ensureData:function(pet){
-        if(!pet.farm) pet.farm={hens:0,feedLevel:100,cleanLevel:100,lastUpdate:Date.now(),deadRecent:0,totalEggs:0,farmPoops:0};
+        if(!pet.farm) pet.farm={hens:0,feedLevel:100,cleanLevel:100,lastUpdate:Date.now(),deadRecent:0,totalEggs:0,farmPoops:0,pendingEggs:0,eggAccum:0};
         return pet.farm;
     },
 
@@ -25,9 +25,11 @@ var Farm = {
             var d2=Math.min(farm.hens,Math.ceil(elapsed*0.3));
             farm.hens-=d2;farm.deadRecent+=d2;farm.cleanLevel=5;
         }
-        if(farm.feedLevel>20&&farm.cleanLevel>20){
-            var eggs=Math.floor(elapsed*farm.hens*0.3);
-            if(eggs>0){pet.coins+=eggs;farm.totalEggs+=eggs;}
+        // 1 œuf / heure réelle / poule (si nourries & propres)
+        if(farm.feedLevel>20&&farm.cleanLevel>20&&farm.hens>0){
+            farm.eggAccum=(farm.eggAccum||0)+elapsed*farm.hens; // 1/h/hen
+            var newEggs=Math.floor(farm.eggAccum);
+            if(newEggs>0){farm.eggAccum-=newEggs;farm.pendingEggs=(farm.pendingEggs||0)+newEggs;farm.totalEggs+=newEggs;}
         }
         farm.lastUpdate=now;
         return farm;
@@ -62,7 +64,8 @@ var Farm = {
         // Dynamic sky matching time of day
         this._updateFarmSky();
         this._initFarmCelestial();
-        if(this._farmSkyIv)clearInterval(this._farmSkyIv);if(this._farmCelIv)clearInterval(this._farmCelIv);if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);
+        this._initEggCorner();
+        if(this._farmSkyIv)clearInterval(this._farmSkyIv);if(this._farmCelIv)clearInterval(this._farmCelIv);if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);if(this._eggIv)clearInterval(this._eggIv);
         var selfF=this;this._farmSkyIv=setInterval(function(){selfF._updateFarmSky();},3000);
         var farm=this.ensureData(pet);
         this.update(pet);
@@ -102,7 +105,7 @@ var Farm = {
                 x:30+Math.random()*(this.canvas.width-80),
                 y:this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4),
                 targetX:this.canvas.width*0.28+Math.random()*(this.canvas.width*0.65),
-                targetY:this.canvas.height*0.35+Math.random()*(this.canvas.height*0.45),
+                targetY:this.canvas.height*0.35+Math.random()*(this.canvas.height*0.37),
                 speed:0.3+Math.random()*0.5, flipX:Math.random()>0.5,
                 state:'idle', stateTimer:Math.random()*200, bob:Math.random()*Math.PI*2
             });
@@ -131,7 +134,7 @@ var Farm = {
                 if(r<0.4){
                     h.state='walking';
                     h.targetX=this.canvas.width*0.28+Math.random()*(this.canvas.width*0.65);
-                    h.targetY=this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4);
+                    h.targetY=this.canvas.height*0.40+Math.random()*(this.canvas.height*0.30);
                     h.stateTimer=100+Math.random()*200;
                 } else if(r<0.7){h.state='pecking';h.stateTimer=30+Math.random()*60;}
                 else {h.state='idle';h.stateTimer=50+Math.random()*150;}
@@ -214,7 +217,7 @@ var Farm = {
         this.hens.push({
             x:-40, y:this.canvas.height*0.5+Math.random()*(this.canvas.height*0.3),
             targetX:this.canvas.width*0.28+Math.random()*(this.canvas.width*0.65),
-            targetY:this.canvas.height*0.35+Math.random()*(this.canvas.height*0.45),
+            targetY:this.canvas.height*0.35+Math.random()*(this.canvas.height*0.37),
             speed:0.5+Math.random()*0.5, flipX:false,
             state:'walking', stateTimer:200, bob:Math.random()*Math.PI*2
         });
@@ -343,13 +346,13 @@ var Farm = {
         this._farmRainCanvas=rainC;this._farmRainCtx=rainC.getContext('2d');
         this._farmRainDrops=[];this._farmRainInit=true;
         var selfR=this;
-        if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);
+        if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);if(this._eggIv)clearInterval(this._eggIv);
         var rainLoop=function(){
             selfR._drawFarmRain();selfR._farmRainIv=requestAnimationFrame(rainLoop);
         };rainLoop();
         this._updateFarmCelestial();
         var self=this;
-        if(this._farmCelIv)clearInterval(this._farmCelIv);if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);
+        if(this._farmCelIv)clearInterval(this._farmCelIv);if(this._farmRainIv)cancelAnimationFrame(this._farmRainIv);if(this._eggIv)clearInterval(this._eggIv);
         this._farmCelIv=setInterval(function(){self._updateFarmCelestial();},2000);
     },
 
@@ -386,5 +389,63 @@ var Farm = {
                 ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-2,d.y+d.l);ctx.stroke();
             }
         }
+    }
+,
+
+    _initEggCorner:function(){
+        var scene=document.getElementById('farm-scene');if(!scene)return;
+        var old=scene.querySelector('.egg-corner');if(old)old.remove();
+        var corner=document.createElement('div');
+        corner.className='egg-corner';
+        corner.innerHTML='<div class="egg-pile" id="egg-pile"></div><div class="egg-count" id="egg-count">🥚 0</div>';
+        scene.appendChild(corner);
+        var self=this;
+        corner.addEventListener('click',function(){self.collectEggs();});
+        this._eggCorner=corner;
+        this.updateEggCorner();
+        if(this._eggIv)clearInterval(this._eggIv);
+        this._eggIv=setInterval(function(){self.updateEggCorner();},2000);
+    },
+
+    updateEggCorner:function(){
+        if(!this._eggCorner||typeof App==='undefined'||!App.pet||!App.pet.farm)return;
+        var n=App.pet.farm.pendingEggs||0;
+        var pile=this._eggCorner.querySelector('#egg-pile');
+        var cnt=this._eggCorner.querySelector('#egg-count');
+        if(cnt)cnt.textContent='🥚 '+n;
+        if(pile){
+            var show=Math.min(n,12);var html='';
+            for(var i=0;i<show;i++){
+                var x=(i%4)*16, y=Math.floor(i/4)*12;
+                html+='<span class="egg-one" style="left:'+x+'px;bottom:'+y+'px">🥚</span>';
+            }
+            pile.innerHTML=html;
+        }
+        this._eggCorner.style.opacity=n>0?'1':'0.5';
+    },
+
+    collectEggs:function(){
+        if(typeof App==='undefined'||!App.pet||!App.pet.farm)return;
+        var n=App.pet.farm.pendingEggs||0;
+        if(n<=0){if(typeof Renderer!=='undefined')Renderer.toast('Aucun œuf à ramasser');return;}
+        App.pet.coins+=n; // 1 œuf = 1 pièce
+        App.pet.farm.pendingEggs=0;
+        if(typeof Renderer!=='undefined')Renderer.toast('🥚→🪙 +'+n+' pièces !');
+        // Coin burst animation
+        var corner=this._eggCorner;
+        if(corner){
+            for(var i=0;i<Math.min(n,8);i++){
+                (function(idx){setTimeout(function(){
+                    var co=document.createElement('div');co.textContent='🪙';
+                    co.style.cssText='position:absolute;right:'+(10+Math.random()*30)+'px;bottom:40px;font-size:20px;z-index:20;pointer-events:none;transition:all 1s ease';
+                    corner.appendChild(co);
+                    requestAnimationFrame(function(){co.style.bottom='160px';co.style.opacity='0';});
+                    setTimeout(function(){co.remove();},1000);
+                },idx*80);})(i);
+            }
+        }
+        this.updateEggCorner();
+        if(typeof App!=='undefined')App.renderFarmUI&&App.renderFarmUI();
+        if(typeof Storage!=='undefined')Storage.save(App.pet);
     }
 };

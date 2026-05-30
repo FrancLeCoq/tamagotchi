@@ -38,7 +38,7 @@ var Weather={
         // Update celestial positions every 2s + sky refresh
         setInterval(function(){
             self._applySky();self._moveCelestial();
-            self.updateBuilding();self.updateClock();
+            self.updateBuilding();self.updateClock();self._checkRocketLaunch();
         },2000);
         setTimeout(function(){self._moveCelestial();},200);
     },
@@ -101,6 +101,22 @@ var Weather={
         }else{this._moonEl.style.opacity='0';}
     },
 
+    _cloudSVG:function(dark){
+        var fill=dark?'%23aab0bd':'%23ffffff';
+        var fill2=dark?'%239aa0ad':'%23f2f5fb';
+        return 'data:image/svg+xml;utf8,'+
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 90">'+
+        '<g fill="'+fill+'">'+
+        '<ellipse cx="55" cy="58" rx="48" ry="30"/>'+
+        '<ellipse cx="105" cy="42" rx="56" ry="38"/>'+
+        '<ellipse cx="150" cy="56" rx="46" ry="30"/>'+
+        '<ellipse cx="100" cy="62" rx="80" ry="26"/>'+
+        '</g>'+
+        '<g fill="'+fill2+'" opacity="0.6">'+
+        '<ellipse cx="95" cy="40" rx="44" ry="26"/>'+
+        '</g>'+
+        '</svg>';
+    },
     _initClouds:function(){
         var self=this;
         var container=document.getElementById('layer-clouds');if(!container)return;
@@ -113,7 +129,7 @@ var Weather={
             el.className='cloud-el';
             var w=90+Math.random()*110;
             var h=w*0.38;
-            el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*45)+'px;left:'+(Math.random()*sw)+'px;background:rgba(245,248,255,'+(0.75+Math.random()*0.2)+');border-radius:'+h+'px;box-shadow:'+(w*0.2)+'px 0 0 -'+(h*0.12)+'px rgba(245,248,255,.85),'+(-w*0.2)+'px 2px 0 -'+(h*0.15)+'px rgba(245,248,255,.8);filter:blur(.5px);';
+            el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(8+Math.random()*45)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+self._cloudSVG(false)+'\') center/contain no-repeat;opacity:'+(0.78+Math.random()*0.18)+';filter:drop-shadow(0 4px 6px rgba(0,0,0,.06));';
             container.appendChild(el);
             this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.12+Math.random()*0.35,w:w,baseOp:el.style.opacity||'0.85'});
         }
@@ -137,13 +153,38 @@ var Weather={
         },50);
     },
 
+    launchRocket:function(){
+        var scene=document.querySelector('.scene');if(!scene)return;
+        var r=document.createElement('div');
+        r.textContent='🚀';
+        r.style.cssText='position:absolute;left:50%;bottom:35%;font-size:34px;z-index:8;pointer-events:none;transform:translateX(-50%) rotate(-45deg)';
+        scene.appendChild(r);
+        // Trail
+        if(r.animate){
+            r.animate([
+                {bottom:'35%',opacity:1,transform:'translateX(-50%) rotate(-45deg) scale(1)'},
+                {bottom:'105%',opacity:0,transform:'translateX(20%) rotate(-45deg) scale(.5)'}
+            ],{duration:2500,easing:'ease-in',fill:'forwards'}).onfinish=function(){r.remove();};
+        }else{setTimeout(function(){r.remove();},2500);}
+    },
+    _checkRocketLaunch:function(){
+        var l=(typeof App!=='undefined'&&App.pet)?App.pet.housingLevel||0:0;
+        var ho=(typeof Engine!=='undefined'&&Engine.HOUSING)?Engine.HOUSING[l]:null;
+        if(!ho||ho.bg!=='spacex')return;
+        var gameHour=this.getHour();
+        var gameMin=Math.floor((this.startHour*60+(Date.now()-this.startTime)/this.HOUR_MS*60));
+        // Launch every 10 game-minutes
+        var slot=Math.floor(gameMin/10);
+        if(this._lastRocketSlot===undefined)this._lastRocketSlot=slot;
+        if(slot>this._lastRocketSlot){this._lastRocketSlot=slot;this.launchRocket();}
+    },
     updateBuilding:function(){
         var d=this.getBri()>.45;
         var l=(typeof App!=='undefined'&&App.pet)?App.pet.housingLevel||0:0;
         var ho=(typeof Engine!=='undefined'&&Engine.HOUSING)?Engine.HOUSING[l]||Engine.HOUSING[0]:{bg:'poulailler'};
         var src='assets/backgrounds/'+ho.bg+(d?'_jour':'_nuit')+'.png';
         // Per-building vertical position from bottom
-        var vPos={poulailler:25,bois:25,brique:15,chateau:15,palace:30}[ho.bg]||25;
+        var vPos={poulailler:25,bois:25,brique:15,chateau:15,palace:30,spacex:18}[ho.bg]||25;
         var el=document.getElementById('layer-building');
         if(el)el.style.bottom=vPos+'%';
         if(this.lastBuildingState!==src){this.lastBuildingState=src;
@@ -160,7 +201,7 @@ var Weather={
         var container=document.getElementById('layer-clouds');if(!container)return;
         var el=document.createElement('div');el.className='cloud-el';
         var w=110+Math.random()*90,h=w*0.4;
-        el.style.cssText='width:'+w+'px;height:'+h+'px;top:'+(8+Math.random()*40)+'px;left:'+(Math.random()*sw)+'px;background:rgba(120,128,140,.85);border-radius:'+h+'px;filter:blur(.5px);opacity:0.95;';
+        el.style.cssText='width:'+w+'px;height:'+(w*0.45)+'px;top:'+(8+Math.random()*40)+'px;left:'+(Math.random()*sw)+'px;background:url(\''+this._cloudSVG(true)+'\') center/contain no-repeat;opacity:0.92;';
         container.appendChild(el);
         this._cloudEls.push({el:el,x:parseFloat(el.style.left),s:0.18+Math.random()*0.4,w:w,baseOp:'0.85'});
     },
