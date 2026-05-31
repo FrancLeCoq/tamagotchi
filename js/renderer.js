@@ -328,15 +328,21 @@ var Renderer={
     },
 
     // ═══ SERINGUE — 180°, flies to pet ═══
-    showBigSyringe:function(onEnd){
+    showBigSyringe:function(onEnd,opts){
+        opts=opts||{};
         this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('sick');
         var big=document.createElement('div');big.className='big-food-anim';big.textContent='💉';
         big.style.bottom='45%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
         this.els.scene.appendChild(big);
         var loop=setInterval(function(){self._flyItemToPet('💉',true,45);},1500);
-        var timer=this._countdown(I18n.t('lbl_healing'),20,'#e74c3c',function(){
-            clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
-        });
+        var dur=opts.duration||20;
+        var finish=function(){clearInterval(loop);if(big.parentNode)big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();};
+        if(opts.noTimer){
+            // Pas de compte à rebours propre (géré par l'appelant) — on s'arrête après dur secondes
+            setTimeout(finish,dur*1000);
+        }else{
+            this._countdown(I18n.t('lbl_healing'),dur,'#e74c3c',finish);
+        }
     },
 
     // ═══ BROSSAGE — big toothbrush, small ones fly to pet, 20s +20% ═══

@@ -28,7 +28,7 @@ var Features = {
             choix:[
                 {labelKey:'ev_fox_c1', effet:function(p){
                     var cout=Math.floor((p.coins||0)*0.1);p.coins-=cout;
-                    Features._runChasseur();
+                    Features._runChasseur(cout);
                     return I18n.t('ev_fox_r1',{c:cout});
                 }},
                 {labelKey:'ev_fox_c2', effet:function(p){
@@ -185,20 +185,52 @@ var Features = {
     },
 
     // ─── Issues (outcomes) ───
-    _runChasseur:function(){
+    _runChasseur:function(cout){
         var scene=document.getElementById('scene');if(!scene)return;
+        var self=this;
         // Nettoyer les renards
         this._clearTmp();
         var s=document.getElementById('evt-siren');if(s)s.remove();
         var hunter=document.createElement('img');hunter.src='assets/events/chasseur.png';hunter.className='evt-hunter evt-tmp';
         hunter.style.cssText='position:absolute;left:50%;bottom:4%;height:80%;transform:translateX(-50%);z-index:233;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))';
         scene.appendChild(hunter);
-        var band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.textContent=I18n.t('ev_band_hunter');
+        // Bandeau précisant le coût de l'intervention
+        var band=document.createElement('div');band.className='evt-storm-band evt-tmp';
+        band.textContent=I18n.t('ev_band_hunter')+(cout?' (-'+cout+' 🪙)':'');
         scene.appendChild(band);
         this._sceneCountdown(10,'',function(){
-            if(hunter.parentNode)hunter.remove();if(band.parentNode)band.remove();
+            if(band.parentNode)band.remove();
+            // Animation des pièces perdues au moment où le chasseur disparaît
+            if(cout&&cout>0)self._runCoinLoss(cout);
+            if(hunter.parentNode)hunter.remove();
             if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('ev_toast_secured'));
         });
+    },
+    // Pièces qui s'envolent (perte) — affiché quand le chasseur part
+    _runCoinLoss:function(cout){
+        var scene=document.getElementById('scene');if(!scene)return;
+        // Montant en gros au centre
+        var amount=document.createElement('div');amount.className='evt-tmp evt-coinloss-amount';amount.textContent='-'+Number(cout).toLocaleString()+' 🪙';
+        scene.appendChild(amount);
+        if(amount.animate)amount.animate([
+            {opacity:0,transform:'translateX(-50%) translateY(0) scale(.6)'},
+            {opacity:1,transform:'translateX(-50%) translateY(-10px) scale(1.1)',offset:.25},
+            {opacity:1,transform:'translateX(-50%) translateY(-10px) scale(1)',offset:.7},
+            {opacity:0,transform:'translateX(-50%) translateY(-40px) scale(.9)'}
+        ],{duration:2200,easing:'ease-out',fill:'forwards'}).onfinish=function(){if(amount.parentNode)amount.remove();};
+        // Pièces qui tombent/s'échappent
+        for(var i=0;i<16;i++){
+            (function(idx){
+                var co=document.createElement('div');co.textContent='🪙';co.className='evt-tmp';
+                co.style.cssText='position:absolute;font-size:'+(20+Math.random()*18)+'px;z-index:233;pointer-events:none;left:'+(20+Math.random()*60)+'%;top:'+(40+Math.random()*15)+'%;filter:grayscale(.2)';
+                scene.appendChild(co);
+                if(co.animate)co.animate([
+                    {transform:'translateY(0) rotate(0deg)',opacity:1},
+                    {transform:'translateY('+(80+Math.random()*60)+'px) rotate('+(Math.random()*360)+'deg)',opacity:0}
+                ],{duration:1400+Math.random()*500,delay:idx*45,easing:'ease-in'}).onfinish=function(){if(co.parentNode)co.remove();};
+            })(i);
+        }
+        if(typeof Renderer!=='undefined'&&Renderer.haptic)Renderer.haptic('medium');
     },
     _runTempeteHide:function(){
         var scene=document.getElementById('scene');if(!scene)return;
@@ -219,12 +251,12 @@ var Features = {
         var scene=document.getElementById('scene');
         var self=this;
         p.sante=100;
-        // Bandeau vaccination
+        // Bandeau vaccination (animation conservée)
         var band=null;
         if(scene){band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.textContent=I18n.t('ev_band_vaccine');scene.appendChild(band);}
-        // Seringue
+        // Seringue SANS son propre compte à rebours (un seul countdown géré ci-dessous)
         if(typeof Renderer!=='undefined'&&Renderer.showBigSyringe){
-            Renderer.showBigSyringe(function(){if(typeof Renderer!=='undefined')Renderer.update(p);});
+            Renderer.showBigSyringe(function(){if(typeof Renderer!=='undefined')Renderer.update(p);},{noTimer:true,duration:10});
         }
         // Les virus s'estompent progressivement sur 10s
         if(scene){
@@ -235,7 +267,7 @@ var Features = {
                 })(viruses[i],i);
             }
         }
-        // Compte à rebours 10s puis nettoyage complet du décor covid
+        // UN SEUL compte à rebours de 10s puis nettoyage complet du décor covid
         this._sceneCountdown(10,'',function(){
             self._stopCovidDecor();
             self._clearTmp();
@@ -254,7 +286,11 @@ var Features = {
             })(i);
         }
         var lbl=document.createElement('div');lbl.className='evt-storm-band evt-tmp';lbl.textContent=I18n.t('ev_band_love');scene.appendChild(lbl);
-        this._sceneCountdown(10,'',function(){if(lbl.parentNode)lbl.remove();});
+        this._sceneCountdown(10,'',function(){
+            if(lbl.parentNode)lbl.remove();
+            var ch=document.getElementById('evt-chantal');if(ch)ch.remove();
+            if(typeof Renderer!=='undefined')Renderer._chantalActive=false;
+        });
     },
     _runEggCoins:function(){
         var scene=document.getElementById('scene');if(!scene)return;
@@ -267,7 +303,11 @@ var Features = {
             })(i);
         }
         var lbl=document.createElement('div');lbl.className='evt-storm-band evt-tmp';lbl.textContent=I18n.t('ev_band_eggs');scene.appendChild(lbl);
-        this._sceneCountdown(10,'',function(){if(lbl.parentNode)lbl.remove();});
+        this._sceneCountdown(10,'',function(){
+            if(lbl.parentNode)lbl.remove();
+            var ch=document.getElementById('evt-chantal');if(ch)ch.remove();
+            if(typeof Renderer!=='undefined')Renderer._chantalActive=false;
+        });
     },
     _clearTmp:function(){
         var scene=document.getElementById('scene');if(!scene)return;
@@ -333,7 +373,7 @@ var Features = {
                 self.addJournal(pet,ev.emoji+' '+I18n.t(ev.titreKey)+' — '+res);
                 ov.classList.add('hidden');
                 // Nettoyage post-choix
-                if(ev.id==='ami'){var ch2=document.getElementById('evt-chantal');if(ch2)setTimeout(function(){ch2.remove();if(typeof Renderer!=='undefined')Renderer._chantalActive=false;},5000);}
+                // (Chantal est retirée à la fin du compte à rebours dans _runHearts/_runEggCoins)
                 if(ev.id==='tempete'&&pet.estMort){
                     // Mort en tempête : on nettoie tout de suite tornades/pluie/obscurité
                     self._clearTmp();

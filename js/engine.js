@@ -66,10 +66,57 @@ const Engine = {
     },
 
     // Wallet
+    // ─── $FRANC wallet (backend Supabase, identique à FrancRun) ───
+    SUPABASE:'https://mubqtnqulpyehkgubhnh.supabase.co/functions/v1',
+    WALLET_MINIAPP:'https://t.me/FrancisLeCoqBot/wallet',
+    GAME_ID:'tamagotchi',
+    _franc:{hasFranc:false,walletLinked:false,balance:0,address:'',checked:false},
+
     isWalletConnected() {
+        // "Connecté & illimité" = détient du $FRANC (vérifié serveur)
+        if(this._franc.hasFranc)return true;
+        // Fallback hors-Telegram / dev : ancien flag local
         try { return localStorage.getItem('francis_wallet') === 'connected'; } catch(e) { return false; }
     },
+    hasFranc(){ return !!this._franc.hasFranc; },
+    walletLinked(){ return !!this._franc.walletLinked; },
+    getFrancBalance(){ return this._franc.balance||0; },
+
+    // Vérifie l'état $FRANC auprès du backend (POST check-franc)
+    checkFranc:function(cb){
+        var self=this;
+        var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
+        if(!tg||!tg.initData){
+            // Hors Telegram : on garde le fallback local éventuel
+            this._franc.checked=true;
+            if(cb)cb(this._franc);
+            return;
+        }
+        try{tg.ready();tg.expand();}catch(e){}
+        fetch(this.SUPABASE+'/check-franc',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({initData:tg.initData,game_id:this.GAME_ID})
+        }).then(function(r){return r.ok?r.json():null;}).then(function(d){
+            if(d){
+                self._franc.hasFranc=!!d.hasFranc;
+                self._franc.walletLinked=!!d.walletLinked;
+                self._franc.balance=d.balance||0;
+                self._franc.address=d.walletAddress||'';
+            }
+            self._franc.checked=true;
+            if(cb)cb(self._franc);
+        }).catch(function(){self._franc.checked=true;if(cb)cb(self._franc);});
+    },
+
+    // Ouvre la Mini App wallet Telegram (gérée par connect-wallet.html)
+    openWallet:function(){
+        var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
+        if(tg&&tg.openTelegramLink){tg.openTelegramLink(this.WALLET_MINIAPP);}
+        else if(tg&&tg.openLink){tg.openLink(this.WALLET_MINIAPP);}
+        else{try{window.open(this.WALLET_MINIAPP,'_blank');}catch(e){}}
+    },
     connectWallet() {
+        // Conservé pour compat (mode dev hors Telegram)
         try { localStorage.setItem('francis_wallet', 'connected'); } catch(e) {}
     },
     needsWalletGate(pet) {

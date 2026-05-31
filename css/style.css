@@ -471,11 +471,30 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 #btn-resume{background:linear-gradient(180deg,#4aa3ff,#2d7fd6);box-shadow:0 0 28px rgba(74,163,255,.5),0 6px 0 rgba(25,90,160,.6)}
 
 /* Holder / wallet */
-.eg-holder{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:11px;border:none;border-radius:18px;background:linear-gradient(180deg,#5fe08a,#3cc06c);color:#1a3d20;cursor:pointer;box-shadow:0 0 24px rgba(70,200,110,.45);text-align:left}
+.eg-holder{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;margin-bottom:11px;border:2px solid transparent;border-radius:18px;cursor:pointer;text-align:left;transition:all .2s}
+/* États du badge holder */
+.holder-disconnected{background:linear-gradient(135deg,rgba(217,119,6,.30),rgba(180,90,0,.24));border-color:rgba(230,150,40,.7);color:#fcd34d;box-shadow:0 0 22px rgba(220,140,20,.35)}
+.holder-connected{background:linear-gradient(135deg,rgba(34,197,94,.30),rgba(15,120,60,.24));border-color:rgba(163,230,53,.75);color:#bff39a;box-shadow:0 0 24px rgba(70,200,110,.5)}
 .eg-holder-lock{font-size:20px}
 .eg-holder-mid{flex:1;font-size:11px;line-height:1.2}
 .eg-coin{color:#e8a020}
-.eg-holder-right{font-size:10.5px;font-weight:800;color:#7a3d10;text-align:right;white-space:nowrap}
+.eg-holder-right{font-size:10.5px;font-weight:800;text-align:right;white-space:nowrap;opacity:.95}
+
+/* Drapeaux de langue */
+.lang-flags{display:flex;gap:14px;justify-content:center;margin:4px 0 14px}
+.flag-btn{font-size:30px;line-height:1;width:54px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:2px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);cursor:pointer;filter:grayscale(.7) opacity(.6);transition:all .18s;padding:0}
+.flag-btn:active{transform:scale(.94)}
+.flag-btn.flag-active{filter:none;border-color:var(--accent,#ffd84d);background:rgba(255,216,77,.16);box-shadow:0 0 16px rgba(255,216,77,.4);transform:translateY(-1px)}
+
+/* Bouton wallet in-game (sous la top-bar) */
+.game-wallet-lock{display:flex;align-items:center;gap:8px;width:calc(100% - 24px);margin:0 12px 8px;padding:8px 12px;border:2px solid transparent;border-radius:14px;cursor:pointer;text-align:left;font-family:inherit;transition:all .2s}
+.game-wallet-lock .gwl-icon{font-size:18px;flex-shrink:0}
+.game-wallet-lock .gwl-txt{flex:1;font-size:12px;font-weight:800;letter-spacing:.5px}
+
+/* Faucheuse de la gate */
+.wg-reaper{width:130px;height:130px;object-fit:contain;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.55));animation:reaperFloat 3s ease-in-out infinite}
+@keyframes reaperFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.wg-reaper-line{color:#ffd84d!important;font-weight:800;font-size:13px!important;margin-top:-6px!important;margin-bottom:22px!important}
 
 /* Rules */
 .eg-rules{border:1.5px solid rgba(150,100,230,.3);border-radius:14px;padding:10px 14px;background:rgba(40,24,70,.3)}
@@ -576,6 +595,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .evt-alarm-band{background:rgba(150,0,0,.78)!important;border-color:rgba(255,80,80,.6)!important;animation:bandPulse .7s ease-in-out infinite,alarmHue .7s steps(1) infinite!important}
 @keyframes alarmHue{0%{box-shadow:0 0 24px rgba(255,0,40,.8)}50%{box-shadow:0 0 24px rgba(0,90,255,.8)}100%{box-shadow:0 0 24px rgba(255,0,40,.8)}}
 .evt-virus{filter:drop-shadow(0 2px 5px rgba(120,0,0,.6))}
+.evt-coinloss-amount{position:absolute;left:50%;top:38%;transform:translateX(-50%);z-index:236;font-size:32px;font-weight:900;color:#ff5a5a;text-shadow:0 2px 8px rgba(0,0,0,.7);white-space:nowrap;pointer-events:none}
 
 /* ═══ Grande notification en haut du décor ═══ */
 .scene-notif{position:absolute;top:0;left:0;right:0;z-index:240;background:linear-gradient(180deg,rgba(10,16,32,.94),rgba(10,16,32,.78));color:#fff;font-size:22px;font-weight:900;text-align:center;padding:14px 16px;line-height:1.25;pointer-events:none;border-bottom:2px solid rgba(120,160,255,.3);text-shadow:0 2px 6px rgba(0,0,0,.6);box-shadow:0 6px 22px rgba(0,0,0,.45)}

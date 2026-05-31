@@ -11,7 +11,7 @@ var I18n = {
     DICT: {
         // ─── Splash ───
         splash_tagline:        {en:'RAISE FRANCIS · EVOLVE HIM',         fr:'ÉLÈVE FRANCIS · FAIS-LE ÉVOLUER'},
-        splash_franc:          {en:'$FRANC HOLDERS PLAY UNLIMITED',       fr:'LES HOLDERS $FRANC JOUENT EN ILLIMITÉ'},
+        splash_franc:          {en:'HOLDERS PLAY UNLIMITED',             fr:'LES HOLDERS JOUENT EN ILLIMITÉ'},
         btn_resume:            {en:'RESUME',                              fr:'REPRENDRE'},
         btn_new_game:          {en:'NEW GAME',                           fr:'NOUVELLE PARTIE'},
         connect_wallet:        {en:'Connect Wallet →',                   fr:'Connecter Wallet →'},
@@ -327,7 +327,27 @@ var I18n = {
         mg_brilliant:          {en:'Brilliant! 🐓',                      fr:'Brillant ! 🐓'},
         mg_retry:              {en:'Try again...',                       fr:'Réessayer...'},
         mg_too_many:           {en:'Too many mistakes!',                  fr:'Trop d\u2019erreurs !'},
-        mg_sudoku_stats:       {en:'Time: {t}s · Intellect bonus: +{b}',  fr:'Temps : {t}s · Bonus intellect : +{b}'}
+        mg_sudoku_stats:       {en:'Time: {t}s · Intellect bonus: +{b}',  fr:'Temps : {t}s · Bonus intellect : +{b}'},
+
+        // ─── Wallet / $FRANC holder ───
+        holder_connect:        {en:'Connect Wallet →',                   fr:'Connecter Wallet →'},
+        holder_checking:       {en:'Checking…',                          fr:'Vérification…'},
+        holder_connected:      {en:'$FRANC HOLDER · UNLIMITED',          fr:'$FRANC HOLDER · ILLIMITÉ'},
+        holder_connected_sub:  {en:'✅ {bal} $FRANC detected',           fr:'✅ {bal} $FRANC détecté'},
+        holder_nofranc:        {en:'No $FRANC found — tap to retry',     fr:'Aucun $FRANC — touchez pour réessayer'},
+        holder_disconnected:   {en:'Tap to connect & unlock',            fr:'Touchez pour connecter & débloquer'},
+        wallet_btn_unlocked:   {en:'$FRANC HOLDER · UNLIMITED ✅',        fr:'$FRANC HOLDER · ILLIMITÉ ✅'},
+        wallet_btn_locked:     {en:'$FRANC HOLDER · UNLIMITED 🔒',        fr:'$FRANC HOLDER · ILLIMITÉ 🔒'},
+        t_wallet_checking:     {en:'⏳ Checking $FRANC…',                 fr:'⏳ Vérification $FRANC…'},
+        t_wallet_ok_franc:     {en:'✅ $FRANC holder — unlimited unlocked!', fr:'✅ Holder $FRANC — illimité débloqué !'},
+        t_wallet_no_franc:     {en:'⚠️ Wallet linked but no $FRANC found', fr:'⚠️ Wallet lié mais aucun $FRANC trouvé'},
+
+        // ─── Gate (fin du stade poussin sans $FRANC) ───
+        gate_title:            {en:'🔒 The chick has grown up',          fr:'🔒 Le poussin a grandi'},
+        gate_text:             {en:'Francis can\u2019t go further without $FRANC. Hold $FRANC to unlock unlimited evolution, events and buildings.', fr:'Francis ne peut aller plus loin sans $FRANC. Détenez du $FRANC pour débloquer l\u2019évolution illimitée, les événements et les bâtiments.'},
+        gate_reaper_line:      {en:'To unlock the $FRANC Holder features, connect a wallet holding $FRANC.', fr:'Pour débloquer les features $FRANC Holder, connectez un wallet détenant du $FRANC.'},
+        gate_connect:          {en:'🔗 Connect $FRANC wallet',           fr:'🔗 Connecter wallet $FRANC'},
+        gate_restart:          {en:'Restart as a chick →',               fr:'Recommencer en poussin →'}
     },
 
     DIALOGUES:{

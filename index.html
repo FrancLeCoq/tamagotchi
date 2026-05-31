@@ -22,18 +22,15 @@
             <button class="eg-play hidden" id="btn-resume"><span class="eg-play-circle">▶</span> <span data-i18n="btn_resume">RESUME</span></button>
             <button class="eg-play" id="btn-new-game"><span class="eg-play-circle">▶</span> <span data-i18n="btn_new_game">NEW GAME</span></button>
 
-            <div class="lang-select">
-                <span class="lang-select-label" data-i18n="lang_label">Language</span>
-                <select id="lang-dropdown" class="lang-dropdown">
-                    <option value="en" data-i18n="lang_en">English</option>
-                    <option value="fr" data-i18n="lang_fr">French</option>
-                </select>
+            <div class="lang-flags">
+                <button class="flag-btn" id="flag-en" title="English" aria-label="English">🇬🇧</button>
+                <button class="flag-btn" id="flag-fr" title="Français" aria-label="Français">🇫🇷</button>
             </div>
 
-            <button class="eg-holder" id="btn-connect-wallet">
-                <span class="eg-holder-lock">🔒</span>
-                <span class="eg-holder-mid"><span class="eg-coin">①</span> <b>$FRANC HOLDER · UNLIMITED</b></span>
-                <span class="eg-holder-right" id="holder-amount" data-i18n="connect_wallet">Connect Wallet →</span>
+            <button class="eg-holder holder-disconnected" id="btn-connect-wallet">
+                <span class="eg-holder-lock" id="holder-lock">🔒</span>
+                <span class="eg-holder-mid" id="holder-mid"><span class="eg-coin">①</span> <b>$FRANC HOLDER · UNLIMITED</b></span>
+                <span class="eg-holder-right" id="holder-amount">Connect Wallet →</span>
             </button>
 
             <div class="eg-rules">
@@ -72,6 +69,11 @@
                 
             </div>
         </div>
+
+        <button class="game-wallet-lock holder-disconnected" id="game-wallet-lock">
+            <span class="gwl-icon" id="game-wallet-lock-icon">🔒</span>
+            <span class="gwl-txt" id="game-wallet-lock-txt">$FRANC HOLDER · UNLIMITED 🔒</span>
+        </button>
 
         <div class="stats-panel" id="stats-panel">
             <!-- Bonheur général = moyenne de toutes les jauges — pleine largeur -->
@@ -162,7 +164,7 @@
   </div>
 </div><div class="farm-info" id="farm-info"></div><div class="farm-actions"><button class="farm-buy-btn" id="btn-farm-buy" data-i18n="farm_buy">🐔 Buy (50🪙)</button><button class="close-btn" data-close="farm-screen">✕</button></div><div class="farm-death-notice hidden" id="farm-death-notice">💀</div></div><div class="farm-scene" id="farm-scene"><canvas id="farm-canvas" style="width:100%;height:100%"></canvas><div class="farm-francis" id="farm-francis"><img id="farm-francis-img" src="assets/sprites/poussin.png" draggable="false"></div></div></div></div>
     <div id="evolution-screen" class="overlay hidden"><div class="evolution-content"><h2 class="evo-title" data-i18n="evo_title">✨ Evolution! ✨</h2><div class="evo-stages"><div class="evo-old" id="evo-old"></div><div class="evo-arrow">→</div><div class="evo-new" id="evo-new"></div></div><p class="evo-desc" id="evo-desc"></p><button class="btn-start" id="btn-evo-ok" data-i18n="evo_ok">Cock-a-doodle-doo!</button></div></div>
-    <div id="wallet-gate" class="overlay hidden"><div class="wallet-gate-content"><img src="assets/sprites/poussin.png" class="wg-img"><h2 data-i18n="wg_title">🔒 Chick mode over!</h2><p data-i18n="wg_text">Connect your wallet to unlock the rest!</p><button class="btn-start" id="btn-wallet-gate" data-i18n="wg_connect">🔗 Connect Wallet</button><button class="btn-link" id="btn-wallet-skip" data-i18n="wg_skip">Restart as a chick →</button></div></div>
+    <div id="wallet-gate" class="overlay hidden"><div class="wallet-gate-content"><img src="assets/sprites/faucheuse.png" class="wg-reaper"><h2 data-i18n="gate_title">🔒 The chick has grown up</h2><p data-i18n="gate_text">Francis can’t go further without $FRANC.</p><p class="wg-reaper-line" data-i18n="gate_reaper_line">To unlock the $FRANC Holder features, connect a wallet holding $FRANC.</p><button class="btn-start" id="btn-wallet-gate" data-i18n="gate_connect">🔗 Connect $FRANC wallet</button><button class="btn-link" id="btn-wallet-skip" data-i18n="gate_restart">Restart as a chick →</button></div></div>
     <div id="event-overlay" class="event-overlay hidden">
         <div class="event-box">
             <div class="event-emoji" id="event-emoji">🎲</div>

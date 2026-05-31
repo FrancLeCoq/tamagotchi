@@ -7,6 +7,61 @@ var App={
     init:function(){
         if(typeof I18n!=='undefined')I18n.init();
         Storage.init();Renderer.init();this.showSplash();this.bindEvents();
+        // Vérifie l'état $FRANC au démarrage (backend), puis rafraîchit le badge
+        this.detectFranc();
+        // Re-vérifie au retour de la page wallet (Telegram revient en visible)
+        var self=this;
+        document.addEventListener('visibilitychange',function(){
+            if(document.visibilityState==='visible')self.detectFranc();
+        });
+        setInterval(function(){
+            if(document.visibilityState==='visible')self.detectFranc();
+        },20000);
+    },
+
+    _detecting:false,
+    detectFranc:function(){
+        if(this._detecting)return;this._detecting=true;
+        var self=this;
+        Engine.checkFranc(function(){
+            self._detecting=false;
+            self.updateHolderBadge();
+            // Si on était bloqué par la gate et que le $FRANC vient d'être détecté, on relance
+            if(Engine.hasFranc()){
+                var gate=document.getElementById('wallet-gate');
+                if(gate&&!gate.classList.contains('hidden')){gate.classList.add('hidden');if(self.pet)self.showGame();}
+            }
+        });
+    },
+
+    // Badge holder : ORANGE si non connecté / VERT + cadenas ouvert si $FRANC détecté
+    updateHolderBadge:function(){
+        var connected=Engine.hasFranc();
+        var linked=Engine.walletLinked();
+        // Splash badge
+        var badge=document.getElementById('btn-connect-wallet');
+        var lock=document.getElementById('holder-lock');
+        var mid=document.getElementById('holder-mid');
+        var right=document.getElementById('holder-amount');
+        if(badge){
+            badge.classList.toggle('holder-connected',connected);
+            badge.classList.toggle('holder-disconnected',!connected);
+        }
+        if(lock)lock.textContent=connected?'🔓':'🔒';
+        if(mid)mid.innerHTML='<span class="eg-coin">①</span> <b>'+I18n.t('holder_connected')+'</b>';
+        if(right){
+            if(connected)right.textContent=I18n.t('holder_connected_sub',{bal:Number(Engine.getFrancBalance()).toLocaleString()});
+            else if(linked)right.textContent=I18n.t('holder_nofranc');
+            else right.textContent=I18n.t('holder_connect');
+        }
+        // In-game lock button
+        var gl=document.getElementById('game-wallet-lock');
+        if(gl){
+            gl.classList.toggle('holder-connected',connected);
+            gl.classList.toggle('holder-disconnected',!connected);
+            var gli=document.getElementById('game-wallet-lock-icon');if(gli)gli.textContent=connected?'🔓':'🔒';
+            var glt=document.getElementById('game-wallet-lock-txt');if(glt)glt.textContent=connected?I18n.t('wallet_btn_unlocked'):I18n.t('wallet_btn_locked');
+        }
     },
 
     showSplash:function(){
@@ -15,28 +70,35 @@ var App={
         rb.classList.toggle('hidden',!(data&&!data.estMort));
         var lbEl=document.getElementById('lb-record');
         if(lbEl){var rec=this.getRecord();var unit=(typeof I18n!=='undefined')?I18n.t('days_suffix'):'days';lbEl.textContent=rec>0?(rec<1?Math.round(rec*24)+'h':rec.toFixed(1)+' '+unit):(I18n.lang==='fr'?'Aucun record':'No record');}
-        if(Engine.isWalletConnected()){var h=document.getElementById('holder-amount');if(h)h.textContent=I18n.lang==='fr'?'✅ CONNECTÉ':'✅ CONNECTED';}
+        this.updateHolderBadge();
     },
 
     bindEvents:function(){
         var self=this;
-        var langDd=document.getElementById('lang-dropdown');
-        if(langDd){
-            langDd.value=(typeof I18n!=='undefined')?I18n.lang:'en';
-            langDd.addEventListener('change',function(){
-                if(typeof I18n!=='undefined'){I18n.set(langDd.value);}
-                self.showSplash();
-                if(self.pet&&typeof Renderer!=='undefined')Renderer.update(self.pet);
-            });
+        // Sélecteur de langue : deux drapeaux cliquables
+        var flagFr=document.getElementById('flag-fr'),flagEn=document.getElementById('flag-en');
+        function setLang(l){
+            if(typeof I18n!=='undefined')I18n.set(l);
+            if(flagFr)flagFr.classList.toggle('flag-active',l==='fr');
+            if(flagEn)flagEn.classList.toggle('flag-active',l==='en');
+            self.showSplash();
+            if(self.pet&&typeof Renderer!=='undefined')Renderer.update(self.pet);
         }
+        if(flagFr)flagFr.addEventListener('click',function(){setLang('fr');});
+        if(flagEn)flagEn.addEventListener('click',function(){setLang('en');});
+        // État initial des drapeaux
+        if(flagFr)flagFr.classList.toggle('flag-active',I18n.lang==='fr');
+        if(flagEn)flagEn.classList.toggle('flag-active',I18n.lang==='en');
+
         document.getElementById('btn-resume').addEventListener('click',function(){
             var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);Engine.updateStats(self.pet);self.showGame();Renderer.toast(I18n.t('t_resume'));}
         });
         document.getElementById('btn-new-game').addEventListener('click',function(){self.newGame();});
-        var cw=document.getElementById('btn-connect-wallet');if(cw)cw.addEventListener('click',function(){self.connectWallet();});
-        var ho=document.getElementById('splash-holder');if(ho)ho.addEventListener('click',function(){self.connectWallet();});
-        document.getElementById('btn-wallet-game').addEventListener('click',function(){self.connectWallet();document.getElementById('more-screen').classList.add('hidden');});
-        document.getElementById('btn-wallet-gate').addEventListener('click',function(){self.connectWallet();document.getElementById('wallet-gate').classList.add('hidden');});
+        var cw=document.getElementById('btn-connect-wallet');if(cw)cw.addEventListener('click',function(){self.openWallet();});
+        var ho=document.getElementById('splash-holder');if(ho)ho.addEventListener('click',function(){self.openWallet();});
+        var gl=document.getElementById('game-wallet-lock');if(gl)gl.addEventListener('click',function(){self.openWallet();});
+        document.getElementById('btn-wallet-game').addEventListener('click',function(){self.openWallet();document.getElementById('more-screen').classList.add('hidden');});
+        document.getElementById('btn-wallet-gate').addEventListener('click',function(){self.openWallet();});
         document.getElementById('btn-wallet-skip').addEventListener('click',function(){document.getElementById('wallet-gate').classList.add('hidden');self.newGame();});
 
         // Game
@@ -110,7 +172,12 @@ var App={
     },
 
     _nearPet:function(cx,cy){var pw=document.getElementById('pet-wrapper');if(!pw)return false;var r=pw.getBoundingClientRect(),m=40;return cx>r.left-m&&cx<r.right+m&&cy>r.top-m&&cy<r.bottom+m;},
-    connectWallet:function(){Engine.connectWallet();var h=document.getElementById('holder-amount');if(h)h.textContent=I18n.lang==='fr'?'✅ CONNECTÉ':'✅ CONNECTED';Renderer.toast(I18n.t('t_wallet_ok'));},
+    openWallet:function(){
+        Engine.openWallet();
+        Renderer.toast(I18n.t('t_wallet_checking'));
+        var self=this;
+        setTimeout(function(){self.detectFranc();},1500);
+    },
 
     playBirthVideo:function(onDone){
         var overlay=document.getElementById('birth-video-overlay');
