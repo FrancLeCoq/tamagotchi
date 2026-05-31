@@ -52,7 +52,16 @@ var App={
         document.getElementById('btn-douche').addEventListener('click',function(){self.doShower();});
         document.getElementById('btn-brossage').addEventListener('click',function(){self.doBrossage();});
         document.getElementById('btn-enclos-badge').addEventListener('click',function(e){e.stopPropagation();self.openFarm();});
-        document.getElementById('btn-notif').addEventListener('click',function(){Renderer.toast('🔔');});
+        document.getElementById('btn-notif').addEventListener('click',function(){
+            document.getElementById('more-screen').classList.add('hidden');
+            if(!('Notification' in window)){Renderer.toast('🔔 Notifications non supportées sur cet appareil');return;}
+            if(Notification.permission==='granted'){Renderer.toast('🔔 Notifications déjà activées !');return;}
+            if(Notification.permission==='denied'){Renderer.toast('🔕 Notifications bloquées — autorise-les dans les réglages du navigateur');return;}
+            Notification.requestPermission().then(function(p){
+                if(p==='granted'){Renderer.toast('🔔 Notifications activées !');try{new Notification('🐓 Francis le Coq',{body:'Tu recevras des alertes quand Francis a besoin de toi !'});}catch(e){}}
+                else Renderer.toast('🔕 Notifications refusées');
+            });
+        });
         document.getElementById('btn-evo-ok').addEventListener('click',function(){Renderer.hideEvolution();});
         document.getElementById('btn-restart').addEventListener('click',function(){Renderer.hideDeath();self.newGame();});
         document.getElementById('btn-play-game').addEventListener('click',function(){self.doPlay();});

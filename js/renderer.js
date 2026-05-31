@@ -161,7 +161,9 @@ var Renderer={
     tickMovement:function(pet){
         this._positionMoodEmoji();
         if(!pet||pet.isSleeping||pet.estMort||this._actionLock||this._calinLock||this._showerLock||this._studyLock)return;
-        if(Math.random()<.02)this.walkTarget=15+Math.random()*70;
+        var maxX=this._chantalActive?52:85;
+        if(Math.random()<.02)this.walkTarget=15+Math.random()*(maxX-15);
+        if(this.currentPetX>maxX){this.walkTarget=Math.min(this.walkTarget,maxX);}
         var dx=this.walkTarget-this.currentPetX;
         if(Math.abs(dx)>2){
             this.walkDir=dx>0?1:-1;this.currentPetX+=this.walkDir*.3;
@@ -468,5 +470,36 @@ var Renderer={
     toast:function(m){var el=document.getElementById('toast'),tx=document.getElementById('toast-text');tx.textContent=m;el.classList.remove('hidden');clearTimeout(this._tt);this._tt=setTimeout(function(){el.classList.add('hidden');},2500);},
     haptic:function(){},
     renderFoodGrid:function(){return Engine.FOODS.map(function(f){return'<div class="food-item" data-food="'+f.id+'"><span class="food-icon">'+f.emoji+'</span><span class="food-name">'+f.nom+'</span><span class="food-stats">+'+f.faim+'🌾</span></div>';}).join('');},
-    renderStatsDetail:function(pet){var sc=function(v){return v>=70?'#44cc66':v>=40?'#f0c040':'#e74c3c';};var rows=[{e:'🌾',n:'Faim',v:pet.faim},{e:'🎮',n:'Jeu',v:pet.jeu||0},{e:'⚡',n:'Énergie',v:pet.energie},{e:'❤️',n:'Santé',v:pet.sante},{e:'🧼',n:'Hygiène',v:pet.hygiene||50},{e:'🧠',n:'Intellect',v:pet.intellect||30},{e:'💕',n:'Amour',v:pet.amour||30},{e:'👷',n:'Travail',v:pet.travail||0}];var html='<div class="bonheur-main-row"><span class="stat-emoji">😊</span><div class="stat-info"><div class="stat-name">Bonheur général</div><div class="stat-value" style="color:'+sc(pet.bonheur)+'">'+Math.round(pet.bonheur)+'%</div><div class="stat-bar-big"><div class="stat-bar-fill" style="width:'+pet.bonheur+'%;background:'+sc(pet.bonheur)+'"></div></div></div></div>';html+=rows.map(function(s){return'<div class="stat-row"><span class="stat-emoji">'+s.e+'</span><div class="stat-info"><div class="stat-name">'+s.n+'</div><div class="stat-value" style="color:'+sc(s.v)+'">'+Math.round(s.v)+'%</div><div class="stat-bar-big"><div class="stat-bar-fill" style="width:'+s.v+'%;background:'+sc(s.v)+'"></div></div></div></div>';}).join('');var stage=Engine.STAGES[pet.stade],age=Engine.getAge(pet),evo=Engine.getTimeToEvolve(pet);html+='<div class="stats-section-title">Infos</div><div class="stats-info-grid"><div class="stats-info-card"><div class="label">Stade</div><div class="value">'+stage.emoji+'</div></div><div class="stats-info-card"><div class="label">Âge</div><div class="value">'+age.days+'j</div></div><div class="stats-info-card"><div class="label">XP</div><div class="value">'+pet.experience+'</div></div><div class="stats-info-card"><div class="label">Évolution</div><div class="value">'+(evo!==null?Math.ceil(evo)+'h':'🏆')+'</div></div></div>';return html;}
+    _circGauge:function(pct,color,centerText,sub){
+        var circ=100.5;var off=circ*(1-pct);
+        return '<div class="prog-circ"><svg viewBox="0 0 40 40"><circle class="prog-track" cx="20" cy="20" r="16"/><circle class="prog-fill" cx="20" cy="20" r="16" style="stroke:'+color+';stroke-dasharray:'+circ+';stroke-dashoffset:'+off+'"/></svg><div class="prog-center">'+centerText+'</div></div><div class="prog-sub">'+sub+'</div>';
+    },
+    renderStatsDetail:function(pet){
+        var sc=function(v){return v>=70?'#44cc66':v>=40?'#f0c040':'#e74c3c';};
+        var stage=Engine.STAGES[pet.stade],age=Engine.getAge(pet);
+        var xp=Engine.getXPProgress(pet);
+        var evo=Engine.getEvolutionProgress(pet);
+        // ── Bloc progression EN HAUT ──
+        var html='<div class="stats-progress-row">';
+        // XP
+        html+='<div class="prog-card"><div class="prog-title">⭐ Expérience</div>'+
+            this._circGauge(xp.done,'#b388ff',Math.round(xp.done*100)+'%',xp.xp+' / '+xp.target+' XP')+'</div>';
+        // Évolution
+        if(evo.total>0){
+            html+='<div class="prog-card"><div class="prog-title">🥚 Évolution</div>'+
+                this._circGauge(evo.done,'#4a90d9',Math.round(evo.done*100)+'%',Math.floor(evo.elapsed)+'h / '+evo.total+'h')+'</div>';
+        }else{
+            html+='<div class="prog-card"><div class="prog-title">🏆 Stade final</div>'+
+                this._circGauge(1,'#f0c040','MAX','Coq Vieux')+'</div>';
+        }
+        html+='</div>';
+        // Cartes infos
+        html+='<div class="stats-info-grid"><div class="stats-info-card"><div class="label">Stade</div><div class="value">'+stage.emoji+' '+stage.nom+'</div></div><div class="stats-info-card"><div class="label">Âge</div><div class="value">'+age.days+'j '+age.hours+'h</div></div></div>';
+        // Bonheur
+        html+='<div class="stats-section-title">Jauges</div>';
+        html+='<div class="bonheur-main-row"><span class="stat-emoji">😊</span><div class="stat-info"><div class="stat-name">Bonheur général</div><div class="stat-value" style="color:'+sc(pet.bonheur)+'">'+Math.round(pet.bonheur)+'%</div><div class="stat-bar-big"><div class="stat-bar-fill" style="width:'+pet.bonheur+'%;background:'+sc(pet.bonheur)+'"></div></div></div></div>';
+        var rows=[{e:'🌾',n:'Faim',v:pet.faim},{e:'🎮',n:'Jeu',v:pet.jeu||0},{e:'⚡',n:'Énergie',v:pet.energie},{e:'❤️',n:'Santé',v:pet.sante},{e:'🧼',n:'Hygiène',v:pet.hygiene||50},{e:'🧠',n:'Intellect',v:pet.intellect||30},{e:'💕',n:'Amour',v:pet.amour||30},{e:'👷',n:'Travail',v:pet.travail||0}];
+        html+=rows.map(function(s){return'<div class="stat-row"><span class="stat-emoji">'+s.e+'</span><div class="stat-info"><div class="stat-name">'+s.n+'</div><div class="stat-value" style="color:'+sc(s.v)+'">'+Math.round(s.v)+'%</div><div class="stat-bar-big"><div class="stat-bar-fill" style="width:'+s.v+'%;background:'+sc(s.v)+'"></div></div></div></div>';}).join('');
+        return html;
+    }
 };

@@ -1,11 +1,35 @@
 const Minigames = {
     active:false, timer:null, score:0, onComplete:null,
 
+    // Compte à rebours circulaire dans le titre
+    _startTitleCD:function(seconds){
+        var badge=document.getElementById('mg-title-cd');
+        var arc=document.getElementById('mg-title-arc');
+        var num=document.getElementById('mg-title-num');
+        if(!badge)return;
+        badge.classList.remove('hidden');
+        var circ=100.5;if(arc){arc.style.strokeDasharray=circ;arc.style.strokeDashoffset=0;}
+        if(num)num.textContent=seconds;
+        this._cdTotal=seconds;
+    },
+    _updateTitleCD:function(remainPct,remainSec){
+        var arc=document.getElementById('mg-title-arc');
+        var num=document.getElementById('mg-title-num');
+        var circ=100.5;
+        if(arc)arc.style.strokeDashoffset=(circ*(1-remainPct/100));
+        if(num)num.textContent=Math.max(0,remainSec);
+    },
+    _stopTitleCD:function(){
+        var badge=document.getElementById('mg-title-cd');if(badge)badge.classList.add('hidden');
+    },
+
     startPlay(onComplete) {
         this.onComplete=onComplete;
         document.getElementById('minigame-title').textContent='Attrape les grains ! 🌾';
         document.getElementById('minigame-screen').classList.remove('hidden');
-        this.startTapGame();
+        var area=document.getElementById('minigame-area');var self=this;
+        area.innerHTML='<div class="mini-intro"><div style="font-size:54px">🌾</div><h3>Attrape les grains</h3><p>Tape sur les aliments qui apparaissent !<br>🌾 = +1 · 🌽🥖🧀 = +2 · 🐛 = malus<br>Tu gagnes du <b>jeu</b>, des <b>pièces</b> et de la <b>faim</b> 🍽️</p><button class="mini-btn" id="mg-start">C\'est parti ! 🐓</button></div>';
+        document.getElementById('mg-start').addEventListener('click',function(){self.startTapGame();});
     },
 
 
@@ -16,12 +40,14 @@ const Minigames = {
         this.active=false;
         if(this._interval){clearInterval(this._interval);this._interval=null;}
         document.getElementById('minigame-title').textContent='Attrape la nourriture ! 🌽';
-        var area=document.getElementById('minigame-area');if(area)area.innerHTML='';
         document.getElementById('minigame-screen').classList.remove('hidden');
-        this.startCatchGame();
+        var area=document.getElementById('minigame-area');var self=this;
+        area.innerHTML='<div class="mini-intro"><div style="font-size:54px">🌽</div><h3>Attrape la nourriture</h3><p>Maintiens le doigt sur Francis et déplace-le<br>pour attraper la nourriture qui tombe !<br>⚠️ Évite le <b>☠️ poison</b> (sinon perdu)<br>Gain : <b>+30% jeu</b> 🎮 et <b>faim</b> 🍽️</p><button class="mini-btn" id="mg-start">C\'est parti ! 🐓</button></div>';
+        document.getElementById('mg-start').addEventListener('click',function(){self.startCatchGame();});
     },
     startCatchGame() {
         this.active=true; this.score=0; var timeLeft=60000;
+        this._startTitleCD(60);
         var area=document.getElementById('minigame-area');
         area.innerHTML='<div class="mini-score" id="mg-score">0</div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field catch-field" id="mg-field"><div class="catch-coq" id="catch-coq">🐔</div></div>';
         var field=document.getElementById('mg-field'), scoreEl=document.getElementById('mg-score'), timerEl=document.getElementById('mg-timer'), coq=document.getElementById('catch-coq');
@@ -59,6 +85,7 @@ const Minigames = {
             if(!self.active)return;
             var e=Date.now()-st, pct=Math.max(0,(1-e/timeLeft)*100);
             timerEl.style.width=pct+'%';timerEl.style.background=pct>30?'#2ecc71':pct>10?'#f39c12':'#e74c3c';
+            self._updateTitleCD(pct,Math.ceil((timeLeft-e)/1000));
             // Move items down
             for(var i=items.length-1;i>=0;i--){
                 var o=items[i];o.y+=2.2;o.el.style.top=o.y+'%';
@@ -74,7 +101,7 @@ const Minigames = {
                 }
                 if(o.y>105){o.el.remove();items.splice(i,1);}
             }
-            if(e>=timeLeft){self.active=false;clearInterval(self._interval);clearInterval(self._spawnIv);self.endCatchGame();}
+            if(e>=timeLeft){self.active=false;clearInterval(self._interval);clearInterval(self._spawnIv);self._stopTitleCD();self.endCatchGame();}
         },50);
     },
     endCatchGame() {
@@ -109,21 +136,27 @@ const Minigames = {
     startRoostGame() {
         this.active=true; this.score=0; var timeLeft=60000;
         var area=document.getElementById('minigame-area');
-        area.innerHTML='<div class="mini-score" id="mg-score">0</div><div class="mini-cd-ring" id="mg-cd-ring"><svg viewBox="0 0 40 40"><circle class="mg-cd-track" cx="20" cy="20" r="16"/><circle class="mg-cd-fill" cx="20" cy="20" r="16" id="mg-cd-arc"/></svg><span class="mg-cd-num" id="mg-cd-num">60</span></div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field roost-field" id="mg-field"><div class="roost-coq" id="roost-coq">🐓</div></div>';
+        this._startTitleCD(60);
+        area.innerHTML='<div class="mini-score" id="mg-score">0</div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field roost-field" id="mg-field"><div class="roost-coq" id="roost-coq">🐓</div></div>';
         var field=document.getElementById('mg-field'), scoreEl=document.getElementById('mg-score'), timerEl=document.getElementById('mg-timer'), coq=document.getElementById('roost-coq');
-        var arc=document.getElementById('mg-cd-arc'),cdNum=document.getElementById('mg-cd-num');var circ=100.5;if(arc){arc.style.strokeDasharray=circ;arc.style.strokeDashoffset=0;}
         var self=this;
         function tap(e){
             if(!self.active)return;
             e.preventDefault();e.stopPropagation();
             self.score+=2; // tapotages x2
             scoreEl.textContent=self.score;
-            coq.style.transform='scale(.82)';
-            setTimeout(function(){coq.style.transform='scale(1)';},80);
-            // floating +2
-            var fl=document.createElement('div');fl.className='float-item';fl.textContent='+2🪙';fl.style.color='#f0c040';
-            fl.style.left=(30+Math.random()*40)+'%';fl.style.top=(30+Math.random()*30)+'%';fl.style.fontWeight='800';
-            field.appendChild(fl);setTimeout(function(){fl.remove();},800);
+            coq.style.transition='transform .1s ease';
+            coq.style.transform='scale(1.5)';
+            setTimeout(function(){coq.style.transform='scale(1)';},120);
+            // +1 pièce qui s'envole haut et s'estompe
+            var fl=document.createElement('div');fl.className='roost-float';fl.textContent='+1🪙';
+            fl.style.left=(35+Math.random()*30)+'%';fl.style.top='55%';
+            field.appendChild(fl);
+            if(fl.animate){fl.animate([
+                {transform:'translateY(0) scale(1)',opacity:1},
+                {transform:'translateY(-140px) scale(1.2)',opacity:0}
+            ],{duration:1100,easing:'ease-out'}).onfinish=function(){fl.remove();};}
+            else{setTimeout(function(){fl.remove();},1100);}
             if(Renderer.haptic)Renderer.haptic('light');
         }
         coq.addEventListener('touchstart',tap,{passive:false});
@@ -132,9 +165,8 @@ const Minigames = {
         this._interval=setInterval(function(){
             var e=Date.now()-st, pct=Math.max(0,(1-e/timeLeft)*100);
             timerEl.style.width=pct+'%';timerEl.style.background=pct>30?'#2ecc71':pct>10?'#f39c12':'#e74c3c';
-            var remain=Math.ceil((timeLeft-e)/1000);if(cdNum)cdNum.textContent=Math.max(0,remain);
-            if(arc)arc.style.strokeDashoffset=(circ*(1-pct/100));
-            if(e>=timeLeft){self.active=false;clearInterval(self._interval);self.endRoostGame();}
+            self._updateTitleCD(pct,Math.ceil((timeLeft-e)/1000));
+            if(e>=timeLeft){self.active=false;clearInterval(self._interval);self._stopTitleCD();self.endRoostGame();}
         },50);
     },
     endRoostGame() {
@@ -150,7 +182,9 @@ const Minigames = {
         this.onComplete=onComplete;
         this.active=false;
         if(this._interval){clearInterval(this._interval);this._interval=null;}
+        if(this._spawnIv){clearInterval(this._spawnIv);this._spawnIv=null;}
         if(this.timer){clearTimeout(this.timer);this.timer=null;}
+        if(this.botTimer){clearInterval(this.botTimer);this.botTimer=null;}
         document.getElementById('minigame-title').textContent='Morpion vs Bot ⭕';
         var area=document.getElementById('minigame-area');if(area)area.innerHTML='';
         document.getElementById('minigame-screen').classList.remove('hidden');
@@ -240,12 +274,15 @@ const Minigames = {
 
     close() {
         this.active=false; clearTimeout(this.timer); clearInterval(this._interval);
+        if(this._spawnIv)clearInterval(this._spawnIv);
+        this._stopTitleCD();
         document.getElementById('minigame-screen').classList.add('hidden');
     },
 
     // ─── Tap Game ──────────────────────────────────────
     startTapGame() {
-        this.active=true; this.score=0; let timeLeft=10000;
+        this.active=true; this.score=0; let timeLeft=30000;
+        this._startTitleCD(30);
         const area=document.getElementById('minigame-area');
         area.innerHTML=`<div class="mini-score" id="mg-score">0</div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field" id="mg-field"></div>`;
         const field=document.getElementById('mg-field'), scoreEl=document.getElementById('mg-score'), timerEl=document.getElementById('mg-timer');
@@ -273,7 +310,8 @@ const Minigames = {
         this._interval=setInterval(()=>{
             const e=Date.now()-st, pct=Math.max(0,(1-e/timeLeft)*100);
             timerEl.style.width=pct+'%'; timerEl.style.background=pct>30?'#2ecc71':pct>10?'#f39c12':'#e74c3c';
-            if(e>=timeLeft){this.active=false;clearInterval(this._interval);this.endTapGame();}
+            this._updateTitleCD(pct,Math.ceil((timeLeft-e)/1000));
+            if(e>=timeLeft){this.active=false;clearInterval(this._interval);this._stopTitleCD();this.endTapGame();}
         },50);
         spawn();
     },

@@ -448,7 +448,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 
 /* ═══ MORPION (tic-tac-toe) ═══ */
 .morpion-msg{text-align:center;font-size:15px;font-weight:700;color:var(--accent,#f0c040);margin-bottom:12px}
-.morpion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:240px;margin:0 auto}
+.morpion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:280px;margin:16px auto}
 .morpion-cell{aspect-ratio:1;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:38px;cursor:pointer;transition:background .15s}
 .morpion-cell:active{background:rgba(255,255,255,.18)}
 
@@ -548,7 +548,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .journal-txt{font-size:12.5px;color:#d8c8f0;line-height:1.4}
 
 /* ═══ GOLDEN ENVELOPE (quête à réclamer) ═══ */
-.tb-envelope{background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;animation:envBlink 1s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(255,200,60,.9));line-height:1}
+.tb-envelope{background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;animation:envBlink 1s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,200,40,1)) saturate(1.6) hue-rotate(-12deg) brightness(1.15);line-height:1}
 @keyframes envBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.15)}}
 
 /* ═══ JEU ATTRAPE (catch) ═══ */
@@ -579,3 +579,35 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .mg-cd-track{fill:none;stroke:rgba(255,255,255,.15);stroke-width:4}
 .mg-cd-fill{fill:none;stroke:#3ddc6e;stroke-width:4;stroke-linecap:round}
 .mini-cd-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff}
+
+/* ═══ Mini-jeu : compte à rebours dans le titre ═══ */
+.mg-title-cd{position:relative;width:42px;height:42px;flex-shrink:0;margin-left:auto;margin-right:10px}
+.mg-title-cd svg{width:100%;height:100%;transform:rotate(-90deg)}
+.mg-title-cd .mg-cd-track{fill:none;stroke:rgba(255,255,255,.15);stroke-width:4}
+.mg-title-cd .mg-cd-fill{fill:none;stroke:#3ddc6e;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .2s linear}
+.mg-title-cd .mg-cd-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff}
+
+/* ═══ Roost clicker — pièce flottante ═══ */
+.roost-float{position:absolute;font-size:22px;font-weight:900;color:#f0c040;z-index:10;pointer-events:none;text-shadow:0 2px 4px rgba(0,0,0,.4)}
+
+/* ═══ STATS — progression circulaire ═══ */
+.stats-progress-row{display:flex;gap:12px;margin-bottom:16px}
+.prog-card{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 10px;text-align:center}
+.prog-title{font-size:12px;font-weight:800;color:#d8c8f0;margin-bottom:10px}
+.prog-circ{position:relative;width:84px;height:84px;margin:0 auto}
+.prog-circ svg{width:100%;height:100%;transform:rotate(-90deg)}
+.prog-track{fill:none;stroke:rgba(255,255,255,.12);stroke-width:4}
+.prog-fill{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .6s ease}
+.prog-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff}
+.prog-sub{font-size:11px;color:#9a85c0;margin-top:8px;font-weight:700}
+
+/* ═══ Événement — compte à rebours scène + chasseur ═══ */
+.evt-countdown{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:235;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.evt-cd-ring{position:relative;width:72px;height:72px}
+.evt-cd-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.evt-cd-track{fill:none;stroke:rgba(255,255,255,.25);stroke-width:4}
+.evt-cd-fill{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+.evt-cd-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.7)}
+.evt-cd-label{font-size:13px;font-weight:800;color:#fff;background:rgba(0,0,0,.55);padding:4px 12px;border-radius:12px}
+.evt-hunter{animation:hunterBob 1.2s ease-in-out infinite}
+@keyframes hunterBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}

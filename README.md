@@ -111,3 +111,15 @@ Mécanique de jeu inspirée de [Tamaweb](https://github.com/autosam/Tamaweb) (CC
 ---
 
 *Cocoricoooo ! 🐓🇫🇷*
+
+---
+
+## 📜 Copyright & Licence
+
+© 2026 Francis Le Coq — Tous droits réservés.
+
+Ce projet, son code source, ses visuels (sprites, bâtiments, personnages), ses sons et son concept de jeu sont la propriété exclusive de leur auteur. Toute reproduction, distribution, modification ou utilisation commerciale, totale ou partielle, sans autorisation écrite préalable est interdite.
+
+Le personnage **Francis le Coq**, l'univers du jeu et le jeton **$FRANC** associé sont des marques et créations protégées.
+
+**Licence : propriétaire (tous droits réservés).** Pour toute demande d'utilisation, de partenariat ou de licence, contactez l'auteur.

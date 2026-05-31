@@ -270,4 +270,7 @@ const Engine = {
         pet.coins-=h.cost;pet.housingLevel=next;return{ok:true,msg:'🏠 '+h.nom+' !'};
     },
     getTimeToEvolve(pet){var s=this.STAGES[pet.stade];if(!s.heures)return null;return Math.max(0,s.heures-(Date.now()-pet.derniereEvolution)/3600000);},
+    getEvolutionProgress(pet){var s=this.STAGES[pet.stade];if(!s.heures)return{done:1,elapsed:0,total:0};var el=(Date.now()-pet.derniereEvolution)/3600000;return{done:Math.min(1,el/s.heures),elapsed:el,total:s.heures};},
+    XP_TARGETS:[100,300,700,1500,3000],
+    getXPProgress(pet){var t=this.XP_TARGETS[pet.stade]||3000;return{done:Math.min(1,(pet.experience||0)/t),xp:pet.experience||0,target:t};},
 };
