@@ -487,7 +487,7 @@ var Renderer={
         el.classList.remove('hidden');
         el.classList.remove('scene-notif-in');void el.offsetWidth;el.classList.add('scene-notif-in');
         clearTimeout(this._snt);
-        this._snt=setTimeout(function(){el.classList.add('hidden');},4200);
+        this._snt=setTimeout(function(){el.classList.add('hidden');},5000);
     },
 
     // Nettoie tous les artefacts d'événement (tornades, renards, virus, sirène, overlays, compte à rebours)
@@ -501,6 +501,7 @@ var Renderer={
         this._chantalActive=false;
         try{if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(false);}catch(e){}
         try{if(typeof App!=='undefined'&&App._rainAudio)App._rainAudio.pause();}catch(e){}
+        try{if(typeof App!=='undefined'&&App._alarmAudio){App._alarmAudio.pause();App._alarmAudio.currentTime=0;}}catch(e){}
     },
     haptic:function(){},
     renderFoodGrid:function(){return Engine.FOODS.map(function(f){return'<div class="food-item" data-food="'+f.id+'"><span class="food-icon">'+f.emoji+'</span><span class="food-name">'+Engine.tName(f)+'</span><span class="food-stats">'+I18n.t('food_plus',{n:f.faim})+'</span></div>';}).join('');},

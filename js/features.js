@@ -121,31 +121,32 @@ var Features = {
             })(i);
         }
     },
+    // Génère des tornades mobiles (sans rotation) sur tout l'écran, pour durationMs
+    _spawnTornadoes:function(scene,count,durationMs){
+        if(!scene)return;
+        var rect=scene.getBoundingClientRect();
+        var W=rect.width||320,H=rect.height||320;
+        for(var i=0;i<count;i++){
+            (function(idx){
+                var t=document.createElement('div');t.textContent='🌪️';t.className='evt-tmp evt-tornado';
+                var size=(72+Math.random()*72); // x2
+                t.style.cssText='position:absolute;font-size:'+size+'px;z-index:232;pointer-events:none;left:0;top:0;will-change:transform;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))';
+                scene.appendChild(t);
+                var pad=size;
+                function rndX(){return Math.random()*Math.max(10,W-pad);}
+                function rndY(){return Math.random()*Math.max(10,H-pad);}
+                var frames=[],steps=8;
+                for(var k=0;k<steps;k++)frames.push({transform:'translate('+rndX()+'px,'+rndY()+'px)',opacity:k===0?0:1});
+                frames[frames.length-1].opacity=1;
+                if(t.animate)t.animate(frames,{duration:durationMs||10000,delay:idx*120,easing:'ease-in-out',fill:'forwards'});
+            })(i);
+        }
+    },
     _animTempete:function(scene){
         if(!scene)return;
         var dark=document.createElement('div');dark.className='evt-storm-dark evt-tmp';dark.id='evt-storm-dark';scene.appendChild(dark);
-        // Tornades : PAS de rotation, taille x2, déplacement aléatoire plein écran
-        for(var i=0;i<8;i++){
-            (function(idx){
-                var t=document.createElement('div');t.textContent='🌪️';t.className='evt-tmp evt-tornado';
-                var size=(72+Math.random()*72); // x2 vs avant (36..72 -> 72..144)
-                t.style.cssText='position:absolute;font-size:'+size+'px;z-index:232;pointer-events:none;left:0;top:0;will-change:transform;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))';
-                scene.appendChild(t);
-                var rect=scene.getBoundingClientRect();
-                var W=rect.width||320,H=rect.height||320;
-                var pad=size;
-                // Déplacement aléatoire continu sur tout l'écran (sans tournoyer)
-                function rndX(){return Math.random()*(W-pad);}
-                function rndY(){return Math.random()*(H-pad);}
-                var frames=[];
-                var steps=6;
-                for(var k=0;k<steps;k++){
-                    frames.push({transform:'translate('+rndX()+'px,'+rndY()+'px)',opacity:k===0?0:1});
-                }
-                frames[frames.length-1].opacity=1;
-                if(t.animate)t.animate(frames,{duration:10000,delay:idx*120,easing:'ease-in-out',fill:'forwards'});
-            })(i);
-        }
+        // Tornades mobiles plein écran (sans rotation), taille x2
+        this._spawnTornadoes(scene,8,10000);
         // Pluie TRÈS forte + son (garantie)
         if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(true);
         try{if(typeof App!=='undefined'&&App._rainAudio){App._rainAudio.currentTime=0;App._rainAudio.play();}}catch(e){}
@@ -203,6 +204,7 @@ var Features = {
             // Animation des pièces perdues au moment où le chasseur disparaît
             if(cout&&cout>0)self._runCoinLoss(cout);
             if(hunter.parentNode)hunter.remove();
+            self._stopAlarm();
             if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('ev_toast_secured'));
         });
     },
@@ -237,6 +239,11 @@ var Features = {
         var self=this;
         var pw=document.getElementById('pet-wrapper');if(pw)pw.style.visibility='hidden';
         var band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.id='evt-storm-band';band.textContent=I18n.t('ev_band_shelter');scene.appendChild(band);
+        // La tempête continue de faire rage : on relance des tornades mobiles + pluie + son
+        var dark=document.getElementById('evt-storm-dark');if(!dark){dark=document.createElement('div');dark.className='evt-storm-dark evt-tmp';dark.id='evt-storm-dark';scene.appendChild(dark);}
+        this._spawnTornadoes(scene,8,10000);
+        if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(true);
+        try{if(typeof App!=='undefined'&&App._rainAudio){App._rainAudio.currentTime=0;App._rainAudio.play();}}catch(e){}
         this._sceneCountdown(10,'',function(){
             // Calme progressif
             self._clearTmp();
@@ -244,6 +251,7 @@ var Features = {
             if(pw)pw.style.visibility='visible';
             if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(false);
             try{if(typeof App!=='undefined'&&App._rainAudio)App._rainAudio.pause();}catch(e){}
+            self._stopAlarm();
             if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('ev_toast_stormgone'));
         });
     },
@@ -271,22 +279,29 @@ var Features = {
         this._sceneCountdown(10,'',function(){
             self._stopCovidDecor();
             self._clearTmp();
+            self._stopAlarm();
             if(band&&band.parentNode)band.remove();
             if(typeof Renderer!=='undefined')Renderer.update(p);
         });
     },
     _runHearts:function(){
         var scene=document.getElementById('scene');if(!scene)return;
-        for(var i=0;i<24;i++){
-            (function(idx){
-                var ht=document.createElement('div');ht.textContent='💕';ht.className='evt-tmp';
-                ht.style.cssText='position:absolute;font-size:'+(22+Math.random()*24)+'px;z-index:233;pointer-events:none;left:'+(8+Math.random()*84)+'%;top:100%';
-                scene.appendChild(ht);
-                if(ht.animate)ht.animate([{top:'100%',opacity:1},{top:(5+Math.random()*35)+'%',opacity:0}],{duration:2500,delay:idx*70,easing:'ease-out'}).onfinish=function(){ht.remove();};
-            })(i);
+        var self=this;
+        function burst(){
+            for(var i=0;i<8;i++){
+                (function(idx){
+                    var ht=document.createElement('div');ht.textContent='💕';ht.className='evt-tmp evt-ami-fx';
+                    ht.style.cssText='position:absolute;font-size:'+(22+Math.random()*24)+'px;z-index:233;pointer-events:none;left:'+(8+Math.random()*84)+'%;top:100%';
+                    scene.appendChild(ht);
+                    if(ht.animate)ht.animate([{top:'100%',opacity:1},{top:(5+Math.random()*35)+'%',opacity:0}],{duration:2500,delay:idx*70,easing:'ease-out'}).onfinish=function(){ht.remove();};
+                })(i);
+            }
         }
+        burst();
+        var iv=setInterval(burst,900); // coeurs en continu pendant tout le compte à rebours
         var lbl=document.createElement('div');lbl.className='evt-storm-band evt-tmp';lbl.textContent=I18n.t('ev_band_love');scene.appendChild(lbl);
         this._sceneCountdown(10,'',function(){
+            clearInterval(iv);
             if(lbl.parentNode)lbl.remove();
             var ch=document.getElementById('evt-chantal');if(ch)ch.remove();
             if(typeof Renderer!=='undefined')Renderer._chantalActive=false;
@@ -294,16 +309,22 @@ var Features = {
     },
     _runEggCoins:function(){
         var scene=document.getElementById('scene');if(!scene)return;
-        for(var i=0;i<24;i++){
-            (function(idx){
-                var co=document.createElement('div');co.textContent='🪙';co.className='evt-tmp';
-                co.style.cssText='position:absolute;font-size:'+(22+Math.random()*22)+'px;z-index:233;pointer-events:none;left:'+(8+Math.random()*84)+'%;top:-10%';
-                scene.appendChild(co);
-                if(co.animate)co.animate([{top:'-10%',opacity:1},{top:(60+Math.random()*30)+'%',opacity:0}],{duration:2200,delay:idx*70,easing:'ease-in'}).onfinish=function(){co.remove();};
-            })(i);
+        var self=this;
+        function burst(){
+            for(var i=0;i<8;i++){
+                (function(idx){
+                    var co=document.createElement('div');co.textContent='🪙';co.className='evt-tmp evt-ami-fx';
+                    co.style.cssText='position:absolute;font-size:'+(22+Math.random()*22)+'px;z-index:233;pointer-events:none;left:'+(8+Math.random()*84)+'%;top:-10%';
+                    scene.appendChild(co);
+                    if(co.animate)co.animate([{top:'-10%',opacity:1},{top:(60+Math.random()*30)+'%',opacity:0}],{duration:2200,delay:idx*70,easing:'ease-in'}).onfinish=function(){co.remove();};
+                })(i);
+            }
         }
+        burst();
+        var iv=setInterval(burst,900); // pièces en continu pendant tout le compte à rebours
         var lbl=document.createElement('div');lbl.className='evt-storm-band evt-tmp';lbl.textContent=I18n.t('ev_band_eggs');scene.appendChild(lbl);
         this._sceneCountdown(10,'',function(){
+            clearInterval(iv);
             if(lbl.parentNode)lbl.remove();
             var ch=document.getElementById('evt-chantal');if(ch)ch.remove();
             if(typeof Renderer!=='undefined')Renderer._chantalActive=false;
@@ -345,10 +366,23 @@ var Features = {
         });
     },
     _startEventIntro:function(ev){
+        // Son d'alarme pendant toute la durée des événements tempête / renard / covid
+        if(ev.id==='renard'||ev.id==='tempete'||ev.id==='malade')this._startAlarm();
         if(ev.id==='renard')this._animRenard(document.getElementById('scene'));
         else if(ev.id==='tempete')this._animTempete(document.getElementById('scene'));
         else if(ev.id==='malade')this._animVirus(document.getElementById('scene'));
         else if(ev.id==='ami')this._showChantal();
+    },
+    _startAlarm:function(){
+        try{
+            if(typeof App!=='undefined'){
+                if(App.initAudio)App.initAudio();
+                if(App._alarmAudio){App._alarmAudio.currentTime=0;App._alarmAudio.play().catch(function(){});}
+            }
+        }catch(e){}
+    },
+    _stopAlarm:function(){
+        try{if(typeof App!=='undefined'&&App._alarmAudio){App._alarmAudio.pause();App._alarmAudio.currentTime=0;}}catch(e){}
     },
     _stopEventIntro:function(ev){
         // Nettoyer les éléments d'intro qui doivent disparaître avant le choix
@@ -384,6 +418,8 @@ var Features = {
                 }
                 if(ev.id==='renard'&&pet.estMort){self._clearTmp();var sr=document.getElementById('evt-siren');if(sr)sr.remove();}
                 if(ev.id==='malade'&&pet.estMort){self._stopCovidDecor();self._clearTmp();}
+                // Coupe l'alarme dès qu'un choix mortel met fin à l'événement
+                if(pet.estMort)self._stopAlarm();
                 if(typeof Renderer!=='undefined'){Renderer.toast(ev.emoji+' '+res);Renderer.update(pet);}
                 if(pet.estMort&&typeof Renderer!=='undefined'){if(typeof App!=='undefined')App.saveRecord&&App.saveRecord();Renderer.showDeath(pet);}
                 if(typeof Storage!=='undefined')Storage.save(pet);

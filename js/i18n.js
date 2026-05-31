@@ -153,7 +153,7 @@ var I18n = {
         // ─── Events (features) ───
         ev_fox_title:          {en:'The foxes attack!',                  fr:'Les renards attaquent !'},
         ev_fox_text:           {en:'Foxes are invading the henhouse! What do you do?', fr:'Les renards envahissent le poulailler ! Que fais-tu ?'},
-        ev_fox_c1:             {en:'Hide Francis + call the hunter 🔫',  fr:'Cacher Francis + appeler le chasseur 🔫'},
+        ev_fox_c1:             {en:'Hide Francis + call the hunter 🔫 + pay the −10% pot tax', fr:'Cacher Francis + appeler le chasseur 🔫 + payer la taxe de −10% de la cagnotte'},
         ev_fox_c2:             {en:'Hide Francis without paying 🙈',     fr:'Cacher Francis sans payer 🙈'},
         ev_fox_r1:             {en:'The hunter secures the henhouse! (-{c} 🪙)', fr:'Le chasseur sécurise le poulailler ! (-{c} 🪙)'},
         ev_fox_r2:             {en:'Francis was devoured by the foxes... 💀', fr:'Francis a été dévoré par les renards... 💀'},

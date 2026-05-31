@@ -486,10 +486,11 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .flag-btn:active{transform:scale(.94)}
 .flag-btn.flag-active{filter:none;border-color:var(--accent,#ffd84d);background:rgba(255,216,77,.16);box-shadow:0 0 16px rgba(255,216,77,.4);transform:translateY(-1px)}
 
-/* Bouton wallet in-game (sous la top-bar) */
-.game-wallet-lock{display:flex;align-items:center;gap:8px;width:calc(100% - 24px);margin:0 12px 8px;padding:8px 12px;border:2px solid transparent;border-radius:14px;cursor:pointer;text-align:left;font-family:inherit;transition:all .2s}
-.game-wallet-lock .gwl-icon{font-size:18px;flex-shrink:0}
-.game-wallet-lock .gwl-txt{flex:1;font-size:12px;font-weight:800;letter-spacing:.5px}
+/* Petit cadenas $FRANC dans la top-bar (entre pièces et statut) */
+.tb-lock{display:flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:2px solid transparent;border-radius:10px;cursor:pointer;font-size:17px;line-height:1;transition:all .2s}
+.tb-lock.holder-disconnected{background:linear-gradient(135deg,rgba(217,119,6,.30),rgba(180,90,0,.22));border-color:rgba(230,150,40,.7);box-shadow:0 0 12px rgba(220,140,20,.35)}
+.tb-lock.holder-connected{background:linear-gradient(135deg,rgba(34,197,94,.30),rgba(15,120,60,.22));border-color:rgba(163,230,53,.75);box-shadow:0 0 14px rgba(70,200,110,.5)}
+.tb-lock:active{transform:scale(.92)}
 
 /* Faucheuse de la gate */
 .wg-reaper{width:130px;height:130px;object-fit:contain;margin-bottom:14px;filter:drop-shadow(0 6px 16px rgba(0,0,0,.55));animation:reaperFloat 3s ease-in-out infinite}

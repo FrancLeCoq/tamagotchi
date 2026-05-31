@@ -389,9 +389,13 @@ var Farm = {
         // Rain darkening
         var raining=(typeof Weather!=='undefined'&&Weather._isRaining)?Weather._isRaining():false;
         scene.classList.toggle('raining',raining);
-        // Couleur du ciel IDENTIQUE à la scène principale (mêmes RGB)
+        // Couleur du ciel IDENTIQUE à la scène principale, AVEC LA MÊME PENTE de dégradé.
+        // La bande de ciel de l'enclos occupe 0%→48% ; on prend donc la couleur du dégradé
+        // principal à 0 (haut) et à 0.48 (horizon de l'enclos) pour matcher exactement.
         var top,mid;
-        if(typeof Weather!=='undefined'&&Weather.getSkyColors){
+        if(typeof Weather!=='undefined'&&Weather.skyColorAt){
+            top=Weather.skyColorAt(0);mid=Weather.skyColorAt(0.48);
+        }else if(typeof Weather!=='undefined'&&Weather.getSkyColors){
             var c=Weather.getSkyColors();top=c.top;mid=c.bottom;
         }else{
             if(h>=8&&h<17){top='rgb(74,144,208)';mid='rgb(135,206,235)';}

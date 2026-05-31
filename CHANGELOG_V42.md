@@ -68,3 +68,36 @@
 
 ## Enclos
 - La **couleur du ciel** de l'enclos est désormais **identique** à celle de la scène principale (mêmes valeurs RGB, synchronisées sur l'heure du jeu).
+
+---
+
+## Correctifs & ajouts (2e passe V42)
+
+### Wallet $FRANC — liaison
+- `checkFranc` plus robuste : log de debug en console (`[franc] check-franc(...)`), et **repli automatique** sur `game_id:'francrun'` si `'tamagotchi'` ne renvoie pas de $FRANC (le wallet étant lié au compte Telegram, pas au jeu).
+- **« Back to game »** dans connect-wallet.html : si l'on vient du Tamagotchi (`?startapp=from_tamagotchi`), le bouton **réouvre le Tamagotchi** au lieu de simplement fermer la WebView. (Non destructif pour FrancRun.)
+- ⚠️ Vérifie que le **short-name** de la Mini App Tamagotchi dans BotFather correspond bien à `t.me/FrancisLeCoqBot/tamagotchi` (utilisé pour le retour).
+
+### Cadenas in-game
+- Suppression de la grosse barre « $FRANC HOLDER · UNLIMITED ».
+- Remplacée par un **petit cadenas** dans la top-bar, entre les pièces et le statut du poussin : **fermé 🔒 (orange)** si non holder, **ouvert 🔓 (vert)** si holder. Un clic ouvre connect-wallet.
+
+### Renards
+- Le bouton précise désormais « **+ payer la taxe de −10% de la cagnotte** » (FR/EN).
+- Pièces qui s'envolent jusqu'à la disparition du chasseur (déjà en place, conservé).
+
+### Ami (Chantal)
+- Les cœurs / pièces s'envolent **en continu** jusqu'à la disparition exacte de Chantal (fin du compte à rebours).
+
+### Tempête
+- Après « Hide Francis », les tornades **rebougent sur tout l'écran** (elles ne sont plus statiques) pendant les 10 s, avec pluie + son.
+
+### Notifications
+- Durée d'affichage portée à **5 secondes**.
+
+### Son d'alarme
+- `assets/sounds/alarme.mp3` joué **pendant toute la durée** des événements Tempête, Renards et Covid19.
+- ⚠️ **À ajouter** : déposer le fichier `alarme.mp3` dans `assets/sounds/` (voir `_AJOUTER_alarme.txt`).
+
+### Enclos
+- Ciel de l'enclos recalé avec **la même pente de dégradé** que la scène principale (couleur du dégradé principal prise à 0% et à 48%), pour une météo réellement identique.

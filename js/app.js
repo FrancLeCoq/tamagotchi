@@ -209,6 +209,8 @@ var App={
         this._ambientAudio.loop=true;this._ambientAudio.volume=0.35;
         this._rainAudio=new Audio('assets/sounds/rain.mp3');
         this._rainAudio.loop=true;this._rainAudio.volume=0.5;
+        this._alarmAudio=new Audio('assets/sounds/alarme.mp3');
+        this._alarmAudio.loop=true;this._alarmAudio.volume=0.6;
         this._audioReady=true;
     },
     updateAudio:function(){

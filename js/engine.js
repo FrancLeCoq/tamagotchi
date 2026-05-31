@@ -83,37 +83,49 @@ const Engine = {
     getFrancBalance(){ return this._franc.balance||0; },
 
     // Vérifie l'état $FRANC auprès du backend (POST check-franc)
+    // Robuste : log de debug + repli sur game_id 'francrun' (wallet lié au user)
     checkFranc:function(cb){
         var self=this;
         var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
         if(!tg||!tg.initData){
-            // Hors Telegram : on garde le fallback local éventuel
+            try{console.log('[franc] no initData (hors Telegram ou lancé sans Mini App button)');}catch(e){}
             this._franc.checked=true;
             if(cb)cb(this._franc);
             return;
         }
         try{tg.ready();tg.expand();}catch(e){}
-        fetch(this.SUPABASE+'/check-franc',{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({initData:tg.initData,game_id:this.GAME_ID})
-        }).then(function(r){return r.ok?r.json():null;}).then(function(d){
-            if(d){
-                self._franc.hasFranc=!!d.hasFranc;
-                self._franc.walletLinked=!!d.walletLinked;
-                self._franc.balance=d.balance||0;
-                self._franc.address=d.walletAddress||'';
-            }
-            self._franc.checked=true;
-            if(cb)cb(self._franc);
-        }).catch(function(){self._franc.checked=true;if(cb)cb(self._franc);});
+        var initData=tg.initData;
+        var tried=[this.GAME_ID,'francrun']; // user-scoped : on tente le game_id puis le repli
+        function query(idx){
+            if(idx>=tried.length){self._franc.checked=true;if(cb)cb(self._franc);return;}
+            fetch(self.SUPABASE+'/check-franc',{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({initData:initData,game_id:tried[idx]})
+            }).then(function(r){return r.ok?r.json():null;}).then(function(d){
+                try{console.log('[franc] check-franc('+tried[idx]+'):',JSON.stringify(d));}catch(e){}
+                if(d){
+                    // On garde le meilleur résultat (un linked/holder positif l'emporte)
+                    if(d.walletLinked)self._franc.walletLinked=true;
+                    if(d.hasFranc){self._franc.hasFranc=true;self._franc.balance=d.balance||self._franc.balance||0;self._franc.address=d.walletAddress||self._franc.address||'';}
+                    else if(d.walletAddress&&!self._franc.address)self._franc.address=d.walletAddress;
+                }
+                // Si on a déjà détecté le $FRANC, inutile de tenter le repli
+                if(self._franc.hasFranc){self._franc.checked=true;if(cb)cb(self._franc);return;}
+                query(idx+1);
+            }).catch(function(e){try{console.log('[franc] error:',e&&e.message);}catch(_){}query(idx+1);});
+        }
+        query(0);
     },
 
     // Ouvre la Mini App wallet Telegram (gérée par connect-wallet.html)
+    // On passe un start_param pour que "back to game" revienne sur le Tamagotchi
+    WALLET_MINIAPP_FROM:'https://t.me/FrancisLeCoqBot/wallet?startapp=from_tamagotchi',
     openWallet:function(){
         var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
-        if(tg&&tg.openTelegramLink){tg.openTelegramLink(this.WALLET_MINIAPP);}
-        else if(tg&&tg.openLink){tg.openLink(this.WALLET_MINIAPP);}
-        else{try{window.open(this.WALLET_MINIAPP,'_blank');}catch(e){}}
+        var url=this.WALLET_MINIAPP_FROM;
+        if(tg&&tg.openTelegramLink){tg.openTelegramLink(url);}
+        else if(tg&&tg.openLink){tg.openLink(url);}
+        else{try{window.open(url,'_blank');}catch(e){}}
     },
     connectWallet() {
         // Conservé pour compat (mode dev hors Telegram)

@@ -74,7 +74,17 @@ var Weather={
         else if(h>=21||h<4){r1=6;g1=8;b1=16;r2=10;g2=22;b2=40;}
         else if(h>=4&&h<6){t=(h-4)/2;r1=6+20*t|0;g1=8+24*t|0;b1=16+64*t|0;r2=10+202*t|0;g2=22+106*t|0;b2=40+56*t|0;}
         else{t=(h-6)/2;r1=26+48*t|0;g1=32+112*t|0;b1=80+128*t|0;r2=212-77*t|0;g2=128+78*t|0;b2=96+139*t|0;}
-        return {top:'rgb('+r1+','+g1+','+b1+')',bottom:'rgb('+r2+','+g2+','+b2+')'};
+        return {top:'rgb('+r1+','+g1+','+b1+')',bottom:'rgb('+r2+','+g2+','+b2+')',topRGB:[r1,g1,b1],bottomRGB:[r2,g2,b2]};
+    },
+    // Couleur du dégradé du ciel principal à une fraction verticale (0 = haut, 1 = bas)
+    // Permet à l'enclos d'utiliser EXACTEMENT la même pente de dégradé.
+    skyColorAt:function(frac){
+        var c=this.getSkyColors();
+        frac=Math.max(0,Math.min(1,frac));
+        var r=Math.round(c.topRGB[0]+(c.bottomRGB[0]-c.topRGB[0])*frac);
+        var g=Math.round(c.topRGB[1]+(c.bottomRGB[1]-c.topRGB[1])*frac);
+        var b=Math.round(c.topRGB[2]+(c.bottomRGB[2]-c.topRGB[2])*frac);
+        return 'rgb('+r+','+g+','+b+')';
     },
 
     _moveCelestial:function(){
