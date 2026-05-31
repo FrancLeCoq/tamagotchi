@@ -1,125 +1,154 @@
 # 🐓 Francis le Coq — Tamagotchi Telegram Mini App
 
-Un jeu Tamagotchi complet jouable directement dans Telegram ! Élève **Francis**, un coq gaulois avec son béret bleu, ses lunettes et sa pièce de 1 Franc.
+A full Tamagotchi-style game playable directly inside Telegram. Raise **Francis**, a French rooster with his blue beret, glasses and his 1-Franc coin — feed him, play with him, keep him healthy, watch him evolve, and survive random events.
 
 <p align="center">
-  <img src="assets/sprites/francis.png" width="200" alt="Francis le Coq">
+  <img src="assets/sprites/coq_adulte.png" width="200" alt="Francis le Coq">
 </p>
 
-## 🎮 Fonctionnalités
+## 🎮 Features
 
-- **5 stades d'évolution** : 🐣 Poussin → 🐤 Petit Coq → 🐔 Coq Ado → 🐓 Adulte → 👴 Vieux
-- **4 statistiques** en temps réel : Faim, Bonheur, Énergie, Santé
-- **6 actions** : Nourrir, Jouer, Dormir, Soigner, Nettoyer, Caresser
-- **6 types de nourriture** avec effets variés
-- **Mini-jeux** : Attrape-grains, Mémoire de coq
-- **Cycle jour/nuit** automatique
-- **Animations** : marche, manger, dormir, émotions, bulles de dialogue
-- **Sauvegarde** via localStorage + Telegram CloudStorage
-- **Telegram Mini App** : s'ouvre en plein écran dans Telegram
+- **5 evolution stages**: 🐣 Chick → 🐤 Little Rooster → 🐔 Teen Rooster → 🐓 Adult → 👴 Old
+- **7 live stats**: Happiness, Hunger, Play, Energy, Health, Hygiene, Love
+- **Care actions**: Feed, Play, Sleep, Cuddle, Heal, plus Toilet / Shower / Brushing
+- **6 foods** with different effects
+- **Mini-games**: Catch the grains, Catch the food, Roost Clicker, Tic-tac-toe, Mini Sudoku, Reading
+- **Enclosure / farm**: buy hens, feed and clean the pen, collect eggs for coins
+- **Random events** with timed choices: Foxes attack, Storm, Covid19 pandemic, Chantal's visit
+- **Day / night cycle** and **weather** (sun, rain, clouds, moon) synced between the main scene and the enclosure
+- **Housing upgrades**: Henhouse → Wooden house → Brick house → Castle → Palace → SpaceX
+- **Bilingual**: English (default) / French, switchable instantly via flag buttons
+- **$FRANC wallet gating**: connect a Solana wallet holding $FRANC to play unlimited
+- **Save** via localStorage + Telegram CloudStorage
 
-## 🚀 Déploiement
+## 🌍 Languages
 
-### Étape 1 : Héberger sur GitHub Pages
+The game ships fully bilingual (English default / French). Players switch language with the 🇬🇧 / 🇫🇷 flag buttons on the splash screen; the whole UI, events, quests, journal, dialogue and mini-games refresh instantly. All strings live in `js/i18n.js` (a single dictionary with `en` / `fr` entries and a `t()` helper).
+
+## 🔗 $FRANC wallet & unlimited mode
+
+Wallet connection and $FRANC verification are handled by a **separate, shared web app** hosted in its own repository:
+
+- Wallet app: `https://franclecoq.github.io/Wallet/connect-wallet.html` (repo `FrancLeCoq/Wallet`)
+- Opened in-game as the Telegram mini-app `https://t.me/FrancisLeCoqBot/wallet`
+
+> The wallet app is **not** part of this repository and must not be bundled here.
+
+How it works in the game:
+- A small padlock sits in the top bar, between the coins and the chick status.
+  - **Closed padlock 🔒 (orange)** = no $FRANC detected.
+  - **Open padlock 🔓 (green)** = $FRANC holder, unlimited mode unlocked.
+- Tapping the padlock (or the splash holder badge) opens the wallet app. The Telegram back button returns to the game.
+- The game calls the backend endpoint `POST /check-franc` with the Telegram `initData`, and re-checks automatically when the player returns to the game (visibility change) and every 20s.
+- **With $FRANC** → unlimited play. **Without $FRANC** → the game ends after the Chick stage: the reaper appears and a bilingual message invites the player to connect a $FRANC wallet to unlock the holder features.
+
+Backend (shared with the other Franc games): `https://mubqtnqulpyehkgubhnh.supabase.co/functions/v1`.
+
+## 🎲 Random events
+
+Events trigger during play, each with a ~10s intro animation, a choice, and a ~10s outcome animation:
+
+- **Foxes** 🦊 — hide Francis and call the hunter (pay a −10% pot tax, coins fly away as he leaves) or risk it.
+- **Storm** 🌪️ — tornadoes roam the whole screen with heavy rain; hide Francis or "learn to fly".
+- **Covid19** 🦠 — red/blue siren décor and floating viruses; vaccinate (viruses fade out) or refuse.
+- **Chantal's visit** 👩‍🌾 — hug her (hearts) or collect the eggs (coins); the animation runs until she leaves.
+
+The **alarm sound** (`assets/sounds/alarme.mp3`) plays for the full duration of the Storm, Foxes and Covid19 events (when game sound is on).
+
+## 🚀 Deployment
+
+### 1. Host on GitHub Pages
 
 ```bash
-# Fork ou clone ce repo
 git clone https://github.com/FrancLeCoq/tamagotchi.git
-cd francis-le-coq
+cd tamagotchi
 git push origin main
 ```
 
-Dans les **Settings** du repo GitHub → **Pages** → Source : `main` / `/ (root)`.
+In the repo **Settings → Pages → Source**: `main` / `/ (root)`.
+The game will be served at `https://franclecoq.github.io/tamagotchi/`.
 
-Ton jeu sera accessible à `https://franclecoq.github.io/tamagotchi/`
+### 2. Create / configure the Telegram bot
 
-### Étape 2 : Créer le bot Telegram
+1. Talk to [@BotFather](https://t.me/BotFather) → `/newbot` (or reuse `@FrancisLeCoqBot`).
+2. Configure the Mini App: `/newapp` → choose the bot → set the GitHub Pages URL.
+3. Make sure the Tamagotchi mini-app short name and the `/wallet` mini-app are both registered under the same bot so the wallet flow works.
 
-1. Parle à [@BotFather](https://t.me/BotFather) → `/newbot`
-2. Donne un nom (ex: `Francis le Coq`) et un username (ex: `FrancisCoqBot`)
-3. Copie le **token**
-4. Configure la Mini App : `/newapp` → choisis ton bot → envoie l'URL GitHub Pages
-
-### Étape 3 : Lancer le bot
+### 3. Run the bot (optional helper)
 
 ```bash
 cd bot/
 pip install python-telegram-bot
 
-FRANCIS_BOT_TOKEN=ton_token \
+FRANCIS_BOT_TOKEN=your_token \
 FRANCIS_WEBAPP_URL=https://franclecoq.github.io/tamagotchi/ \
 python bot.py
 ```
 
-## 📁 Structure du projet
+## 📁 Project structure
 
 ```
 francis-le-coq/
-├── index.html              # Page principale du jeu
+├── index.html              # Main game page
 ├── css/
-│   └── style.css           # Styles complets (scène, animations, UI)
+│   └── style.css           # All styles (scene, animations, UI, events)
 ├── js/
-│   ├── storage.js          # Sauvegarde localStorage + Telegram Cloud
-│   ├── engine.js           # Moteur de jeu (stats, évolution, actions)
-│   ├── renderer.js         # Rendu visuel (scène, pet, effets)
-│   ├── minigames.js        # Mini-jeux (tap, mémoire)
-│   └── app.js              # Contrôleur principal
+│   ├── i18n.js             # Bilingual dictionary (EN/FR) + t() helper
+│   ├── storage.js          # Save: localStorage + Telegram CloudStorage
+│   ├── engine.js           # Game engine (stats, evolution, actions, $FRANC wallet)
+│   ├── renderer.js         # Visual rendering (scene, pet, gauges, countdowns, effects)
+│   ├── weather.js          # Day/night cycle, weather, sky colors
+│   ├── weather_imgs.js     # Weather sprite data
+│   ├── farm.js             # Enclosure / hens / eggs
+│   ├── minigames.js        # Mini-games
+│   ├── features.js         # Events, daily quests, journal
+│   └── app.js              # Main controller
 ├── assets/
-│   ├── sprites/            # Sprites du personnage
-│   │   └── francis.png     # Image de Francis (stade adulte)
-│   ├── backgrounds/        # Décors (à ajouter)
-│   ├── items/              # Items : nourriture, jouets (à ajouter)
-│   └── ui/                 # Éléments d'interface (à ajouter)
+│   ├── sprites/            # Character sprites per stage
+│   ├── backgrounds/        # Scene + enclosure backgrounds
+│   ├── events/             # Event art (foxes, hunter, Chantal)
+│   ├── sounds/             # ferme.mp3 (ambient), rain.mp3, alarme.mp3 (events)
+│   ├── video/              # Birth video
+│   └── weather/            # Weather assets
 ├── bot/
-│   └── bot.py              # Bot Telegram (lance la Mini App)
+│   └── bot.py              # Telegram bot (launches the Mini App)
 └── README.md
 ```
 
-## 🖼️ Ajouter des assets personnalisés
+> Note: `connect-wallet.html` is intentionally **not** in this repo — it lives in the dedicated `FrancLeCoq/Wallet` repository and is shared across all Franc games.
 
-### Spritesheets par stade (optionnel)
-Ajouter dans `assets/sprites/` :
-- `francis_poussin.png` — Petit poussin
-- `francis_petit.png` — Jeune coq
-- `francis_ado.png` — Coq adolescent
-- `francis_adulte.png` — Coq adulte (= `francis.png`)
-- `francis_vieux.png` — Vieux coq sage
+## 🎯 Game mechanics
 
-### Backgrounds (optionnel)
-Ajouter dans `assets/backgrounds/` :
-- `room_day.png` — Scène principale (jour)
-- `room_night.png` — Scène principale (nuit)
+| Mechanic | Description |
+|----------|-------------|
+| Depletion | Stats drop in real time, even while offline |
+| Interactions | A neglected rooster loses health and happiness |
+| Evolution | Elapsed time + average stats threshold |
+| Cooldowns | Each action has a reuse delay |
+| Poops | Appear over time and must be cleaned |
+| Events | Random timed events with branching outcomes |
+| Death | When critical stats reach 0, or a fatal event choice |
+| Gating | Without $FRANC, the game ends after the Chick stage |
 
-Le jeu fonctionne avec des décors CSS par défaut si les images ne sont pas fournies.
+## 🛠️ Tech notes
 
-## 🎯 Mécanique de jeu
+- Pure HTML / CSS / vanilla JS — no build step, no framework.
+- Telegram-browser friendly: traditional `var` / `function` syntax, no ES modules.
+- Sprite backgrounds are pre-processed (transparent) before integration.
+- Deploy by uploading the files to GitHub Pages (drag & drop via the web UI works).
 
-| Mécanisme | Description |
-|-----------|-------------|
-| Déplétion | Les stats baissent en temps réel, même hors-ligne |
-| Interactions | Un coq affamé perd santé et bonheur |
-| Évolution | Temps écoulé + stats moyennes ≥ 25% |
-| Cooldowns | Chaque action a un délai avant réutilisation |
-| Poops | Apparaissent toutes les 2h, à nettoyer ! |
-| Mort | Si 2+ stats tombent à 0 |
+## 📜 Copyright & License
 
-## 📄 Licence
+© 2026 Francis Le Coq — All rights reserved.
 
-Code : MIT License
-Mécanique de jeu inspirée de [Tamaweb](https://github.com/autosam/Tamaweb) (CC BY-NC-SA 4.0 par SamanDev).
+This project, its source code, its visuals (sprites, buildings, characters), its sounds and its game concept are the exclusive property of their author. Any reproduction, distribution, modification or commercial use, in whole or in part, without prior written permission is prohibited.
 
----
+The character **Francis le Coq**, the game universe and the associated **$FRANC** token are protected creations and trademarks.
 
-*Cocoricoooo ! 🐓🇫🇷*
+**License: proprietary (all rights reserved).** For any usage, partnership or licensing request, contact the author.
+
+Game mechanics originally inspired by [Tamaweb](https://github.com/autosam/Tamaweb) (CC BY-NC-SA 4.0 by SamanDev).
 
 ---
 
-## 📜 Copyright & Licence
-
-© 2026 Francis Le Coq — Tous droits réservés.
-
-Ce projet, son code source, ses visuels (sprites, bâtiments, personnages), ses sons et son concept de jeu sont la propriété exclusive de leur auteur. Toute reproduction, distribution, modification ou utilisation commerciale, totale ou partielle, sans autorisation écrite préalable est interdite.
-
-Le personnage **Francis le Coq**, l'univers du jeu et le jeton **$FRANC** associé sont des marques et créations protégées.
-
-**Licence : propriétaire (tous droits réservés).** Pour toute demande d'utilisation, de partenariat ou de licence, contactez l'auteur.
+*Cock-a-doodle-doo! 🐓🇫🇷*
