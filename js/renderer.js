@@ -44,9 +44,9 @@ var Renderer={
 
     updateHUD:function(pet){
         var stage=Engine.STAGES[pet.stade];
-        var el=document.getElementById('hud-stage');if(el)el.textContent=stage.nom;
+        var el=document.getElementById('hud-stage');if(el)el.textContent=Engine.tName(stage);
         var lv=document.getElementById('hud-level');
-        if(lv){var stage=Engine.STAGES[pet.stade];var pct=stage.heures?Math.min(100,Math.round((Date.now()-pet.derniereEvolution)/3600000/stage.heures*100)):100;lv.textContent=stage.nom+' '+pct+'%';}
+        if(lv){var stage=Engine.STAGES[pet.stade];var pct=stage.heures?Math.min(100,Math.round((Date.now()-pet.derniereEvolution)/3600000/stage.heures*100)):100;lv.textContent=Engine.tName(stage)+' '+pct+'%';}
         var coins=document.getElementById('hud-coins');if(coins)coins.textContent='🪙 '+pet.coins;
         var dot=document.getElementById('alert-dot');if(dot)dot.classList.toggle('hidden',!Engine.hasAlerts(pet));
         var sprite=Engine.getSpriteForPet(pet);
@@ -84,12 +84,12 @@ var Renderer={
     _showHints:function(pet){
         var hint=document.getElementById('hint-bar');if(!hint)return;
         var msg='';
-        if(pet.faim<20)msg='🌾 Francis a faim → Nourrir';
-        else if(pet.energie<20)msg='😴 Francis est épuisé → Dormir';
-        else if(pet.sante<20)msg='❤️ Francis est malade → Soigner';
-        else if((pet.hygiene||50)<20)msg='🧼 Francis est sale → Douche';
-        else if((pet.amour||30)<20)msg='💕 Francis se sent seul → Câliner';
-        else if((pet.jeu||0)<20)msg='🎮 Francis s\'ennuie → Jouer';
+        if(pet.faim<20)msg=I18n.t('hint_hunger');
+        else if(pet.energie<20)msg=I18n.t('hint_energy');
+        else if(pet.sante<20)msg=I18n.t('hint_health');
+        else if((pet.hygiene||50)<20)msg=I18n.t('hint_hygiene');
+        else if((pet.amour||30)<20)msg=I18n.t('hint_love');
+        else if((pet.jeu||0)<20)msg=I18n.t('hint_play');
         hint.textContent=msg;hint.style.display=msg?'block':'none';
     },
 
@@ -114,8 +114,8 @@ var Renderer={
     updateSleepButton:function(pet){
         var btn=document.getElementById('btn-dormir');if(!btn)return;
         var ic=btn.querySelector('.act-icon'),lb=btn.querySelector('.act-label');
-        if(pet.isSleeping){btn.classList.add('sleep-active');btn.classList.remove('on-cooldown');if(ic)ic.textContent='⏹️';if(lb)lb.textContent='Réveiller';}
-        else{btn.classList.remove('sleep-active');if(ic)ic.textContent='💤';if(lb)lb.textContent='Dormir';}
+        if(pet.isSleeping){btn.classList.add('sleep-active');btn.classList.remove('on-cooldown');if(ic)ic.textContent='⏹️';if(lb)lb.textContent=I18n.t('act_wake');}
+        else{btn.classList.remove('sleep-active');if(ic)ic.textContent='💤';if(lb)lb.textContent=I18n.t('act_sleep');}
     },
     petPulse:function(){
         var s=this.els.petSprite;if(!s)return;
@@ -194,9 +194,13 @@ var Renderer={
     },
 
     // ═══ GAUGE ANIMATION — animated bar rising +20% ═══
+    _statLabelKey:{faim:'stat_hunger',jeu:'stat_play',energie:'stat_energy',sante:'stat_health',hygiene:'stat_hygiene',amour:'stat_love',bonheur:'stat_happiness'},
     animateGauge:function(statName,label,fromPct,toPct,color){
         var bar=document.getElementById('stat-'+statName);
         var txt=document.getElementById('pct-'+statName);
+        // Label localisé d'après la clé de stat (ignore le label passé)
+        var lk=this._statLabelKey[statName];
+        if(lk&&typeof I18n!=='undefined')label=I18n.t(lk);
         // Color based on final value (correct gauge color) unless explicitly given
         var gColor=color||this._gc(toPct);
         var delta=Math.round(toPct-fromPct);
@@ -255,7 +259,7 @@ var Renderer={
         big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
         var feedLoop=setInterval(function(){self._flyItemToPet(emoji,false);},1500);
-        var timer=this._countdown('🍽️ Francis mange',seconds,'#44cc66',function(){
+        var timer=this._countdown(I18n.t('lbl_eating'),seconds,'#44cc66',function(){
             clearInterval(feedLoop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
@@ -279,7 +283,7 @@ var Renderer={
         // Pet faces the book
         this._applyFlip(bookX<this.currentPetX);
         var loop=setInterval(function(){self._flyItemToPet('🧠',false);},1400);
-        var timer=this._countdown('📖 Francis lit',40,'#4a90d9',function(){
+        var timer=this._countdown(I18n.t('lbl_reading'),40,'#4a90d9',function(){
             clearInterval(loop);book.remove();self._actionLock=false;self._studyLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
@@ -291,7 +295,7 @@ var Renderer={
         big.style.bottom='52%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
         var loop=setInterval(function(){self._flyItemToPet('💧',false);},450);
-        var timer=this._countdown('🚿 Francis se lave',30,'#3498db',function(){
+        var timer=this._countdown(I18n.t('lbl_washing'),30,'#3498db',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._showerLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
@@ -316,7 +320,7 @@ var Renderer={
             // Fade the poop progressively over the countdown
             (function(p,delay){p.style.transition='opacity '+dur+'s linear';setTimeout(function(){p.style.opacity='0';},80);})(poop);
         }
-        var timer=this._countdown('🧹 Nettoyage',dur,'#e8a020',function(){
+        var timer=this._countdown(I18n.t('lbl_cleaning'),dur,'#e8a020',function(){
             for(var b=0;b<brooms.length;b++)brooms[b].remove();
             for(var pp=0;pp<poops.length;pp++){if(poops[pp].parentNode)poops[pp].remove();}
             self._actionLock=false;if(onEnd)onEnd();
@@ -330,7 +334,7 @@ var Renderer={
         big.style.bottom='45%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
         this.els.scene.appendChild(big);
         var loop=setInterval(function(){self._flyItemToPet('💉',true,45);},1500);
-        var timer=this._countdown('🚨 Soin en cours',20,'#e74c3c',function(){
+        var timer=this._countdown(I18n.t('lbl_healing'),20,'#e74c3c',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
@@ -342,7 +346,7 @@ var Renderer={
         big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%)';
         this.els.scene.appendChild(big);
         var loop=setInterval(function(){self._flyItemToPet('🪥',false,55);},1500);
-        var timer=this._countdown('🪥 Francis se brosse',20,'#3498db',function(){
+        var timer=this._countdown(I18n.t('lbl_brushing'),20,'#3498db',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
@@ -368,7 +372,7 @@ var Renderer={
             hrt.style.fontSize='48px';
             self.els.sceneItems.appendChild(hrt);setTimeout(function(){hrt.remove();},1500);
         },800);
-        var timer=this._countdown('💕 Moment intime',60,'#e84393',function(){
+        var timer=this._countdown(I18n.t('lbl_intimate'),60,'#e84393',function(){
             clearInterval(heartLoop);w.classList.add('hidden');self._calinLock=false;
             if(onAmourEnd)onAmourEnd();
         });
@@ -385,7 +389,7 @@ var Renderer={
             z.style.fontSize=(20+Math.random()*16)+'px';
             self.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);
         },800);
-        this._sleepTimer=this._countdown('💤 Francis dort',seconds,'#9b59b6',function(){
+        this._sleepTimer=this._countdown(I18n.t('lbl_sleeping'),seconds,'#9b59b6',function(){
             clearInterval(self._sleepZLoop);self._sleepZLoop=null;self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
         });
     },
@@ -445,7 +449,7 @@ var Renderer={
         document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1200);
     },
     showFloatingItem:function(e,x,y){var d=document.createElement('div');d.className='float-item';d.textContent=e;d.style.left=(x||50)+'%';d.style.top=(y||60)+'%';this.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},1500);},
-    showEvolution:function(o,n){document.getElementById('evo-old').textContent=o.emoji;document.getElementById('evo-new').textContent=n.emoji;document.getElementById('evo-desc').textContent=n.nom;document.getElementById('evolution-screen').classList.remove('hidden');this.launchFireworks();},
+    showEvolution:function(o,n){document.getElementById('evo-old').textContent=o.emoji;document.getElementById('evo-new').textContent=n.emoji;document.getElementById('evo-desc').textContent=Engine.tName(n);document.getElementById('evolution-screen').classList.remove('hidden');this.launchFireworks();},
     launchFireworks:function(){
         var host=document.getElementById('evolution-screen')||document.body;
         var colors=['#ff5252','#ffd740','#69f0ae','#40c4ff','#e040fb','#ffab40'];
@@ -465,11 +469,35 @@ var Renderer={
         }
     },
     hideEvolution:function(){document.getElementById('evolution-screen').classList.add('hidden');},
-    showDeath:function(pet){var age=Engine.getAge(pet);document.getElementById('death-desc').textContent=pet.nom+' a vécu '+age.days+'j. Cause: '+(pet.causeMort||'?');document.getElementById('death-stats').innerHTML='<p style="color:#8899bb">XP:'+pet.experience+' 🪙'+pet.coins+'</p>';document.getElementById('death-screen').classList.remove('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.add('dead-scene');},
+    showDeath:function(pet){var age=Engine.getAge(pet);document.getElementById('death-desc').textContent=I18n.t('death_lived',{nom:pet.nom,d:age.days,cause:(pet.causeMortKey?I18n.t(pet.causeMortKey):(pet.causeMort||I18n.t('cause_unknown')))});document.getElementById('death-stats').innerHTML='<p style="color:#8899bb">XP:'+pet.experience+' 🪙'+pet.coins+'</p>';document.getElementById('death-screen').classList.remove('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.add('dead-scene');},
     hideDeath:function(){document.getElementById('death-screen').classList.add('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.remove('dead-scene');},
     toast:function(m){var el=document.getElementById('toast'),tx=document.getElementById('toast-text');tx.textContent=m;el.classList.remove('hidden');clearTimeout(this._tt);this._tt=setTimeout(function(){el.classList.add('hidden');},2500);},
+
+    // Grande notification en haut du décor de jeu (visible dans la scène)
+    sceneNotif:function(m){
+        var el=document.getElementById('scene-notif'),tx=document.getElementById('scene-notif-text');
+        if(!el||!tx){this.toast(m);return;}
+        tx.textContent=m;
+        el.classList.remove('hidden');
+        el.classList.remove('scene-notif-in');void el.offsetWidth;el.classList.add('scene-notif-in');
+        clearTimeout(this._snt);
+        this._snt=setTimeout(function(){el.classList.add('hidden');},4200);
+    },
+
+    // Nettoie tous les artefacts d'événement (tornades, renards, virus, sirène, overlays, compte à rebours)
+    clearEventArtifacts:function(){
+        var scene=document.getElementById('scene');
+        if(scene){
+            var sel=['.evt-tmp','.evt-fox','.evt-siren','.evt-storm-dark','.evt-rain-overlay','.evt-hunter','.evt-chantal','#evt-countdown','#evt-storm-band','.evt-covid-alarm'];
+            for(var i=0;i<sel.length;i++){var els=scene.querySelectorAll(sel[i]);for(var j=0;j<els.length;j++)els[j].remove();}
+        }
+        var pw=document.getElementById('pet-wrapper');if(pw)pw.style.visibility='visible';
+        this._chantalActive=false;
+        try{if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(false);}catch(e){}
+        try{if(typeof App!=='undefined'&&App._rainAudio)App._rainAudio.pause();}catch(e){}
+    },
     haptic:function(){},
-    renderFoodGrid:function(){return Engine.FOODS.map(function(f){return'<div class="food-item" data-food="'+f.id+'"><span class="food-icon">'+f.emoji+'</span><span class="food-name">'+f.nom+'</span><span class="food-stats">+'+f.faim+'🌾</span></div>';}).join('');},
+    renderFoodGrid:function(){return Engine.FOODS.map(function(f){return'<div class="food-item" data-food="'+f.id+'"><span class="food-icon">'+f.emoji+'</span><span class="food-name">'+Engine.tName(f)+'</span><span class="food-stats">'+I18n.t('food_plus',{n:f.faim})+'</span></div>';}).join('');},
     _circGauge:function(pct,color,centerText,sub){
         var circ=100.5;var off=circ*(1-pct);
         return '<div class="prog-circ"><svg viewBox="0 0 40 40"><circle class="prog-track" cx="20" cy="20" r="16"/><circle class="prog-fill" cx="20" cy="20" r="16" style="stroke:'+color+';stroke-dasharray:'+circ+';stroke-dashoffset:'+off+'"/></svg><div class="prog-center">'+centerText+'</div></div><div class="prog-sub">'+sub+'</div>';
@@ -494,7 +522,7 @@ var Renderer={
         }
         html+='</div>';
         // Cartes infos
-        html+='<div class="stats-info-grid"><div class="stats-info-card"><div class="label">Stade</div><div class="value">'+stage.emoji+' '+stage.nom+'</div></div><div class="stats-info-card"><div class="label">Âge</div><div class="value">'+age.days+'j '+age.hours+'h</div></div></div>';
+        html+='<div class="stats-info-grid"><div class="stats-info-card"><div class="label">'+I18n.t('info_stage')+'</div><div class="value">'+stage.emoji+' '+Engine.tName(stage)+'</div></div><div class="stats-info-card"><div class="label">'+I18n.t('info_age')+'</div><div class="value">'+age.days+'j '+age.hours+'h</div></div></div>';
         // Bonheur
         html+='<div class="stats-section-title">Jauges</div>';
         html+='<div class="bonheur-main-row"><span class="stat-emoji">😊</span><div class="stat-info"><div class="stat-name">Bonheur général</div><div class="stat-value" style="color:'+sc(pet.bonheur)+'">'+Math.round(pet.bonheur)+'%</div><div class="stat-bar-big"><div class="stat-bar-fill" style="width:'+pet.bonheur+'%;background:'+sc(pet.bonheur)+'"></div></div></div></div>';

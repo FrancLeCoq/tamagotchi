@@ -25,10 +25,10 @@ const Minigames = {
 
     startPlay(onComplete) {
         this.onComplete=onComplete;
-        document.getElementById('minigame-title').textContent='Attrape les grains ! 🌾';
+        document.getElementById('minigame-title').textContent=I18n.t('mg_grains_title');
         document.getElementById('minigame-screen').classList.remove('hidden');
         var area=document.getElementById('minigame-area');var self=this;
-        area.innerHTML='<div class="mini-intro"><div style="font-size:54px">🌾</div><h3>Attrape les grains</h3><p>Tape sur les aliments qui apparaissent !<br>🌾 = +1 · 🌽🥖🧀 = +2 · 🐛 = malus<br>Tu gagnes du <b>jeu</b>, des <b>pièces</b> et de la <b>faim</b> 🍽️</p><button class="mini-btn" id="mg-start">C\'est parti ! 🐓</button></div>';
+        area.innerHTML='<div class="mini-intro"><div style="font-size:54px">🌾</div><h3>'+I18n.t('mg_grains_h')+'</h3><p>'+I18n.t('mg_grains_p')+'</p><button class="mini-btn" id="mg-start">'+I18n.t('mg_go')+'</button></div>';
         document.getElementById('mg-start').addEventListener('click',function(){self.startTapGame();});
     },
 
@@ -39,10 +39,10 @@ const Minigames = {
         this.onComplete=onComplete;
         this.active=false;
         if(this._interval){clearInterval(this._interval);this._interval=null;}
-        document.getElementById('minigame-title').textContent='Attrape la nourriture ! 🌽';
+        document.getElementById('minigame-title').textContent=I18n.t('mg_catch_title');
         document.getElementById('minigame-screen').classList.remove('hidden');
         var area=document.getElementById('minigame-area');var self=this;
-        area.innerHTML='<div class="mini-intro"><div style="font-size:54px">🌽</div><h3>Attrape la nourriture</h3><p>Maintiens le doigt sur Francis et déplace-le<br>pour attraper la nourriture qui tombe !<br>⚠️ Évite le <b>☠️ poison</b> (sinon perdu)<br>Gain : <b>+30% jeu</b> 🎮 et <b>faim</b> 🍽️</p><button class="mini-btn" id="mg-start">C\'est parti ! 🐓</button></div>';
+        area.innerHTML=I18n.t('mg_catch_intro');
         document.getElementById('mg-start').addEventListener('click',function(){self.startCatchGame();});
     },
     startCatchGame() {
@@ -111,11 +111,11 @@ const Minigames = {
             // Poison attrapé : aucun gain
             this._poisoned=false;
             this._reward={coins:0,faim:0,jeu:0};
-            area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">☠️</div><div style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px">Poison attrapé !</div><div style="font-size:14px;color:#c88;margin:8px 0;line-height:1.6">Aucun gain cette fois...<br>Évite le ☠️ la prochaine fois !</div><button class="mini-btn" id="mg-done">Dommage 🐓</button></div>';
+            area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">☠️</div><div style="font-size:22px;font-weight:800;color:#e74c3c;margin-bottom:4px">'+I18n.t('mg_poison_title')+'</div><div style="font-size:14px;color:#c88;margin:8px 0;line-height:1.6">'+I18n.t('mg_poison_desc')+'</div><button class="mini-btn" id="mg-done">'+I18n.t('mg_too_bad')+'</button></div>';
         }else{
             // Pas de gain de pièces pour ce jeu
             this._reward={coins:0,faim:Math.min(30,this.score),jeu:30};
-            area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌽</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">Attrapés : '+this.score+'</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🎮 +30% jeu<br>🍽️ +'+Math.min(30,this.score)+'% faim</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>';
+            area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌽</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">'+I18n.t('mg_caught',{n:this.score})+'</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">'+I18n.t('mg_catch_result',{f:Math.min(30,this.score)})+'</div><button class="mini-btn" id="mg-done">'+I18n.t('mg_harvest')+'</button></div>';
         }
         document.getElementById('mg-done').addEventListener('click',function(){self.close();if(self.onComplete)self.onComplete(self._reward);});
     },
@@ -125,12 +125,12 @@ const Minigames = {
         this.onComplete=onComplete;
         this.active=false;
         if(this._interval){clearInterval(this._interval);this._interval=null;}
-        document.getElementById('minigame-title').textContent='Roost Clicker ! 👆';
+        document.getElementById('minigame-title').textContent=I18n.t('mg_roost_title');
         document.getElementById('minigame-screen').classList.remove('hidden');
         var area=document.getElementById('minigame-area');
         var self=this;
         // Écran de consigne
-        area.innerHTML='<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tapote Francis un max en 60 secondes !<br>Chaque tap rapporte <b>×2 pièces</b> 🪙<br>et tu gagnes <b>+20% dans la jauge Jeu</b> 🎮</p><button class="mini-btn" id="mg-start">C\'est parti ! 🐓</button></div>';
+        area.innerHTML=I18n.t('mg_roost_intro');
         document.getElementById('mg-start').addEventListener('click',function(){self.startRoostGame();});
     },
     startRoostGame() {
@@ -173,7 +173,7 @@ const Minigames = {
         var area=document.getElementById('minigame-area');
         // score = déjà x2 (pièces). Gain JEU +20%.
         this._reward={coins:this.score,faim:0,jeu:20};
-        area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">👆</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">'+this.score+' pièces (×2 !)</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🪙 +'+this.score+' pièces<br>🎮 +20% jeu</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>';
+        area.innerHTML='<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">👆</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">'+I18n.t('mg_roost_coins',{n:this.score})+'</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">'+I18n.t('mg_roost_result',{c:this.score})+'</div><button class="mini-btn" id="mg-done">'+I18n.t('mg_harvest')+'</button></div>';
         var self=this;
         document.getElementById('mg-done').addEventListener('click',function(){self.close();if(self.onComplete)self.onComplete(self._reward);});
     },
@@ -185,7 +185,7 @@ const Minigames = {
         if(this._spawnIv){clearInterval(this._spawnIv);this._spawnIv=null;}
         if(this.timer){clearTimeout(this.timer);this.timer=null;}
         if(this.botTimer){clearInterval(this.botTimer);this.botTimer=null;}
-        document.getElementById('minigame-title').textContent='Morpion vs Bot ⭕';
+        document.getElementById('minigame-title').textContent=I18n.t('mg_morpion_title');
         var area=document.getElementById('minigame-area');if(area)area.innerHTML='';
         document.getElementById('minigame-screen').classList.remove('hidden');
         this.morpionBoard=['','','','','','','','',''];
@@ -195,7 +195,7 @@ const Minigames = {
     renderMorpion(msg) {
         var area=document.getElementById('minigame-area');if(!area)return;
         var self=this;
-        var html='<div class="morpion-msg">'+(msg||'À toi de jouer ! Tu es ❌')+'</div>';
+        var html='<div class="morpion-msg">'+(msg||I18n.t('mg_your_turn'))+'</div>';
         html+='<div class="morpion-grid">';
         for(var i=0;i<9;i++){
             html+='<div class="morpion-cell" data-i="'+i+'">'+(this.morpionBoard[i]||'')+'</div>';
@@ -209,11 +209,11 @@ const Minigames = {
                 if(self.morpionBoard[i])return;
                 self.morpionBoard[i]='❌';
                 if(self.checkMorpion('❌')){self.endMorpion(true);return;}
-                if(self.morpionBoard.every(function(x){return x;})){self.endMorpion(false,'Match nul !');return;}
+                if(self.morpionBoard.every(function(x){return x;})){self.endMorpion(false,I18n.t('mg_draw'));return;}
                 // Bot thinks for 5 seconds with countdown
                 self.botThinking=true;
                 var sec=2;
-                self.renderMorpion('🤖 Le bot réfléchit... '+sec+'s');
+                self.renderMorpion(I18n.t('mg_bot_thinking')+sec+'s');
                 self.botTimer=setInterval(function(){
                     sec--;
                     if(sec<=0){
@@ -221,7 +221,7 @@ const Minigames = {
                         self.botThinking=false;
                         self.botMove();
                     }else{
-                        self.renderMorpion('🤖 Le bot réfléchit... '+sec+'s');
+                        self.renderMorpion(I18n.t('mg_bot_thinking')+sec+'s');
                     }
                 },1000);
             });
@@ -246,8 +246,8 @@ const Minigames = {
         if(move<0){var corners=[0,2,6,8].filter(function(i){return !b[i];});if(corners.length)move=corners[Math.floor(Math.random()*corners.length)];}
         if(move<0){var empty=[];for(var i=0;i<9;i++)if(!b[i])empty.push(i);move=empty[Math.floor(Math.random()*empty.length)];}
         b[move]='⭕';
-        if(this.checkMorpion('⭕')){this.endMorpion(false,'Le bot a gagné ! 🤖');return;}
-        if(b.every(function(x){return x;})){this.endMorpion(false,'Match nul !');return;}
+        if(this.checkMorpion('⭕')){this.endMorpion(false,I18n.t('mg_bot_won'));return;}
+        if(b.every(function(x){return x;})){this.endMorpion(false,I18n.t('mg_draw'));return;}
         this.renderMorpion();
     },
     checkMorpion(mark) {
@@ -258,7 +258,7 @@ const Minigames = {
     endMorpion(win,msg) {
         this.morpionOver=true;this.botThinking=false;if(this.botTimer)clearInterval(this.botTimer);
         var self=this;
-        this.renderMorpion(win?'🎉 Tu as gagné !':(msg||'Perdu...'));
+        this.renderMorpion(win?I18n.t('mg_you_won'):(msg||I18n.t('mg_retry')));
         setTimeout(function(){
             document.getElementById('minigame-screen').classList.add('hidden');
             if(self.onComplete)self.onComplete(win);
@@ -267,7 +267,7 @@ const Minigames = {
 
     startSudoku(onComplete) {
         this.onComplete=onComplete;
-        document.getElementById('minigame-title').textContent='Mini Sudoku 🧠';
+        document.getElementById('minigame-title').textContent=I18n.t('mg_sudoku_title');
         document.getElementById('minigame-screen').classList.remove('hidden');
         this.startSudokuGame();
     },
@@ -317,10 +317,10 @@ const Minigames = {
     },
     endTapGame() {
         const area=document.getElementById('minigame-area');
-        // Économie : chaque grain attrapé = 2 pièces + 1% faim, + bonus bonheur
-        const coins=this.score*2, faim=Math.min(40,this.score), bonus=Math.min(20,this.score);
-        this._reward={coins:coins,faim:faim,bonheur:bonus,jeu:20};
-        area.innerHTML=`<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌾</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">Score : ${this.score}</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">🪙 +${coins} pièces<br>🍽️ +${faim}% faim<br>😊 +${bonus}% bonheur</div><button class="mini-btn" id="mg-done">Récolter ! 🐓</button></div>`;
+        // 1 truc collecté = 1% de jauge de jeu. Aucun gain de pièces ni de faim.
+        const jeu=Math.max(0,this.score);
+        this._reward={jeu:jeu,jeuOnly:true};
+        area.innerHTML=`<div class="mini-result"><div style="font-size:48px;margin-bottom:12px">🌾</div><div style="font-size:24px;font-weight:800;color:#f0c040;margin-bottom:4px">${I18n.t('mg_grains_score',{s:this.score})}</div><div style="font-size:14px;color:#5fe08a;margin:8px 0;line-height:1.6">${I18n.t('mg_grains_result',{j:jeu})}</div><button class="mini-btn" id="mg-done">${I18n.t('mg_collect')}</button></div>`;
         document.getElementById('mg-done').addEventListener('click',()=>{this.close();if(this.onComplete)this.onComplete(this._reward);});
     },
 
@@ -398,9 +398,9 @@ const Minigames = {
         const bonus=won?Math.max(5,20-elapsed-mistakes*3):2;
         area.innerHTML=`<div class="mini-result">
             <div style="font-size:48px;margin-bottom:12px">${won?'🧠':'😵'}</div>
-            <div style="font-size:24px;font-weight:800;color:${won?'#f0c040':'#e74c3c'};margin-bottom:8px">${won?'Résolu !':'Trop d\'erreurs !'}</div>
-            <div style="font-size:14px;color:#8888aa;margin-bottom:16px">Temps: ${elapsed}s · Bonus intellect: +${bonus}</div>
-            <button class="mini-btn" id="mg-done">${won?'Brillant ! 🐓':'Réessayer...'}</button>
+            <div style="font-size:24px;font-weight:800;color:${won?'#f0c040':'#e74c3c'};margin-bottom:8px">${won?I18n.t('mg_solved'):I18n.t('mg_too_many')}</div>
+            <div style="font-size:14px;color:#8888aa;margin-bottom:16px">${I18n.t('mg_sudoku_stats',{t:elapsed,b:bonus})}</div>
+            <button class="mini-btn" id="mg-done">${won?I18n.t('mg_brilliant'):I18n.t('mg_retry')}</button>
         </div>`;
         document.getElementById('mg-done').addEventListener('click',()=>{this.close();if(this.onComplete)this.onComplete(bonus);});
     },

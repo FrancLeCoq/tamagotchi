@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -16,27 +16,35 @@
         <div class="splash-card">
             <div class="splash-rooster-wrap"><img src="assets/sprites/francis.png" alt="Francis" class="splash-francis"></div>
             <h1 class="splash-title">TAMAGOTCHI</h1>
-            <p class="splash-tagline">ÉLÈVE FRANCIS · FAIS-LE ÉVOLUER</p>
-            <p class="splash-franc">LES HOLDERS <span class="franc-highlight">$FRANC</span> JOUENT EN ILLIMITÉ</p>
+            <p class="splash-tagline" data-i18n="splash_tagline">RAISE FRANCIS · EVOLVE HIM</p>
+            <p class="splash-franc"><span class="franc-highlight">$FRANC</span> <span data-i18n="splash_franc">HOLDERS PLAY UNLIMITED</span></p>
 
-            <button class="eg-play hidden" id="btn-resume"><span class="eg-play-circle">▶</span> REPRENDRE</button>
-            <button class="eg-play" id="btn-new-game"><span class="eg-play-circle">▶</span> NOUVELLE PARTIE</button>
+            <button class="eg-play hidden" id="btn-resume"><span class="eg-play-circle">▶</span> <span data-i18n="btn_resume">RESUME</span></button>
+            <button class="eg-play" id="btn-new-game"><span class="eg-play-circle">▶</span> <span data-i18n="btn_new_game">NEW GAME</span></button>
+
+            <div class="lang-select">
+                <span class="lang-select-label" data-i18n="lang_label">Language</span>
+                <select id="lang-dropdown" class="lang-dropdown">
+                    <option value="en" data-i18n="lang_en">English</option>
+                    <option value="fr" data-i18n="lang_fr">French</option>
+                </select>
+            </div>
 
             <button class="eg-holder" id="btn-connect-wallet">
                 <span class="eg-holder-lock">🔒</span>
                 <span class="eg-holder-mid"><span class="eg-coin">①</span> <b>$FRANC HOLDER · UNLIMITED</b></span>
-                <span class="eg-holder-right" id="holder-amount">Connect Wallet →</span>
+                <span class="eg-holder-right" id="holder-amount" data-i18n="connect_wallet">Connect Wallet →</span>
             </button>
 
             <div class="eg-rules">
-                <p class="eg-rules-title">💎 $FRANC RULES</p>
-                <p class="eg-rules-line"><span class="eg-rules-emoji">💜</span> Sans <b>$FRANC</b> : <span class="eg-rules-hl">FIN APRÈS LE STADE POUSSIN</span></p>
-                <p class="eg-rules-line"><span class="eg-rules-emoji">💚</span> Avec <b>$FRANC</b> ou <b>⭐</b> : <span class="eg-rules-hl">JEU ILLIMITÉ</span></p>
+                <p class="eg-rules-title">💎 <span data-i18n="franc_rules">$FRANC RULES</span></p>
+                <p class="eg-rules-line"><span class="eg-rules-emoji">💜</span> <span data-i18n="rule_without_a">Without</span> <b>$FRANC</b> : <span class="eg-rules-hl" data-i18n="rule_without_b">ENDS AFTER CHICK STAGE</span></p>
+                <p class="eg-rules-line"><span class="eg-rules-emoji">💚</span> <span data-i18n="rule_with_a">With</span> <b>$FRANC</b> <span data-i18n="rule_with_b">or</span> <b>⭐</b> : <span class="eg-rules-hl" data-i18n="rule_with_c">UNLIMITED PLAY</span></p>
             </div>
             <div class="eg-leaderboard">
                 <span class="eg-lb-icon">🏆</span>
-                <span class="eg-lb-label">Record de longévité</span>
-                <span class="eg-lb-value" id="lb-record">0 jours</span>
+                <span class="eg-lb-label" data-i18n="record_label">Longevity record</span>
+                <span class="eg-lb-value" id="lb-record">0</span>
             </div>
         </div>
     </div>
@@ -68,24 +76,25 @@
         <div class="stats-panel" id="stats-panel">
             <!-- Bonheur général = moyenne de toutes les jauges — pleine largeur -->
             <div class="sp-row sp-bonheur-main">
-                <div class="sp-stat sp-full"><span class="sp-icon">😊</span><span class="sp-label sp-label-main">Bonheur</span><div class="sp-track sp-track-main"><div class="sp-fill" id="stat-bonheur-main" style="width:50%"></div></div><span class="sp-pct" id="pct-bonheur-main">50%</span></div>
+                <div class="sp-stat sp-full"><span class="sp-icon">😊</span><span class="sp-label sp-label-main" data-i18n="stat_happiness">Happiness</span><div class="sp-track sp-track-main"><div class="sp-fill" id="stat-bonheur-main" style="width:50%"></div></div><span class="sp-pct" id="pct-bonheur-main">50%</span></div>
             </div>
             <div class="sp-row">
-                <div class="sp-stat"><span class="sp-icon">🌾</span><span class="sp-label">Faim</span><div class="sp-track"><div class="sp-fill" id="stat-faim"></div></div><span class="sp-pct" id="pct-faim">80%</span></div>
-                <div class="sp-stat"><span class="sp-icon">🎮</span><span class="sp-label">Jeu</span><div class="sp-track"><div class="sp-fill" id="stat-jeu"></div></div><span class="sp-pct" id="pct-jeu">0%</span></div>
+                <div class="sp-stat"><span class="sp-icon">🌾</span><span class="sp-label" data-i18n="stat_hunger">Hunger</span><div class="sp-track"><div class="sp-fill" id="stat-faim"></div></div><span class="sp-pct" id="pct-faim">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">🎮</span><span class="sp-label" data-i18n="stat_play">Play</span><div class="sp-track"><div class="sp-fill" id="stat-jeu"></div></div><span class="sp-pct" id="pct-jeu">0%</span></div>
             </div>
             <div class="sp-row">
-                <div class="sp-stat"><span class="sp-icon">⚡</span><span class="sp-label">Énergie</span><div class="sp-track"><div class="sp-fill sp-yellow" id="stat-energie"></div></div><span class="sp-pct" id="pct-energie">80%</span></div>
-                <div class="sp-stat"><span class="sp-icon">❤️</span><span class="sp-label">Santé</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-sante"></div></div><span class="sp-pct" id="pct-sante">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">⚡</span><span class="sp-label" data-i18n="stat_energy">Energy</span><div class="sp-track"><div class="sp-fill sp-yellow" id="stat-energie"></div></div><span class="sp-pct" id="pct-energie">80%</span></div>
+                <div class="sp-stat"><span class="sp-icon">❤️</span><span class="sp-label" data-i18n="stat_health">Health</span><div class="sp-track"><div class="sp-fill sp-green" id="stat-sante"></div></div><span class="sp-pct" id="pct-sante">80%</span></div>
             </div>
             <div class="sp-row">
-                <div class="sp-stat"><span class="sp-icon">🧼</span><span class="sp-label">Hygiène</span><div class="sp-track"><div class="sp-fill sp-blue" id="stat-hygiene"></div></div><span class="sp-pct" id="pct-hygiene">90%</span></div>
-                <div class="sp-stat"><span class="sp-icon">💕</span><span class="sp-label">Amour</span><div class="sp-track"><div class="sp-fill sp-pink" id="stat-amour"></div></div><span class="sp-pct" id="pct-amour">30%</span></div>
+                <div class="sp-stat"><span class="sp-icon">🧼</span><span class="sp-label" data-i18n="stat_hygiene">Hygiene</span><div class="sp-track"><div class="sp-fill sp-blue" id="stat-hygiene"></div></div><span class="sp-pct" id="pct-hygiene">90%</span></div>
+                <div class="sp-stat"><span class="sp-icon">💕</span><span class="sp-label" data-i18n="stat_love">Love</span><div class="sp-track"><div class="sp-fill sp-pink" id="stat-amour"></div></div><span class="sp-pct" id="pct-amour">30%</span></div>
             </div>
         </div>
 
         <div class="scene-container">
             <div class="scene" id="scene">
+                <div class="scene-notif hidden" id="scene-notif"><span id="scene-notif-text"></span></div>
                 <div class="layer-sky" id="layer-sky"></div><div class="layer-clouds" id="layer-clouds"></div>
                 <canvas id="weather-canvas" class="weather-canvas"></canvas>
                 <canvas id="sky-canvas" class="sky-canvas"></canvas>
@@ -115,45 +124,45 @@
         <div class="weather-banner" id="weather-banner"></div>
         <div class="hint-bar" id="hint-bar" style="display:none"></div>
         <div class="action-row">
-            <button class="act-btn act-green" id="btn-nourrir"><span class="act-icon">🍽️</span><span class="act-label">Nourrir</span></button>
-            <button class="act-btn act-blue" id="btn-jouer"><span class="act-icon">🎮</span><span class="act-label">Jouer</span></button>
-            <button class="act-btn act-purple" id="btn-dormir"><span class="act-icon">💤</span><span class="act-label">Dormir</span></button>
-            <button class="act-btn act-pink" id="btn-visite"><span class="act-icon">💕</span><span class="act-label">Câliner</span></button>
-            <button class="act-btn act-orange" id="btn-soigner"><span class="act-icon">💊</span><span class="act-label">Soigner</span></button>
+            <button class="act-btn act-green" id="btn-nourrir"><span class="act-icon">🍽️</span><span class="act-label" data-i18n="act_feed">Feed</span></button>
+            <button class="act-btn act-blue" id="btn-jouer"><span class="act-icon">🎮</span><span class="act-label" data-i18n="act_play">Play</span></button>
+            <button class="act-btn act-purple" id="btn-dormir"><span class="act-icon">💤</span><span class="act-label" data-i18n="act_sleep">Sleep</span></button>
+            <button class="act-btn act-pink" id="btn-visite"><span class="act-icon">💕</span><span class="act-label" data-i18n="act_cuddle">Cuddle</span></button>
+            <button class="act-btn act-orange" id="btn-soigner"><span class="act-icon">💊</span><span class="act-label" data-i18n="act_heal">Heal</span></button>
         </div>
 
         <div class="bottom-nav">
-            <button class="nav-btn" id="btn-stats"><span class="nav-icon">📊</span><span class="nav-label">Stats</span></button>
-            <button class="nav-btn" id="btn-housing"><span class="nav-icon">🏗️</span><span class="nav-label">Bâtiments</span></button>
-            <button class="nav-btn" id="btn-sound"><span class="nav-icon" id="sound-icon">🔇</span><span class="nav-label">Son</span></button>
-            <button class="nav-btn" id="btn-pause"><span class="nav-icon" id="pause-icon">⏸️</span><span class="nav-label">Pause</span></button>
-            <button class="nav-btn" id="btn-nav-more"><span class="nav-icon">⚙️</span><span class="nav-label">Plus</span></button>
+            <button class="nav-btn" id="btn-stats"><span class="nav-icon">📊</span><span class="nav-label" data-i18n="nav_stats">Stats</span></button>
+            <button class="nav-btn" id="btn-housing"><span class="nav-icon">🏗️</span><span class="nav-label" data-i18n="nav_buildings">Buildings</span></button>
+            <button class="nav-btn" id="btn-sound"><span class="nav-icon" id="sound-icon">🔇</span><span class="nav-label" data-i18n="nav_sound">Sound</span></button>
+            <button class="nav-btn" id="btn-pause"><span class="nav-icon" id="pause-icon">⏸️</span><span class="nav-label" data-i18n="nav_pause">Pause</span></button>
+            <button class="nav-btn" id="btn-nav-more"><span class="nav-icon">⚙️</span><span class="nav-label" data-i18n="nav_more">More</span></button>
         </div>
     </div>
 
     <!-- OVERLAYS -->
-    <div id="care-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Soins 💊</h2><button class="close-btn" data-close="care-screen">✕</button></div><div class="care-grid"><button class="care-item care-heal" id="btn-heal-direct"><span class="care-icon">🩺</span><span>Guérir</span></button><button class="care-item" id="btn-toilette"><span class="care-icon">🚽</span><span>Toilette</span></button><button class="care-item" id="btn-douche"><span class="care-icon">🚿</span><span>Douche</span></button><button class="care-item" id="btn-brossage"><span class="care-icon">🪥</span><span>Brossage</span></button></div></div></div>
-    <div id="more-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Paramètres</h2><button class="close-btn" data-close="more-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-journal"><span class="care-icon">📔</span><span>Journal</span></button><button class="care-item" id="btn-notif"><span class="care-icon">🔔</span><span>Notifications</span></button><button class="care-item" id="btn-wallet-game"><span class="care-icon">🔗</span><span>Wallet</span></button><button class="care-item care-danger" id="btn-reset"><span class="care-icon">🗑️</span><span>Reset</span></button></div></div></div>
-    <div id="food-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Nourrir</h2><button class="close-btn" data-close="food-screen">✕</button></div><div class="food-grid" id="food-grid"></div></div></div>
-    <div id="stats-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2>Statistiques</h2><button class="close-btn" data-close="stats-screen">✕</button></div><div class="stats-detail" id="stats-detail"></div></div></div>
-    <div id="minigame-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2 id="minigame-title">Mini-jeu</h2><div class="mg-title-cd hidden" id="mg-title-cd"><svg viewBox="0 0 40 40"><circle class="mg-cd-track" cx="20" cy="20" r="16"/><circle class="mg-cd-fill" cx="20" cy="20" r="16" id="mg-title-arc"/></svg><span class="mg-cd-num" id="mg-title-num">60</span></div><button class="close-btn" data-close="minigame-screen">✕</button></div><div class="minigame-area" id="minigame-area"></div></div></div>
-    <div id="play-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>Jouer 🎮</h2><button class="close-btn" data-close="play-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-play-game"><span class="care-icon">🎯</span><span>Mini-jeu</span></button><button class="care-item" id="btn-play-study"><span class="care-icon">📖</span><span>Lecture</span></button><button class="care-item" id="btn-play-sudoku"><span class="care-icon">🔢</span><span>Sudoku</span></button><button class="care-item" id="btn-play-morpion"><span class="care-icon">⭕</span><span>Morpion</span></button><button class="care-item" id="btn-play-catch"><span class="care-icon">🌽</span><span>Attrape</span></button><button class="care-item" id="btn-play-roost"><span class="care-icon">👆</span><span>Roost Clicker</span></button></div></div></div>
-    <div id="housing-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2>Bâtiments 🏗️</h2><button class="close-btn" data-close="housing-screen">✕</button></div><div id="housing-list"></div></div></div>
+    <div id="care-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2 data-i18n="hdr_care">Care 💊</h2><button class="close-btn" data-close="care-screen">✕</button></div><div class="care-grid"><button class="care-item care-heal" id="btn-heal-direct"><span class="care-icon">🩺</span><span data-i18n="care_heal">Cure</span></button><button class="care-item" id="btn-toilette"><span class="care-icon">🚽</span><span data-i18n="care_toilet">Toilet</span></button><button class="care-item" id="btn-douche"><span class="care-icon">🚿</span><span data-i18n="care_shower">Shower</span></button><button class="care-item" id="btn-brossage"><span class="care-icon">🪥</span><span data-i18n="care_brush">Brushing</span></button></div></div></div>
+    <div id="more-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2 data-i18n="hdr_settings">Settings</h2><button class="close-btn" data-close="more-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-journal"><span class="care-icon">📔</span><span data-i18n="more_journal">Journal</span></button><button class="care-item" id="btn-notif"><span class="care-icon">🔔</span><span data-i18n="more_notif">Notifications</span></button><button class="care-item" id="btn-wallet-game"><span class="care-icon">🔗</span><span data-i18n="more_wallet">Wallet</span></button><button class="care-item care-danger" id="btn-reset"><span class="care-icon">🗑️</span><span data-i18n="more_reset">Reset</span></button></div></div></div>
+    <div id="food-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2 data-i18n="hdr_feed">Feed</h2><button class="close-btn" data-close="food-screen">✕</button></div><div class="food-grid" id="food-grid"></div></div></div>
+    <div id="stats-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2 data-i18n="hdr_stats">Statistics</h2><button class="close-btn" data-close="stats-screen">✕</button></div><div class="stats-detail" id="stats-detail"></div></div></div>
+    <div id="minigame-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2 id="minigame-title" data-i18n="hdr_minigame">Mini-game</h2><div class="mg-title-cd hidden" id="mg-title-cd"><svg viewBox="0 0 40 40"><circle class="mg-cd-track" cx="20" cy="20" r="16"/><circle class="mg-cd-fill" cx="20" cy="20" r="16" id="mg-title-arc"/></svg><span class="mg-cd-num" id="mg-title-num">60</span></div><button class="close-btn" data-close="minigame-screen">✕</button></div><div class="minigame-area" id="minigame-area"></div></div></div>
+    <div id="play-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2 data-i18n="hdr_play">Play 🎮</h2><button class="close-btn" data-close="play-screen">✕</button></div><div class="care-grid"><button class="care-item" id="btn-play-game"><span class="care-icon">🎯</span><span data-i18n="play_minigame">Mini-game</span></button><button class="care-item" id="btn-play-study"><span class="care-icon">📖</span><span data-i18n="play_read">Reading</span></button><button class="care-item" id="btn-play-sudoku"><span class="care-icon">🔢</span><span data-i18n="play_sudoku">Sudoku</span></button><button class="care-item" id="btn-play-morpion"><span class="care-icon">⭕</span><span data-i18n="play_morpion">Tic-tac-toe</span></button><button class="care-item" id="btn-play-catch"><span class="care-icon">🌽</span><span data-i18n="play_catch">Catch</span></button><button class="care-item" id="btn-play-roost"><span class="care-icon">👆</span><span data-i18n="play_roost">Roost Clicker</span></button></div></div></div>
+    <div id="housing-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full"><div class="overlay-header"><h2 data-i18n="hdr_buildings">Buildings 🏗️</h2><button class="close-btn" data-close="housing-screen">✕</button></div><div id="housing-list"></div></div></div>
     <div id="farm-screen" class="overlay hidden"><div class="overlay-panel overlay-panel-full" style="max-height:95vh;padding:0"><div class="farm-header"><div class="farm-gauges">
   <div class="farm-bonheur-main" id="farm-bonheur-row">
     <span class="farm-bon-icon">😊</span>
     <div class="farm-bon-content">
-      <div class="farm-bon-header"><span class="farm-bon-label">Bonheur enclos</span><span id="farm-bonheur-pct" class="farm-bon-pct">50%</span></div>
+      <div class="farm-bon-header"><span class="farm-bon-label" data-i18n="farm_happiness">Pen happiness</span><span id="farm-bonheur-pct" class="farm-bon-pct">50%</span></div>
       <div class="farm-bon-track-wrap"><div class="farm-gauge-fill farm-bon-fill" id="farm-bonheur-bar" style="width:50%"></div></div>
     </div>
   </div>
   <div class="farm-sub-gauges">
-    <div class="farm-gauge" id="farm-feed-row"><span>🌾</span><div class="farm-gauge-track"><div class="farm-gauge-fill" id="farm-feed-bar"></div></div><button class="farm-gauge-btn" id="btn-farm-feed">Nourrir</button></div>
-    <div class="farm-gauge" id="farm-clean-row"><span>🧹</span><div class="farm-gauge-track"><div class="farm-gauge-fill" id="farm-clean-bar"></div></div><button class="farm-gauge-btn" id="btn-farm-clean">Nettoyer</button></div>
+    <div class="farm-gauge" id="farm-feed-row"><span>🌾</span><div class="farm-gauge-track"><div class="farm-gauge-fill" id="farm-feed-bar"></div></div><button class="farm-gauge-btn" id="btn-farm-feed" data-i18n="farm_feed">Feed</button></div>
+    <div class="farm-gauge" id="farm-clean-row"><span>🧹</span><div class="farm-gauge-track"><div class="farm-gauge-fill" id="farm-clean-bar"></div></div><button class="farm-gauge-btn" id="btn-farm-clean" data-i18n="farm_clean">Clean</button></div>
   </div>
-</div><div class="farm-info" id="farm-info"></div><div class="farm-actions"><button class="farm-buy-btn" id="btn-farm-buy">🐔 Acheter (50🪙)</button><button class="close-btn" data-close="farm-screen">✕</button></div><div class="farm-death-notice hidden" id="farm-death-notice">💀</div></div><div class="farm-scene" id="farm-scene"><canvas id="farm-canvas" style="width:100%;height:100%"></canvas><div class="farm-francis" id="farm-francis"><img id="farm-francis-img" src="assets/sprites/poussin.png" draggable="false"></div></div></div></div>
-    <div id="evolution-screen" class="overlay hidden"><div class="evolution-content"><h2 class="evo-title">✨ Évolution ! ✨</h2><div class="evo-stages"><div class="evo-old" id="evo-old"></div><div class="evo-arrow">→</div><div class="evo-new" id="evo-new"></div></div><p class="evo-desc" id="evo-desc"></p><button class="btn-start" id="btn-evo-ok">Cocorico !</button></div></div>
-    <div id="wallet-gate" class="overlay hidden"><div class="wallet-gate-content"><img src="assets/sprites/poussin.png" class="wg-img"><h2>🔒 Mode Poussin terminé !</h2><p>Connecte ton wallet pour débloquer la suite !</p><button class="btn-start" id="btn-wallet-gate">🔗 Connecter Wallet</button><button class="btn-link" id="btn-wallet-skip">Recommencer en poussin →</button></div></div>
+</div><div class="farm-info" id="farm-info"></div><div class="farm-actions"><button class="farm-buy-btn" id="btn-farm-buy" data-i18n="farm_buy">🐔 Buy (50🪙)</button><button class="close-btn" data-close="farm-screen">✕</button></div><div class="farm-death-notice hidden" id="farm-death-notice">💀</div></div><div class="farm-scene" id="farm-scene"><canvas id="farm-canvas" style="width:100%;height:100%"></canvas><div class="farm-francis" id="farm-francis"><img id="farm-francis-img" src="assets/sprites/poussin.png" draggable="false"></div></div></div></div>
+    <div id="evolution-screen" class="overlay hidden"><div class="evolution-content"><h2 class="evo-title" data-i18n="evo_title">✨ Evolution! ✨</h2><div class="evo-stages"><div class="evo-old" id="evo-old"></div><div class="evo-arrow">→</div><div class="evo-new" id="evo-new"></div></div><p class="evo-desc" id="evo-desc"></p><button class="btn-start" id="btn-evo-ok" data-i18n="evo_ok">Cock-a-doodle-doo!</button></div></div>
+    <div id="wallet-gate" class="overlay hidden"><div class="wallet-gate-content"><img src="assets/sprites/poussin.png" class="wg-img"><h2 data-i18n="wg_title">🔒 Chick mode over!</h2><p data-i18n="wg_text">Connect your wallet to unlock the rest!</p><button class="btn-start" id="btn-wallet-gate" data-i18n="wg_connect">🔗 Connect Wallet</button><button class="btn-link" id="btn-wallet-skip" data-i18n="wg_skip">Restart as a chick →</button></div></div>
     <div id="event-overlay" class="event-overlay hidden">
         <div class="event-box">
             <div class="event-emoji" id="event-emoji">🎲</div>
@@ -162,24 +171,25 @@
             <div class="event-choices" id="event-choices"></div>
         </div>
     </div>
-    <div id="quests-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>🎯 Quêtes du jour</h2><button class="close-btn" data-close="quests-screen">✕</button></div><div class="quests-list" id="quests-list"></div></div></div>
-    <div id="journal-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2>📔 Journal de Francis</h2><button class="close-btn" data-close="journal-screen">✕</button></div><div class="journal-list" id="journal-list"></div></div></div>
+    <div id="quests-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2 data-i18n="hdr_quests">🎯 Daily quests</h2><button class="close-btn" data-close="quests-screen">✕</button></div><div class="quests-list" id="quests-list"></div></div></div>
+    <div id="journal-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2 data-i18n="hdr_journal">📔 Francis’ journal</h2><button class="close-btn" data-close="journal-screen">✕</button></div><div class="journal-list" id="journal-list"></div></div></div>
     <div id="pause-overlay" class="pause-overlay hidden">
         <div class="pause-box">
             <div class="pause-big-icon">⏸️</div>
-            <div class="pause-text">PAUSE</div>
-            <button class="pause-resume-btn" id="btn-pause-resume">▶ Reprendre</button>
+            <div class="pause-text" data-i18n="pause_text">PAUSE</div>
+            <button class="pause-resume-btn" id="btn-pause-resume" data-i18n="pause_resume">▶ Resume</button>
         </div>
     </div>
     <div id="birth-video-overlay" class="birth-video-overlay hidden">
         <video id="birth-video" class="birth-video" playsinline muted>
             <source src="assets/video/naissance.mp4" type="video/mp4">
         </video>
-        <button id="birth-skip" class="birth-skip">Passer ▶</button>
+        <button id="birth-skip" class="birth-skip" data-i18n="birth_skip">Skip ▶</button>
     </div>
-    <div id="death-screen" class="overlay hidden"><div class="death-content"><img src="assets/sprites/faucheuse.png" class="death-faucheuse"><h2 class="death-title">Francis est parti...</h2><p class="death-desc" id="death-desc"></p><div id="death-stats"></div><button class="btn-start" id="btn-restart">Nouvel œuf 🥚</button></div></div>
+    <div id="death-screen" class="overlay hidden"><div class="death-content"><img src="assets/sprites/faucheuse.png" class="death-faucheuse"><h2 class="death-title" data-i18n="death_title">Francis is gone...</h2><p class="death-desc" id="death-desc"></p><div id="death-stats"></div><button class="btn-start" id="btn-restart" data-i18n="death_restart">New egg 🥚</button></div></div>
     <div class="toast hidden" id="toast"><span id="toast-text"></span></div>
 
+    <script src="js/i18n.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/engine.js"></script>
     <script src="js/renderer.js"></script>

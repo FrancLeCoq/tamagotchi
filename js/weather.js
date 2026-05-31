@@ -59,6 +59,14 @@ var Weather={
 
     _applySky:function(){
         var sky=document.getElementById('layer-sky');if(!sky)return;
+        var c=this.getSkyColors();
+        sky.style.background='linear-gradient(180deg,'+c.top+' 0%,'+c.bottom+' 100%)';
+        var ov=document.getElementById('scene-overlay');
+        if(ov)ov.style.background='rgba(5,5,30,'+((1-this.getBri())*.3)+')';
+    },
+
+    // Renvoie les couleurs RGB du ciel pour l'heure courante (réutilisé par l'enclos)
+    getSkyColors:function(){
         var h=this.getHour(),t,r1,g1,b1,r2,g2,b2;
         if(h>=8&&h<17){r1=74;g1=144;b1=208;r2=135;g2=206;b2=235;}
         else if(h>=17&&h<19){t=(h-17)/2;r1=74-48*t|0;g1=144-112*t|0;b1=208-144*t|0;r2=135+97*t|0;g2=206-74*t|0;b2=235-143*t|0;}
@@ -66,9 +74,7 @@ var Weather={
         else if(h>=21||h<4){r1=6;g1=8;b1=16;r2=10;g2=22;b2=40;}
         else if(h>=4&&h<6){t=(h-4)/2;r1=6+20*t|0;g1=8+24*t|0;b1=16+64*t|0;r2=10+202*t|0;g2=22+106*t|0;b2=40+56*t|0;}
         else{t=(h-6)/2;r1=26+48*t|0;g1=32+112*t|0;b1=80+128*t|0;r2=212-77*t|0;g2=128+78*t|0;b2=96+139*t|0;}
-        sky.style.background='linear-gradient(180deg,rgb('+r1+','+g1+','+b1+') 0%,rgb('+r2+','+g2+','+b2+') 100%)';
-        var ov=document.getElementById('scene-overlay');
-        if(ov)ov.style.background='rgba(5,5,30,'+((1-this.getBri())*.3)+')';
+        return {top:'rgb('+r1+','+g1+','+b1+')',bottom:'rgb('+r2+','+g2+','+b2+')'};
     },
 
     _moveCelestial:function(){
@@ -184,7 +190,7 @@ var Weather={
         var ho=(typeof Engine!=='undefined'&&Engine.HOUSING)?Engine.HOUSING[l]||Engine.HOUSING[0]:{bg:'poulailler'};
         var src='assets/backgrounds/'+ho.bg+'_jour.png';
         // Per-building vertical position from bottom
-        var vPos={poulailler:25,bois:25,brique:10,chateau:15,palace:30,spacex:18}[ho.bg]||25;
+        var vPos={poulailler:25,bois:25,brique:10,chateau:15,palace:20,spacex:18}[ho.bg]||25;
         var el=document.getElementById('layer-building');
         if(el){el.style.bottom=vPos+'%';
             // Night: dim the building + warm doorway glow
@@ -228,15 +234,18 @@ var Weather={
             var rs=this.SCHEDULE.rain[j][0],re=this.SCHEDULE.rain[j][1];
             if(h>=rs&&h<re){var mid=(rs+re)/2;inten=h<mid?(h-rs)/(mid-rs):1-(h-mid)/(re-mid);}
         }
+        // Pluie forcée (tempête) : pluie TRÈS forte
+        if(this._forcedRain)inten=1.4;
         var tgt=Math.floor(inten*200);
         while(this.raindrops.length<tgt)this.raindrops.push({x:Math.random()*cw,y:Math.random()*-ch,s:5+Math.random()*8,l:10+Math.random()*18});
         while(this.raindrops.length>tgt)this.raindrops.pop();
         if(this.raindrops.length){
-            ctx.strokeStyle='rgba(160,196,232,.65)';ctx.lineWidth=1.5;
+            var heavy=this._forcedRain;
+            ctx.strokeStyle=heavy?'rgba(180,210,240,.8)':'rgba(160,196,232,.65)';ctx.lineWidth=heavy?2.2:1.5;
             for(var k=0;k<this.raindrops.length;k++){
-                var d=this.raindrops[k];d.y+=d.s;d.x-=1.5;
+                var d=this.raindrops[k];d.y+=d.s*(heavy?1.5:1);d.x-=(heavy?3:1.5);
                 if(d.y>ch){d.y=-30;d.x=Math.random()*cw;}
-                ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-2,d.y+d.l);ctx.stroke();
+                ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x-(heavy?4:2),d.y+d.l*(heavy?1.4:1));ctx.stroke();
             }
         }
         var self=this;requestAnimationFrame(function(){self._loop();});

@@ -22,52 +22,52 @@ var Features = {
     // ═══════════════════════════════════════════════════════
     EVENTS:[
         {
-            id:'renard', emoji:'🦊', titre:'Les renards attaquent !',
-            intro:5, // 5s d'animation renards + sirène
-            texte:'Les renards envahissent le poulailler ! Que fais-tu ?',
+            id:'renard', emoji:'🦊', titreKey:'ev_fox_title',
+            intro:10, // 10s d'animation renards + sirène
+            texteKey:'ev_fox_text',
             choix:[
-                {label:'Cacher Francis + appeler le chasseur 🔫', effet:function(p){
+                {labelKey:'ev_fox_c1', effet:function(p){
                     var cout=Math.floor((p.coins||0)*0.1);p.coins-=cout;
                     Features._runChasseur();
-                    return 'Le chasseur sécurise le poulailler ! (-'+cout+' 🪙)';
+                    return I18n.t('ev_fox_r1',{c:cout});
                 }},
-                {label:'Cacher Francis sans payer 🙈', effet:function(p){
-                    p.sante=0;p.faim=0;p.bonheur=0;p.estMort=true;p.causeMort='Dévoré par les renards';
-                    return 'Francis a été dévoré par les renards... 💀';
+                {labelKey:'ev_fox_c2', effet:function(p){
+                    p.sante=0;p.faim=0;p.bonheur=0;p.estMort=true;p.causeMortKey='ev_fox_death';p.causeMort=I18n.t('ev_fox_death');
+                    return I18n.t('ev_fox_r2');
                 }}
             ]
         },
         {
-            id:'tempete', emoji:'🌪️', titre:'Tempête !',
-            intro:5, // 5s tornades + pluie + son
-            texte:'Une tempête fait rage ! Que fais-tu ?',
+            id:'tempete', emoji:'🌪️', titreKey:'ev_storm_title',
+            intro:10, // 10s tornades + pluie + son
+            texteKey:'ev_storm_text',
             choix:[
-                {label:'Cacher Francis 🏠', effet:function(p){
+                {labelKey:'ev_storm_c1', effet:function(p){
                     Features._runTempeteHide();
-                    return 'Francis se met à l\'abri, le temps se calme...';
+                    return I18n.t('ev_storm_r1');
                 }},
-                {label:'Apprendre à voler 🪽', effet:function(p){
-                    p.sante=0;p.estMort=true;p.causeMort='Emporté par la tempête';
-                    return 'Francis s\'est envolé... et n\'est jamais revenu 💀';
+                {labelKey:'ev_storm_c2', effet:function(p){
+                    p.sante=0;p.estMort=true;p.causeMortKey='ev_storm_death';p.causeMort=I18n.t('ev_storm_death');
+                    return I18n.t('ev_storm_r2');
                 }}
             ]
         },
         {
-            id:'malade', emoji:'🦠', titre:'PANDÉMIE — Covid19 !',
-            intro:5, // 5s virus partout
-            texte:'Une pandémie frappe le poulailler ! Vaccines-tu Francis ?',
+            id:'malade', emoji:'🦠', titreKey:'ev_sick_title',
+            intro:10, // 10s virus partout + sirène
+            texteKey:'ev_sick_text',
             choix:[
-                {label:'Vacciner 💉', effet:function(p){Features._runVaccin(p);return 'Vacciné ! Santé à 100% 💪';}},
-                {label:'Pas de vaccin 🚫', effet:function(p){p.sante=0;return 'Catastrophe... Santé tombée à 0% !';}}
+                {labelKey:'ev_sick_c1', effet:function(p){Features._runVaccin(p);return I18n.t('ev_sick_r1');}},
+                {labelKey:'ev_sick_c2', effet:function(p){p.sante=0;Features._stopCovidDecor();return I18n.t('ev_sick_r2');}}
             ]
         },
         {
-            id:'ami', emoji:'👩\u200d🌾', titre:'Visite de Chantal',
-            intro:5, // 5s Chantal apparaît
-            texte:'Chantal, son éleveuse, vient lui rendre visite !',
+            id:'ami', emoji:'👩\u200d🌾', titreKey:'ev_friend_title',
+            intro:10, // 10s Chantal apparaît
+            texteKey:'ev_friend_text',
             choix:[
-                {label:'Faire un câlin 🤗', effet:function(p){p.amour=Engine.cl((p.amour||0)+40);Features._runHearts();return '+40% amour 💕';}},
-                {label:'Récupérer les œufs 🥚', effet:function(p){if(!p.farm)p.farm={};p.farm.pendingEggs=(p.farm.pendingEggs||0)+50;p.farm.totalEggs=(p.farm.totalEggs||0)+50;Features._runEggCoins();return '+50 œufs ! 🥚';}}
+                {labelKey:'ev_friend_c1', effet:function(p){p.amour=Engine.cl((p.amour||0)+40);Features._runHearts();return I18n.t('ev_friend_r1');}},
+                {labelKey:'ev_friend_c2', effet:function(p){if(!p.farm)p.farm={};p.farm.pendingEggs=(p.farm.pendingEggs||0)+50;p.farm.totalEggs=(p.farm.totalEggs||0)+50;Features._runEggCoins();return I18n.t('ev_friend_r2');}}
             ]
         }
     ],
@@ -117,52 +117,68 @@ var Features = {
                     {left:(15+Math.random()*70)+'%',opacity:1,offset:.4},
                     {left:(15+Math.random()*70)+'%',opacity:1,offset:.85},
                     {opacity:.9}
-                ],{duration:5000,delay:idx*120,easing:'ease-out',fill:'forwards'});
+                ],{duration:10000,delay:idx*120,easing:'ease-out',fill:'forwards'});
             })(i);
         }
     },
     _animTempete:function(scene){
         if(!scene)return;
         var dark=document.createElement('div');dark.className='evt-storm-dark evt-tmp';dark.id='evt-storm-dark';scene.appendChild(dark);
-        // Tornades
-        for(var i=0;i<10;i++){
+        // Tornades : PAS de rotation, taille x2, déplacement aléatoire plein écran
+        for(var i=0;i<8;i++){
             (function(idx){
-                var t=document.createElement('div');t.textContent='🌪️';t.className='evt-tmp';
-                t.style.cssText='position:absolute;font-size:'+(36+Math.random()*36)+'px;z-index:232;pointer-events:none;left:'+(Math.random()*90)+'%;top:'+(20+Math.random()*60)+'%';
+                var t=document.createElement('div');t.textContent='🌪️';t.className='evt-tmp evt-tornado';
+                var size=(72+Math.random()*72); // x2 vs avant (36..72 -> 72..144)
+                t.style.cssText='position:absolute;font-size:'+size+'px;z-index:232;pointer-events:none;left:0;top:0;will-change:transform;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))';
                 scene.appendChild(t);
-                if(t.animate)t.animate([
-                    {opacity:0,transform:'translateY(20px) rotate(0deg)'},
-                    {opacity:1,transform:'translateY(0) rotate(360deg)',offset:.3},
-                    {opacity:1,transform:'translateX('+(Math.random()*40-20)+'px) rotate(1080deg)'}
-                ],{duration:5000,delay:idx*150,easing:'linear',fill:'forwards'});
+                var rect=scene.getBoundingClientRect();
+                var W=rect.width||320,H=rect.height||320;
+                var pad=size;
+                // Déplacement aléatoire continu sur tout l'écran (sans tournoyer)
+                function rndX(){return Math.random()*(W-pad);}
+                function rndY(){return Math.random()*(H-pad);}
+                var frames=[];
+                var steps=6;
+                for(var k=0;k<steps;k++){
+                    frames.push({transform:'translate('+rndX()+'px,'+rndY()+'px)',opacity:k===0?0:1});
+                }
+                frames[frames.length-1].opacity=1;
+                if(t.animate)t.animate(frames,{duration:10000,delay:idx*120,easing:'ease-in-out',fill:'forwards'});
             })(i);
         }
-        // Pluie forte + son
+        // Pluie TRÈS forte + son (garantie)
         if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(true);
         try{if(typeof App!=='undefined'&&App._rainAudio){App._rainAudio.currentTime=0;App._rainAudio.play();}}catch(e){}
     },
     _animVirus:function(scene){
         if(!scene)return;
+        // Décor alarmiste : sirène rouge/bleu
+        var alarm=document.createElement('div');alarm.className='evt-covid-alarm evt-tmp';alarm.id='evt-covid-alarm';scene.appendChild(alarm);
+        var band=document.createElement('div');band.className='evt-storm-band evt-tmp evt-alarm-band';band.id='evt-covid-band';band.textContent=I18n.t('ev_sick_alarm');scene.appendChild(band);
         for(var i=0;i<22;i++){
             (function(idx){
-                var v=document.createElement('div');v.textContent='🦠';v.className='evt-tmp';
+                var v=document.createElement('div');v.textContent='🦠';v.className='evt-tmp evt-virus';
                 v.style.cssText='position:absolute;font-size:'+(28+Math.random()*28)+'px;z-index:232;pointer-events:none;left:'+(Math.random()*92)+'%;top:'+(Math.random()*85)+'%';
                 scene.appendChild(v);
                 if(v.animate)v.animate([
                     {opacity:0,transform:'scale(0) rotate(0deg)'},
                     {opacity:.95,transform:'scale(1) rotate(180deg)',offset:.3},
                     {opacity:.95,transform:'scale(1.1) rotate(540deg)'}
-                ],{duration:5000,delay:idx*70,fill:'forwards'});
+                ],{duration:10000,delay:idx*70,fill:'forwards'});
             })(i);
         }
+    },
+    _stopCovidDecor:function(){
+        var a=document.getElementById('evt-covid-alarm');if(a)a.remove();
+        var b=document.getElementById('evt-covid-band');if(b)b.remove();
     },
     _showChantal:function(){
         var scene=document.getElementById('scene');if(!scene)return;
         var old=document.getElementById('evt-chantal');if(old)old.remove();
         var img=document.createElement('img');
         img.src='assets/events/chantal.png';img.id='evt-chantal';img.className='evt-chantal';
-        // À DROITE de l'écran
-        img.style.cssText='position:absolute;right:3%;bottom:10%;width:150px;z-index:14;pointer-events:none';
+        // À DROITE de l'écran, position basse (5% du bas)
+        img.style.cssText='position:absolute;right:3%;bottom:5%;width:150px;z-index:14;pointer-events:none';
         scene.appendChild(img);
         // Pousser Francis à gauche pour éviter la superposition
         if(typeof Renderer!=='undefined')Renderer._chantalActive=true;
@@ -177,18 +193,18 @@ var Features = {
         var hunter=document.createElement('img');hunter.src='assets/events/chasseur.png';hunter.className='evt-hunter evt-tmp';
         hunter.style.cssText='position:absolute;left:50%;bottom:4%;height:80%;transform:translateX(-50%);z-index:233;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))';
         scene.appendChild(hunter);
-        var band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.textContent='🔫 Le chasseur sécurise le poulailler';
+        var band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.textContent=I18n.t('ev_band_hunter');
         scene.appendChild(band);
         this._sceneCountdown(10,'',function(){
             if(hunter.parentNode)hunter.remove();if(band.parentNode)band.remove();
-            if(typeof Renderer!=='undefined')Renderer.toast('✅ Poulailler sécurisé !');
+            if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('ev_toast_secured'));
         });
     },
     _runTempeteHide:function(){
         var scene=document.getElementById('scene');if(!scene)return;
         var self=this;
         var pw=document.getElementById('pet-wrapper');if(pw)pw.style.visibility='hidden';
-        var band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.id='evt-storm-band';band.textContent='🏠 Francis est à l\'abri';scene.appendChild(band);
+        var band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.id='evt-storm-band';band.textContent=I18n.t('ev_band_shelter');scene.appendChild(band);
         this._sceneCountdown(10,'',function(){
             // Calme progressif
             self._clearTmp();
@@ -196,16 +212,36 @@ var Features = {
             if(pw)pw.style.visibility='visible';
             if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(false);
             try{if(typeof App!=='undefined'&&App._rainAudio)App._rainAudio.pause();}catch(e){}
-            if(typeof Renderer!=='undefined')Renderer.toast('☀️ La tempête est passée !');
+            if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('ev_toast_stormgone'));
         });
     },
     _runVaccin:function(p){
+        var scene=document.getElementById('scene');
+        var self=this;
         p.sante=100;
-        // Réutilise l'animation seringue du jeu
+        // Bandeau vaccination
+        var band=null;
+        if(scene){band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.textContent=I18n.t('ev_band_vaccine');scene.appendChild(band);}
+        // Seringue
         if(typeof Renderer!=='undefined'&&Renderer.showBigSyringe){
-            this._clearTmp();
             Renderer.showBigSyringe(function(){if(typeof Renderer!=='undefined')Renderer.update(p);});
         }
+        // Les virus s'estompent progressivement sur 10s
+        if(scene){
+            var viruses=scene.querySelectorAll('.evt-virus');
+            for(var i=0;i<viruses.length;i++){
+                (function(v,idx){
+                    if(v.animate)v.animate([{opacity:.95},{opacity:0}],{duration:10000,delay:idx*60,easing:'ease-in',fill:'forwards'}).onfinish=function(){if(v.parentNode)v.remove();};
+                })(viruses[i],i);
+            }
+        }
+        // Compte à rebours 10s puis nettoyage complet du décor covid
+        this._sceneCountdown(10,'',function(){
+            self._stopCovidDecor();
+            self._clearTmp();
+            if(band&&band.parentNode)band.remove();
+            if(typeof Renderer!=='undefined')Renderer.update(p);
+        });
     },
     _runHearts:function(){
         var scene=document.getElementById('scene');if(!scene)return;
@@ -217,8 +253,8 @@ var Features = {
                 if(ht.animate)ht.animate([{top:'100%',opacity:1},{top:(5+Math.random()*35)+'%',opacity:0}],{duration:2500,delay:idx*70,easing:'ease-out'}).onfinish=function(){ht.remove();};
             })(i);
         }
-        var lbl=document.createElement('div');lbl.className='evt-storm-band evt-tmp';lbl.textContent='💕 +40% amour';scene.appendChild(lbl);
-        this._sceneCountdown(5,'',function(){if(lbl.parentNode)lbl.remove();});
+        var lbl=document.createElement('div');lbl.className='evt-storm-band evt-tmp';lbl.textContent=I18n.t('ev_band_love');scene.appendChild(lbl);
+        this._sceneCountdown(10,'',function(){if(lbl.parentNode)lbl.remove();});
     },
     _runEggCoins:function(){
         var scene=document.getElementById('scene');if(!scene)return;
@@ -230,12 +266,12 @@ var Features = {
                 if(co.animate)co.animate([{top:'-10%',opacity:1},{top:(60+Math.random()*30)+'%',opacity:0}],{duration:2200,delay:idx*70,easing:'ease-in'}).onfinish=function(){co.remove();};
             })(i);
         }
-        var lbl=document.createElement('div');lbl.className='evt-storm-band evt-tmp';lbl.textContent='🥚 +50 œufs !';scene.appendChild(lbl);
-        this._sceneCountdown(5,'',function(){if(lbl.parentNode)lbl.remove();});
+        var lbl=document.createElement('div');lbl.className='evt-storm-band evt-tmp';lbl.textContent=I18n.t('ev_band_eggs');scene.appendChild(lbl);
+        this._sceneCountdown(10,'',function(){if(lbl.parentNode)lbl.remove();});
     },
     _clearTmp:function(){
         var scene=document.getElementById('scene');if(!scene)return;
-        var els=scene.querySelectorAll('.evt-tmp, .evt-fox, .evt-siren');
+        var els=scene.querySelectorAll('.evt-tmp, .evt-fox, .evt-siren, .evt-covid-alarm, .evt-tornado, .evt-virus');
         for(var i=0;i<els.length;i++)els[i].remove();
     },
 
@@ -284,21 +320,30 @@ var Features = {
         var ov=document.getElementById('event-overlay');
         if(!ov)return;
         document.getElementById('event-emoji').textContent=ev.emoji;
-        document.getElementById('event-title').textContent=ev.titre;
-        document.getElementById('event-text').textContent=ev.texte;
+        document.getElementById('event-title').textContent=I18n.t(ev.titreKey);
+        document.getElementById('event-text').textContent=I18n.t(ev.texteKey);
         var box=document.getElementById('event-choices');
         box.innerHTML='';
         ev.choix.forEach(function(ch){
             var b=document.createElement('button');
             b.className='event-choice-btn';
-            b.textContent=ch.label;
+            b.textContent=I18n.t(ch.labelKey);
             b.addEventListener('click',function(){
                 var res=ch.effet(pet);
-                self.addJournal(pet,ev.emoji+' '+ev.titre+' — '+res);
+                self.addJournal(pet,ev.emoji+' '+I18n.t(ev.titreKey)+' — '+res);
                 ov.classList.add('hidden');
                 // Nettoyage post-choix
                 if(ev.id==='ami'){var ch2=document.getElementById('evt-chantal');if(ch2)setTimeout(function(){ch2.remove();if(typeof Renderer!=='undefined')Renderer._chantalActive=false;},5000);}
-                if(ev.id==='tempete'){/* géré par _runTempeteHide / mort */ if(pet.estMort){var d=document.getElementById('evt-storm-dark');if(d)d.remove();var r=document.querySelector('.evt-rain-overlay');if(r)r.remove();}}
+                if(ev.id==='tempete'&&pet.estMort){
+                    // Mort en tempête : on nettoie tout de suite tornades/pluie/obscurité
+                    self._clearTmp();
+                    var d=document.getElementById('evt-storm-dark');if(d)d.remove();
+                    if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(false);
+                    try{if(typeof App!=='undefined'&&App._rainAudio)App._rainAudio.pause();}catch(e){}
+                    var pw=document.getElementById('pet-wrapper');if(pw)pw.style.visibility='visible';
+                }
+                if(ev.id==='renard'&&pet.estMort){self._clearTmp();var sr=document.getElementById('evt-siren');if(sr)sr.remove();}
+                if(ev.id==='malade'&&pet.estMort){self._stopCovidDecor();self._clearTmp();}
                 if(typeof Renderer!=='undefined'){Renderer.toast(ev.emoji+' '+res);Renderer.update(pet);}
                 if(pet.estMort&&typeof Renderer!=='undefined'){if(typeof App!=='undefined')App.saveRecord&&App.saveRecord();Renderer.showDeath(pet);}
                 if(typeof Storage!=='undefined')Storage.save(pet);
@@ -312,14 +357,14 @@ var Features = {
     //  2. QUÊTES JOURNALIÈRES
     // ═══════════════════════════════════════════════════════
     QUEST_POOL:[
-        {id:'feed3', texte:'Nourrir Francis 3 fois', cible:3, reward:30, track:'feed'},
-        {id:'play2', texte:'Jouer 2 fois', cible:2, reward:25, track:'play'},
-        {id:'wash1', texte:'Laver Francis 1 fois', cible:1, reward:20, track:'wash'},
-        {id:'happy80', texte:'Atteindre 80% de bonheur', cible:80, reward:40, track:'happy'},
-        {id:'caress5', texte:'Caresser Francis 5 fois', cible:5, reward:20, track:'caress'},
-        {id:'eggs5', texte:'Récolter 5 œufs', cible:5, reward:35, track:'eggs'},
-        {id:'heal1', texte:'Soigner Francis 1 fois', cible:1, reward:25, track:'heal'},
-        {id:'study1', texte:'Faire lire Francis 1 fois', cible:1, reward:20, track:'study'}
+        {id:'feed3', texteKey:'q_feed3', cible:3, reward:30, track:'feed'},
+        {id:'play2', texteKey:'q_play2', cible:2, reward:25, track:'play'},
+        {id:'wash1', texteKey:'q_wash1', cible:1, reward:20, track:'wash'},
+        {id:'happy80', texteKey:'q_happy80', cible:80, reward:40, track:'happy'},
+        {id:'caress5', texteKey:'q_caress5', cible:5, reward:20, track:'caress'},
+        {id:'eggs5', texteKey:'q_eggs5', cible:5, reward:35, track:'eggs'},
+        {id:'heal1', texteKey:'q_heal1', cible:1, reward:25, track:'heal'},
+        {id:'study1', texteKey:'q_study1', cible:1, reward:20, track:'study'}
     ],
 
     _dayNumber:function(){return Math.floor(Date.now()/86400000);},
@@ -334,7 +379,7 @@ var Features = {
         for(var i=0;i<3&&pool.length;i++){
             var idx=Math.floor(Math.random()*pool.length);
             var q=pool.splice(idx,1)[0];
-            picked.push({id:q.id,texte:q.texte,cible:q.cible,reward:q.reward,track:q.track,progress:0,done:false,claimed:false});
+            picked.push({id:q.id,texteKey:q.texteKey,cible:q.cible,reward:q.reward,track:q.track,progress:0,done:false,claimed:false});
         }
         f.quests=picked; f.questDay=today;
         return f.quests;
@@ -354,7 +399,7 @@ var Features = {
                 if(q.progress>=q.cible){q.progress=q.cible;q.done=true;changed=true;}
             }
         });
-        if(changed&&typeof Renderer!=='undefined')Renderer.toast('🎯 Quête accomplie ! Va la réclamer');
+        if(changed&&typeof Renderer!=='undefined')Renderer.toast(I18n.t('q_done_toast'));
         return changed;
     },
 
@@ -364,8 +409,8 @@ var Features = {
         if(!q||!q.done||q.claimed)return false;
         q.claimed=true;
         pet.coins+=q.reward;
-        this.addJournal(pet,'🎯 Quête réussie : '+q.texte+' (+'+q.reward+' 🪙)');
-        if(typeof Renderer!=='undefined'){Renderer.toast('🪙 +'+q.reward+' pièces !');Renderer.update(pet);}
+        this.addJournal(pet,I18n.t('q_success_journal',{t:I18n.t(q.texteKey),r:q.reward}));
+        if(typeof Renderer!=='undefined'){Renderer.toast(I18n.t('q_coins_toast',{r:q.reward}));Renderer.update(pet);}
         if(typeof Storage!=='undefined')Storage.save(pet);
         return true;
     },
@@ -382,9 +427,9 @@ var Features = {
             var item=document.createElement('div');
             item.className='quest-item'+(q.done?' quest-done':'');
             var btn=q.done&&!q.claimed
-                ? '<button class="quest-claim" data-q="'+q.id+'">Réclamer +'+q.reward+'🪙</button>'
-                : (q.claimed?'<span class="quest-claimed">✅ Fait</span>':'<span class="quest-reward">+'+q.reward+'🪙</span>');
-            item.innerHTML='<div class="quest-top"><span class="quest-text">'+q.texte+'</span>'+btn+'</div>'+
+                ? '<button class="quest-claim" data-q="'+q.id+'">'+I18n.t('q_claim',{r:q.reward})+'</button>'
+                : (q.claimed?'<span class="quest-claimed">'+I18n.t('q_claimed')+'</span>':'<span class="quest-reward">'+I18n.t('q_reward',{r:q.reward})+'</span>');
+            item.innerHTML='<div class="quest-top"><span class="quest-text">'+I18n.t(q.texteKey)+'</span>'+btn+'</div>'+
                 '<div class="quest-bar"><div class="quest-fill" style="width:'+pct+'%"></div></div>'+
                 '<div class="quest-prog">'+Math.min(q.progress,q.cible)+' / '+q.cible+'</div>';
             box.appendChild(item);
@@ -410,14 +455,9 @@ var Features = {
         var age=Engine.getAge(pet);
         if(age.days>f.lastJournalDay){
             f.lastJournalDay=age.days;
-            var lines=[
-                'Une nouvelle journée commence pour Francis.',
-                'Francis a bien dormi et chante le coq !',
-                'Le soleil brille sur le poulailler.',
-                'Francis se sent en pleine forme aujourd\'hui.',
-                'Encore un jour de gagné dans la vie de Francis !'
-            ];
-            if(age.days>0)this.addJournal(pet,'📅 Jour '+age.days+' — '+lines[Math.floor(Math.random()*lines.length)]);
+            var lineKeys=['j_line1','j_line2','j_line3','j_line4','j_line5'];
+            var line=I18n.t(lineKeys[Math.floor(Math.random()*lineKeys.length)]);
+            if(age.days>0)this.addJournal(pet,I18n.t('j_day',{n:age.days,line:line}));
         }
     },
 
@@ -425,7 +465,7 @@ var Features = {
         var f=this.ensure(pet);
         var box=document.getElementById('journal-list');
         if(!box)return;
-        if(!f.journal.length){box.innerHTML='<p class="journal-empty">Le journal de Francis est vide pour l\'instant. Vis des aventures !</p>';return;}
+        if(!f.journal.length){box.innerHTML='<p class="journal-empty">'+I18n.t('j_empty')+'</p>';return;}
         box.innerHTML='';
         f.journal.forEach(function(e){
             var d=document.createElement('div');
@@ -464,9 +504,9 @@ var Features = {
         if(typeof Weather==='undefined')return '';
         var raining=Weather._isRaining?Weather._isRaining():false;
         var bri=Weather.getBri?Weather.getBri():1;
-        if(raining)return '🌧️ Pluie — humeur en baisse';
-        if(bri>0.8)return '☀️ Grand soleil — Francis est boosté !';
-        if(bri<0.3)return '🌙 Nuit calme';
-        return '⛅ Temps doux';
+        if(raining)return I18n.t('w_rain');
+        if(bri>0.8)return I18n.t('w_sun');
+        if(bri<0.3)return I18n.t('w_night');
+        return I18n.t('w_mild');
     }
 };

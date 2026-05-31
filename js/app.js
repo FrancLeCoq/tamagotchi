@@ -5,6 +5,7 @@ var App={
     _cheatBuffer:'',_cheatTimer:null,_visitTimer:null,
 
     init:function(){
+        if(typeof I18n!=='undefined')I18n.init();
         Storage.init();Renderer.init();this.showSplash();this.bindEvents();
     },
 
@@ -13,14 +14,23 @@ var App={
         var rb=document.getElementById('btn-resume');
         rb.classList.toggle('hidden',!(data&&!data.estMort));
         var lbEl=document.getElementById('lb-record');
-        if(lbEl){var rec=this.getRecord();lbEl.textContent=rec>0?(rec<1?Math.round(rec*24)+'h':rec.toFixed(1)+' jours'):'Aucun record';}
-        if(Engine.isWalletConnected()){var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';}
+        if(lbEl){var rec=this.getRecord();var unit=(typeof I18n!=='undefined')?I18n.t('days_suffix'):'days';lbEl.textContent=rec>0?(rec<1?Math.round(rec*24)+'h':rec.toFixed(1)+' '+unit):(I18n.lang==='fr'?'Aucun record':'No record');}
+        if(Engine.isWalletConnected()){var h=document.getElementById('holder-amount');if(h)h.textContent=I18n.lang==='fr'?'✅ CONNECTÉ':'✅ CONNECTED';}
     },
 
     bindEvents:function(){
         var self=this;
+        var langDd=document.getElementById('lang-dropdown');
+        if(langDd){
+            langDd.value=(typeof I18n!=='undefined')?I18n.lang:'en';
+            langDd.addEventListener('change',function(){
+                if(typeof I18n!=='undefined'){I18n.set(langDd.value);}
+                self.showSplash();
+                if(self.pet&&typeof Renderer!=='undefined')Renderer.update(self.pet);
+            });
+        }
         document.getElementById('btn-resume').addEventListener('click',function(){
-            var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);Engine.updateStats(self.pet);self.showGame();Renderer.toast('▶ Reprise !');}
+            var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);Engine.updateStats(self.pet);self.showGame();Renderer.toast(I18n.t('t_resume'));}
         });
         document.getElementById('btn-new-game').addEventListener('click',function(){self.newGame();});
         var cw=document.getElementById('btn-connect-wallet');if(cw)cw.addEventListener('click',function(){self.connectWallet();});
@@ -54,12 +64,12 @@ var App={
         document.getElementById('btn-enclos-badge').addEventListener('click',function(e){e.stopPropagation();self.openFarm();});
         document.getElementById('btn-notif').addEventListener('click',function(){
             document.getElementById('more-screen').classList.add('hidden');
-            if(!('Notification' in window)){Renderer.toast('🔔 Notifications non supportées sur cet appareil');return;}
-            if(Notification.permission==='granted'){Renderer.toast('🔔 Notifications déjà activées !');return;}
-            if(Notification.permission==='denied'){Renderer.toast('🔕 Notifications bloquées — autorise-les dans les réglages du navigateur');return;}
+            if(!('Notification' in window)){Renderer.toast(I18n.t('t_notif_unsupported'));return;}
+            if(Notification.permission==='granted'){Renderer.toast(I18n.t('t_notif_already'));return;}
+            if(Notification.permission==='denied'){Renderer.toast(I18n.t('t_notif_blocked'));return;}
             Notification.requestPermission().then(function(p){
-                if(p==='granted'){Renderer.toast('🔔 Notifications activées !');try{new Notification('🐓 Francis le Coq',{body:'Tu recevras des alertes quand Francis a besoin de toi !'});}catch(e){}}
-                else Renderer.toast('🔕 Notifications refusées');
+                if(p==='granted'){Renderer.toast(I18n.t('t_notif_on'));try{new Notification('🐓 Francis le Coq',{body:I18n.t('t_notif_test')});}catch(e){}}
+                else Renderer.toast(I18n.t('t_notif_refused'));
             });
         });
         document.getElementById('btn-evo-ok').addEventListener('click',function(){Renderer.hideEvolution();});
@@ -71,7 +81,7 @@ var App={
         document.getElementById('btn-play-catch').addEventListener('click',function(){self.doCatch();});
         document.getElementById('btn-play-roost').addEventListener('click',function(){self.doRoost();});
         document.getElementById('food-grid').addEventListener('click',function(e){var item=e.target.closest('[data-food]');if(item)self.doFeed(item.dataset.food);});
-        document.getElementById('btn-reset').addEventListener('click',function(){document.getElementById('more-screen').classList.add('hidden');if(confirm('Reset?')){Storage.clear();self.pet=null;document.getElementById('game-screen').classList.remove('active');document.getElementById('splash-screen').classList.add('active');self.showSplash();}});
+        document.getElementById('btn-reset').addEventListener('click',function(){document.getElementById('more-screen').classList.add('hidden');if(confirm(I18n.t('t_reset_confirm'))){Storage.clear();self.pet=null;document.getElementById('game-screen').classList.remove('active');document.getElementById('splash-screen').classList.add('active');self.showSplash();}});
 
         // Cheats via keyboard
         document.addEventListener('keyup',function(e){
@@ -100,7 +110,7 @@ var App={
     },
 
     _nearPet:function(cx,cy){var pw=document.getElementById('pet-wrapper');if(!pw)return false;var r=pw.getBoundingClientRect(),m=40;return cx>r.left-m&&cx<r.right+m&&cy>r.top-m&&cy<r.bottom+m;},
-    connectWallet:function(){Engine.connectWallet();var h=document.getElementById('holder-amount');if(h)h.textContent='✅ CONNECTÉ';Renderer.toast('✅ Wallet connecté !');},
+    connectWallet:function(){Engine.connectWallet();var h=document.getElementById('holder-amount');if(h)h.textContent=I18n.lang==='fr'?'✅ CONNECTÉ':'✅ CONNECTED';Renderer.toast(I18n.t('t_wallet_ok'));},
 
     playBirthVideo:function(onDone){
         var overlay=document.getElementById('birth-video-overlay');
@@ -119,9 +129,11 @@ var App={
     },
     newGame:function(){
         var self=this;
+        if(typeof Features!=='undefined'&&Features._clearTmp)Features._clearTmp();
+        if(typeof Renderer!=='undefined'&&Renderer.clearEventArtifacts)Renderer.clearEventArtifacts();
         this.pet=Engine.createPet('Francis');Storage.save(this.pet);
         this.playBirthVideo(function(){
-            self.showGame();Renderer.toast('🥚 Francis est né !');
+            self.showGame();Renderer.sceneNotif(I18n.t('born_notif'));
         });
     },
     initAudio:function(){
@@ -257,26 +269,26 @@ var App={
         if(dot)dot.classList.toggle('hidden',b>=50);
         // Threshold notifications
         var thresholds=[
-            {v:50,msg:'⚠️ Francis ne va pas bien ('+b+'%) !'},
-            {v:25,msg:'🚨 ALERTE : Francis va très mal ('+b+'%) !'},
-            {v:10,msg:'💀 DANGER CRITIQUE : Francis est en danger de mort ('+b+'%) !'},
-            {v:5,msg:'☠️ URGENCE ABSOLUE ! Francis agonise ('+b+'%) !!'},
-            {v:0,msg:'😇 La faucheuse est passée... Toutes nos condoléances.'}
+            {v:50,msg:I18n.t('al_50',{b:b})},
+            {v:25,msg:I18n.t('al_25',{b:b})},
+            {v:10,msg:I18n.t('al_10',{b:b})},
+            {v:5,msg:I18n.t('al_5',{b:b})},
+            {v:0,msg:I18n.t('al_0')}
         ];
         // Find cause
         var cause='';
-        if(p.faim<20)cause='Il a super faim !';
-        else if(p.energie<20)cause='Il est épuisé !';
-        else if(p.sante<20)cause='Il est très malade !';
-        else if((p.hygiene||50)<20)cause='Son hygiène est critique !';
-        else if((p.amour||30)<20)cause='Il se sent abandonné !';
-        else if((p.jeu||0)<15)cause='Il s\'ennuie !';
+        if(p.faim<20)cause=I18n.t('cause_hungry');
+        else if(p.energie<20)cause=I18n.t('cause_tired');
+        else if(p.sante<20)cause=I18n.t('cause_sick');
+        else if((p.hygiene||50)<20)cause=I18n.t('cause_dirty');
+        else if((p.amour||30)<20)cause=I18n.t('cause_lonely');
+        else if((p.jeu||0)<15)cause=I18n.t('cause_bored');
         for(var i=0;i<thresholds.length;i++){
             var t=thresholds[i];
             if(b<=t.v&&this._lastAlertLevel>t.v){
                 this._lastAlertLevel=t.v;
                 var fullMsg=t.msg+(cause?' '+cause:'');
-                Renderer.toast(fullMsg);
+                Renderer.sceneNotif(fullMsg);
                 // Try Telegram notification
                 try{if(window.Telegram&&Telegram.WebApp)Telegram.WebApp.showAlert(fullMsg);}catch(e){}
                 // Try browser notification
@@ -328,11 +340,13 @@ var App={
         Minigames.startPlay(function(reward){
             reward=reward||{};
             var beforeJeu=self.pet.jeu||0, beforeFaim=self.pet.faim||0;
-            self.pet.jeu=Engine.cl((self.pet.jeu||0)+(reward.jeu||20));
-            self.pet.faim=Engine.cl((self.pet.faim||0)+(reward.faim||0));
-            self.pet.bonheur=Engine.cl(self.pet.bonheur+(reward.bonheur||10));
-            self.pet.energie=Engine.cl(self.pet.energie-5);
-            self.pet.coins+=(reward.coins||3);
+            self.pet.jeu=Engine.cl((self.pet.jeu||0)+(reward.jeu||0));
+            if(!reward.jeuOnly){
+                self.pet.faim=Engine.cl((self.pet.faim||0)+(reward.faim||0));
+                self.pet.bonheur=Engine.cl(self.pet.bonheur+(reward.bonheur||10));
+                self.pet.energie=Engine.cl(self.pet.energie-5);
+                self.pet.coins+=(reward.coins||3);
+            }
             if(Renderer.petHappyAnimation)Renderer.petHappyAnimation();
             Storage.save(self.pet);
             setTimeout(function(){
@@ -452,7 +466,7 @@ var App={
     doToilet:function(){
         if(!this.pet)return;document.getElementById('care-screen').classList.add('hidden');
         var poopCount=this.pet.poops||0;
-        if(poopCount<=0){Renderer.toast('Rien à nettoyer !');return;}
+        if(poopCount<=0){Renderer.toast(I18n.t('t_nothing_clean'));return;}
         var self=this;var oldHyg2=this.pet.hygiene||50;
         var gain=poopCount*10; // +10% per poop
         Renderer.showBigBroom(function(){
@@ -524,7 +538,7 @@ var App={
         if(!this.pet)return;var list=document.getElementById('housing-list');list.innerHTML='';var self=this;
         for(var i=0;i<Engine.HOUSING.length;i++){var h=Engine.HOUSING[i],isCur=i===this.pet.housingLevel,isNext=i===this.pet.housingLevel+1;
         var cls='housing-item'+(isCur?' current':'')+(i>this.pet.housingLevel+1?' locked':'')+(isNext&&this.pet.coins>=h.cost?' can-buy':'');
-        list.innerHTML+='<div class="'+cls+'" data-housing="'+i+'"><span class="housing-emoji">'+h.emoji+'</span><div class="housing-info"><div class="housing-name">'+h.nom+'</div><div class="housing-cost">'+(h.cost||'Gratuit')+' 🪙</div></div></div>';}
+        list.innerHTML+='<div class="'+cls+'" data-housing="'+i+'"><span class="housing-emoji">'+h.emoji+'</span><div class="housing-info"><div class="housing-name">'+Engine.tName(h)+'</div><div class="housing-cost">'+(h.cost||I18n.t('m_free'))+' 🪙</div></div></div>';}
         list.querySelectorAll('[data-housing]').forEach(function(el){el.addEventListener('click',function(){var idx=+el.dataset.housing;if(idx===self.pet.housingLevel+1){var r=Engine.upgradeHousing(self.pet);Renderer.toast(r.msg);if(r.ok){Weather.lastBuildingState=null;Storage.save(self.pet);Renderer.update(self.pet);self.openHousing();}}});});
         document.getElementById('housing-screen').classList.remove('hidden');
     },

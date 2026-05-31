@@ -73,7 +73,7 @@ var Farm = {
             farm.hens-=toKill;
             farm._bonheurDeaths+=toKill;
             if(this.isOpen)this.showHenDeathAnimation(deaths);
-            if(typeof Renderer!=='undefined')Renderer.toast('💀 '+toKill+' poule(s) ont succombé au chagrin de Francis !');
+            if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('f_hens_died',{n:toKill}));
             return toKill;
         }
         return 0;
@@ -108,26 +108,26 @@ var Farm = {
 
     buyHen:function(pet){
         var farm=this.ensureData(pet);
-        if(farm.hens>=this.MAX_HENS) return {ok:false,msg:'Enclos plein ! (max '+this.MAX_HENS+')'};
-        if(pet.coins<this.HEN_COST) return {ok:false,msg:'Il faut '+this.HEN_COST+' 🪙 (tu as '+pet.coins+')'};
+        if(farm.hens>=this.MAX_HENS) return {ok:false,msg:I18n.t('f_pen_full',{n:this.MAX_HENS})};
+        if(pet.coins<this.HEN_COST) return {ok:false,msg:I18n.t('f_need',{c:this.HEN_COST,h:pet.coins})};
         pet.coins-=this.HEN_COST;farm.hens++;
-        return {ok:true,msg:'🐔 Nouvelle poule ! ('+farm.hens+'/'+this.MAX_HENS+')'};
+        return {ok:true,msg:I18n.t('f_new_hen',{h:farm.hens,m:this.MAX_HENS})};
     },
 
     feedEnclosure:function(pet){
         var farm=this.ensureData(pet);
-        if(farm.hens<=0) return {ok:false,msg:'Pas de poules !'};
+        if(farm.hens<=0) return {ok:false,msg:I18n.t('f_no_hens')};
         farm.feedLevel=Math.min(100,farm.feedLevel+20);pet.coins+=1;
-        return {ok:true,msg:'🌾 Enclos nourri !'};
+        return {ok:true,msg:I18n.t('f_fed')};
     },
 
     cleanEnclosure:function(pet){
         var farm=this.ensureData(pet);
-        if(farm.hens<=0) return {ok:false,msg:'Pas de poules !'};
+        if(farm.hens<=0) return {ok:false,msg:I18n.t('f_no_hens')};
         farm.cleanLevel=Math.min(100,farm.cleanLevel+20);pet.coins+=1;
         // Remove poops proportionally
         var removed=Math.floor((farm.farmPoops||0)*0.2);farm.farmPoops=Math.max(0,(farm.farmPoops||0)-removed-1);
-        return {ok:true,msg:'🧹 Enclos nettoyé !'};
+        return {ok:true,msg:I18n.t('f_cleaned')};
     },
 
     open:function(pet){
@@ -389,14 +389,14 @@ var Farm = {
         // Rain darkening
         var raining=(typeof Weather!=='undefined'&&Weather._isRaining)?Weather._isRaining():false;
         scene.classList.toggle('raining',raining);
-        // Couleur synchronisée sur l'heure du jeu (cohérente avec la scène principale)
+        // Couleur du ciel IDENTIQUE à la scène principale (mêmes RGB)
         var top,mid;
-        if(h>=8&&h<17){top='#87CEEB';mid='#b8e4f0';}       // plein jour
-        else if(h>=17&&h<19){top='#FFB347';mid='#FFCC99';} // coucher
-        else if(h>=19&&h<21){top='#7a5a8a';mid='#b88aa0';} // crépuscule
-        else if(h>=21||h<5){top='#0a1228';mid='#1a2848';}  // nuit
-        else if(h>=5&&h<7){top='#3a3a6a';mid='#8a7aa0';}   // aube
-        else{top='#FF9966';mid='#FFD4A3';}                 // lever (7-8h)
+        if(typeof Weather!=='undefined'&&Weather.getSkyColors){
+            var c=Weather.getSkyColors();top=c.top;mid=c.bottom;
+        }else{
+            if(h>=8&&h<17){top='rgb(74,144,208)';mid='rgb(135,206,235)';}
+            else{top='#0a1228';mid='#1a2848';}
+        }
         scene.style.backgroundImage="url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,"+top+" 0%,"+mid+" 48%,#3a6a28 48%,#3a6a28 100%)";
         scene.style.backgroundSize='cover,100% 100%';
         scene.style.backgroundPosition='center bottom,center';
@@ -510,11 +510,11 @@ var Farm = {
     collectEggs:function(){
         if(typeof App==='undefined'||!App.pet||!App.pet.farm)return;
         var n=App.pet.farm.pendingEggs||0;
-        if(n<=0){if(typeof Renderer!=='undefined')Renderer.toast('Aucun œuf à ramasser');return;}
+        if(n<=0){if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('f_no_eggs'));return;}
         App.pet.coins+=n; // 1 œuf = 1 pièce
         App.pet.farm.pendingEggs=0;
         if(typeof Features!=='undefined')Features.trackQuest(App.pet,'eggs',n);
-        if(typeof Renderer!=='undefined')Renderer.toast('🥚→🪙 +'+n+' pièces !');
+        if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('f_eggs_coins',{n:n}));
         // Coin burst animation
         var corner=this._eggCorner;
         if(corner){

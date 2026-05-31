@@ -1,27 +1,31 @@
 const Engine = {
     STAGES: [
-        { id:0, nom:'Poussin',    emoji:'🐣', heures:24,  depletion:1.6, size:104,  sprite:'assets/sprites/poussin.png', spriteSad:'assets/sprites/poussin_triste.png', hen:'assets/sprites/poule_poussin.png', henName:'Poussinette' },
-        { id:1, nom:'Petit Coq',  emoji:'🐤', heures:48,  depletion:1.4, size:150, sprite:'assets/sprites/petit_coq.png', spriteSad:'assets/sprites/petit_coq_triste.png', hen:'assets/sprites/poule_petite.png',  henName:'Cocotte' },
-        { id:2, nom:'Coq Ado',    emoji:'🐔', heures:72,  depletion:1.2, size:156, sprite:'assets/sprites/coq_ado.png', spriteSad:'assets/sprites/coq_ado_triste.png', hen:'assets/sprites/poule_ado.png',     henName:'Poulette' },
-        { id:3, nom:'Coq Adulte', emoji:'🐓', heures:168, depletion:1.0, size:155, sprite:'assets/sprites/coq_adulte.png', spriteSad:'assets/sprites/coq_adulte_triste.png', hen:'assets/sprites/poule_adulte.png',  henName:'Françoise' },
-        { id:4, nom:'Coq Vieux',  emoji:'👴', heures:null,depletion:0.7, size:169, sprite:'assets/sprites/coq_vieux.png', spriteSad:'assets/sprites/coq_vieux_triste.png', hen:'assets/sprites/poule_vieille.png', henName:'Mamie Plume' },
+        { id:0, nom:'Poussin',    nk:'stage_chick',  hnk:'stage_chick_f',  emoji:'🐣', heures:24,  depletion:1.6, size:104,  sprite:'assets/sprites/poussin.png', spriteSad:'assets/sprites/poussin_triste.png', hen:'assets/sprites/poule_poussin.png', henName:'Poussinette' },
+        { id:1, nom:'Petit Coq',  nk:'stage_little', hnk:'stage_little_f', emoji:'🐤', heures:48,  depletion:1.4, size:150, sprite:'assets/sprites/petit_coq.png', spriteSad:'assets/sprites/petit_coq_triste.png', hen:'assets/sprites/poule_petite.png',  henName:'Cocotte' },
+        { id:2, nom:'Coq Ado',    nk:'stage_teen',   hnk:'stage_teen_f',   emoji:'🐔', heures:72,  depletion:1.2, size:156, sprite:'assets/sprites/coq_ado.png', spriteSad:'assets/sprites/coq_ado_triste.png', hen:'assets/sprites/poule_ado.png',     henName:'Poulette' },
+        { id:3, nom:'Coq Adulte', nk:'stage_adult',  hnk:'stage_adult_f',  emoji:'🐓', heures:168, depletion:1.0, size:155, sprite:'assets/sprites/coq_adulte.png', spriteSad:'assets/sprites/coq_adulte_triste.png', hen:'assets/sprites/poule_adulte.png',  henName:'Françoise' },
+        { id:4, nom:'Coq Vieux',  nk:'stage_old',    hnk:'stage_old_f',    emoji:'👴', heures:null,depletion:0.7, size:169, sprite:'assets/sprites/coq_vieux.png', spriteSad:'assets/sprites/coq_vieux_triste.png', hen:'assets/sprites/poule_vieille.png', henName:'Mamie Plume' },
     ],
     FOODS: [
-        { id:'grain',   nom:'Grain',    emoji:'🌾', faim:20, bonheur:5,  energie:5,  sante:0 },
-        { id:'mais',    nom:'Maïs',     emoji:'🌽', faim:30, bonheur:10, energie:5,  sante:5 },
-        { id:'baguette',nom:'Baguette', emoji:'🥖', faim:40, bonheur:15, energie:10, sante:-5 },
-        { id:'graines', nom:'Graines',  emoji:'🫘', faim:18, bonheur:8,  energie:8,  sante:10 },
-        { id:'gateau',  nom:'Gâteau',   emoji:'🧁', faim:25, bonheur:30, energie:15, sante:-10 },
-        { id:'fromage', nom:'Fromage',  emoji:'🧀', faim:35, bonheur:20, energie:10, sante:5 },
+        { id:'grain',   nom:'Grain',    nk:'food_grain',    emoji:'🌾', faim:20, bonheur:5,  energie:5,  sante:0 },
+        { id:'mais',    nom:'Maïs',     nk:'food_mais',     emoji:'🌽', faim:30, bonheur:10, energie:5,  sante:5 },
+        { id:'baguette',nom:'Baguette', nk:'food_baguette', emoji:'🥖', faim:40, bonheur:15, energie:10, sante:-5 },
+        { id:'graines', nom:'Graines',  nk:'food_graines',  emoji:'🫘', faim:18, bonheur:8,  energie:8,  sante:10 },
+        { id:'gateau',  nom:'Gâteau',   nk:'food_gateau',   emoji:'🧁', faim:25, bonheur:30, energie:15, sante:-10 },
+        { id:'fromage', nom:'Fromage',  nk:'food_fromage',  emoji:'🧀', faim:35, bonheur:20, energie:10, sante:5 },
     ],
     HOUSING: [
-        { id:0, nom:'Poulailler',       emoji:'🏚️', cost:0,     bg:'poulailler' },
-        { id:1, nom:'Maison en bois',   emoji:'🏡', cost:1000,  bg:'bois' },
-        { id:2, nom:'Maison en brique', emoji:'🏠', cost:10000, bg:'brique' },
-        { id:3, nom:'Château',          emoji:'🏰', cost:15000, bg:'chateau' },
-        { id:4, nom:'Palace',           emoji:'🏛️', cost:30000, bg:'palace' },
-        { id:5, nom:'SpaceX',           emoji:'🚀', cost:50000, bg:'spacex' },
+        { id:0, nom:'Poulailler',       nk:'house_poulailler', emoji:'🏚️', cost:0,     bg:'poulailler' },
+        { id:1, nom:'Maison en bois',   nk:'house_bois',       emoji:'🏡', cost:1000,  bg:'bois' },
+        { id:2, nom:'Maison en brique', nk:'house_brique',     emoji:'🏠', cost:10000, bg:'brique' },
+        { id:3, nom:'Château',          nk:'house_chateau',    emoji:'🏰', cost:15000, bg:'chateau' },
+        { id:4, nom:'Palace',           nk:'house_palace',     emoji:'🏛️', cost:30000, bg:'palace' },
+        { id:5, nom:'SpaceX',           nk:'house_spacex',     emoji:'🚀', cost:50000, bg:'spacex' },
     ],
+    // Helpers de noms localisés
+    tName:function(obj){return (obj&&obj.nk&&typeof I18n!=='undefined')?I18n.t(obj.nk):(obj?obj.nom:'');},
+    tHenName:function(stage){return (stage&&stage.hnk&&typeof I18n!=='undefined')?I18n.t(stage.hnk):(stage?stage.henName:'');},
+    stageName:function(idx){return this.tName(this.STAGES[idx]);},
     DIALOGUES: {
         faim:['J\'ai la dalle ! 🌾','Du grain, stp...','Mon ventre gargouille...','Nourris-moi ! Je dépéris !','Je mangerais bien un croissant... 🥐','Mon estomac crie famine !','Un grain... juste un grain...','Par Toutatis, du maïs !','Même une miette ferait l\'affaire...','Le frigo est vide ou quoi ?'],
         fatigue:['Zzz... même les coqs dorment...','Je pique du bec...','Trop fatigué pour chanter... 😴','Une bonne sieste, vite !','Mes paupières sont lourdes...','Je tiens plus debout...','Un lit, par pitié !','Je bâille sans arrêt...','Mon énergie est à zéro !','Même les poules dorment mieux...'],
@@ -144,9 +148,9 @@ const Engine = {
         if(now-pet.dernierePoop>this.POOP_INTERVAL*1000){pet.poops=Math.min(12,pet.poops+3);pet.dernierePoop=now;pet.hygiene=this.cl(pet.hygiene-8);}
         if(now-pet.dernierePipi>this.PIPI_INTERVAL*1000){pet.pipis=Math.min(5,pet.pipis+1);pet.dernierePipi=now;}
         // Starvation / death
-        if(pet.faim<=0&&pet.sante<=5){pet.estMort=true;pet.causeMort='Famine';}
-        if(pet.sante<=0){pet.estMort=true;pet.causeMort='Maladie';}
-        if(pet.bonheur<=0&&pet.sante<=10){pet.estMort=true;pet.causeMort='Dépression';}
+        if(pet.faim<=0&&pet.sante<=5){pet.estMort=true;pet.causeMortKey='cause_famine';pet.causeMort=I18n.t('cause_famine');}
+        if(pet.sante<=0){pet.estMort=true;pet.causeMortKey='cause_illness';pet.causeMort=I18n.t('cause_illness');}
+        if(pet.bonheur<=0&&pet.sante<=10){pet.estMort=true;pet.causeMortKey='cause_depression';pet.causeMort=I18n.t('cause_depression');}
         pet.derniereUpdate=now;
         return pet;
     },
@@ -170,7 +174,12 @@ const Engine = {
         if(pet.faim<15||pet.energie<15||(pet.hygiene||50)<15) return 'sad';
         return 'ok';
     },
-    getDialogue(pet){var m=this.getMood(pet);var pool=this.DIALOGUES[m]||this.DIALOGUES.faim;if((pet.jeu||0)<20&&Math.random()<.3)pool=this.DIALOGUES.jeu;return pool[Math.floor(Math.random()*pool.length)];},
+    getDialogue(pet){var m=this.getMood(pet);
+        var src=(typeof I18n!=='undefined'&&I18n.DIALOGUES)?I18n.DIALOGUES:this.DIALOGUES;
+        var get=function(cat){var d=src[cat];if(!d)return null;return (d[I18n.lang]||d.en||d);};
+        var pool=get(m)||get('faim');
+        if((pet.jeu||0)<20&&Math.random()<.3)pool=get('jeu');
+        return pool[Math.floor(Math.random()*pool.length)];},
     hasAlerts(pet){return pet.faim<10||pet.bonheur<10||pet.energie<10||pet.sante<10||pet.hygiene<10||pet.amour<10;},
     getAge(pet){var ms=Date.now()-pet.neLe,h=ms/3600000;return{days:Math.floor(h/24),hours:Math.floor(h%24)};},
 
@@ -191,7 +200,7 @@ const Engine = {
     },
 
     canDo(pet,action){
-        if(pet.estMort) return {ok:false,msg:'Francis n\'est plus là...'};
+        if(pet.estMort) return {ok:false,msg:I18n.t('m_gone')};
         var now=Date.now(),cd=pet.cooldowns[action]||0;
         if(now<cd){var s=Math.ceil((cd-now)/1000),mn=Math.floor(s/60);return {ok:false,msg:'⏳ '+mn+':'+String(s%60).padStart(2,'0')};}
         return {ok:true};
@@ -208,66 +217,66 @@ const Engine = {
         pet.energie=this.cl(pet.energie+f.energie);pet.sante=this.cl(pet.sante+f.sante);
         pet.experience+=10;pet.actions++;pet.coins+=1;
         this.setCooldown(pet,'nourrir');
-        return{ok:true,msg:'🍽️ '+f.nom+' !',food:f};
+        return{ok:true,msg:I18n.t('m_feed',{f:this.tName(f)}),food:f};
     },
     play(pet,bonus){
         var c=this.canDo(pet,'jouer');if(!c.ok)return c;
         pet.bonheur=this.cl(pet.bonheur+Math.min(20,15+bonus));pet.energie=this.cl(pet.energie-10);pet.jeu=this.cl(pet.jeu+20);
         pet.experience+=15+bonus;pet.actions++;pet.coins+=2+Math.floor(bonus/3);
-        this.setCooldown(pet,'jouer');return{ok:true,msg:'🎮 Fun !'};
+        this.setCooldown(pet,'jouer');return{ok:true,msg:I18n.t('m_fun')};
     },
     sleep(pet){
         if(pet.isSleeping){
             // Interrompre la sieste
             pet.isSleeping=false;pet.sleepStart=null;
-            return{ok:true,msg:'⏹️ Sieste interrompue',interrupted:true};
+            return{ok:true,msg:I18n.t('m_nap_stop'),interrupted:true};
         }
         var c=this.canDo(pet,'dormir');if(!c.ok)return c;
         pet.isSleeping=true;pet.sleepStart=Date.now();
         pet.experience+=10;pet.actions++;pet.coins+=2;
-        this.setCooldown(pet,'dormir');return{ok:true,msg:'💤 Dodo...',interrupted:false};
+        this.setCooldown(pet,'dormir');return{ok:true,msg:I18n.t('m_sleep'),interrupted:false};
     },
     heal(pet){
         var c=this.canDo(pet,'soigner');if(!c.ok)return c;
         var isInj=pet.healthActionCount%2===0;
         pet.sante=this.cl(pet.sante+20);pet.bonheur=this.cl(pet.bonheur-5);
         pet.experience+=5;pet.actions++;pet.coins+=1;pet.healthActionCount++;pet.soinTotal++;
-        this.setCooldown(pet,'soigner');return{ok:true,msg:isInj?'💉 Piqûre !':'💊 Cachet !',isInjection:isInj};
+        this.setCooldown(pet,'soigner');return{ok:true,msg:isInj?I18n.t('m_injection'):I18n.t('m_pill'),isInjection:isInj};
     },
     toilet(pet){
-        if(pet.poops<=0&&pet.pipis<=0)return{ok:false,msg:'Rien à nettoyer !'};
+        if(pet.poops<=0&&pet.pipis<=0)return{ok:false,msg:I18n.t('m_nothing_clean')};
         pet.poops=0;pet.pipis=0;pet.hygiene=this.cl(pet.hygiene+20);
         pet.experience+=10;pet.actions++;pet.coins+=2;
-        return{ok:true,msg:'🧹 Propre !'};
+        return{ok:true,msg:I18n.t('m_clean')};
     },
     shower(pet){
         var c=this.canDo(pet,'douche');if(!c.ok)return c;
         pet.hygiene=this.cl(pet.hygiene+20);pet.bonheur=this.cl(pet.bonheur+5);
         pet.experience+=10;pet.actions++;pet.coins+=3;
-        this.setCooldown(pet,'douche');return{ok:true,msg:'🚿 Douche !'};
+        this.setCooldown(pet,'douche');return{ok:true,msg:I18n.t('m_shower')};
     },
     visit(pet){
         var c=this.canDo(pet,'visite');if(!c.ok)return c;
         var stage=this.STAGES[pet.stade];
         pet.amour=this.cl(pet.amour+20);pet.bonheur=this.cl(pet.bonheur+20);
         pet.experience+=15;pet.actions++;pet.coins+=3;
-        this.setCooldown(pet,'visite');return{ok:true,msg:'💕 '+stage.henName+' !',henSprite:stage.hen};
+        this.setCooldown(pet,'visite');return{ok:true,msg:I18n.t('m_visit',{h:this.tHenName(stage)}),henSprite:stage.hen};
     },
     studyAuto(pet){
         var c=this.canDo(pet,'intellect');if(!c.ok)return c;
         pet.intellect=this.cl(pet.intellect+20);pet.energie=this.cl(pet.energie-5);pet.jeu=this.cl(pet.jeu+20);
         pet.experience+=10;pet.actions++;pet.coins+=2;
-        this.setCooldown(pet,'intellect');return{ok:true,msg:'📖 Lecture !'};
+        this.setCooldown(pet,'intellect');return{ok:true,msg:I18n.t('m_read')};
     },
     studyGame(pet,bonus){
         pet.intellect=this.cl(pet.intellect+15+bonus*2);pet.bonheur=this.cl(pet.bonheur+10);
         pet.experience+=10+bonus;pet.actions++;pet.coins+=2+Math.floor(bonus/2);
-        return{ok:true,msg:'🧠 +'+(15+bonus*2)+' intellect'};
+        return{ok:true,msg:I18n.t('m_intellect',{n:(15+bonus*2)})};
     },
     upgradeHousing(pet){
-        var next=pet.housingLevel+1;if(next>=this.HOUSING.length)return{ok:false,msg:'Max atteint !'};
-        var h=this.HOUSING[next];if(pet.coins<h.cost)return{ok:false,msg:'Pas assez de 🪙 ('+h.cost+')'};
-        pet.coins-=h.cost;pet.housingLevel=next;return{ok:true,msg:'🏠 '+h.nom+' !'};
+        var next=pet.housingLevel+1;if(next>=this.HOUSING.length)return{ok:false,msg:I18n.t('m_max_reached')};
+        var h=this.HOUSING[next];if(pet.coins<h.cost)return{ok:false,msg:I18n.t('m_not_enough',{c:h.cost})};
+        pet.coins-=h.cost;pet.housingLevel=next;return{ok:true,msg:I18n.t('m_house',{h:this.tName(h)})};
     },
     getTimeToEvolve(pet){var s=this.STAGES[pet.stade];if(!s.heures)return null;return Math.max(0,s.heures-(Date.now()-pet.derniereEvolution)/3600000);},
     getEvolutionProgress(pet){var s=this.STAGES[pet.stade];if(!s.heures)return{done:1,elapsed:0,total:0};var el=(Date.now()-pet.derniereEvolution)/3600000;return{done:Math.min(1,el/s.heures),elapsed:el,total:s.heures};},

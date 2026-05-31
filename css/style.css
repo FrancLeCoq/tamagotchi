@@ -65,7 +65,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .layer-building img[src*='brique']{max-height:95vh;max-width:100vw}
 .layer-building img[src*='chateau']{max-height:64.5vh;max-width:70.3vw}
 .layer-building img[src*='palace']{max-height:54.5vh;max-width:60.3vw}
-.layer-building img[src*='spacex']{max-height:120vh;max-width:124vw}
+.layer-building img[src*='spacex']{max-height:84vh;max-width:86.8vw}
 .hud-weather{position:absolute;top:6px;right:6px;font-size:18px;z-index:8}
 .sleep-zzz{position:absolute;top:15%;left:50%;transform:translateX(-50%);font-size:36px;z-index:6;animation:zzzPulse 2s ease-in-out infinite;text-shadow:0 2px 12px rgba(0,0,0,.5);letter-spacing:8px}
 @keyframes zzzPulse{0%,100%{opacity:.6;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.15)}}
@@ -570,6 +570,19 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 @keyframes bandPulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.08)}}
 .evt-chantal{filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))}
 
+/* ═══ COVID — décor alarmiste sirène rouge/bleu ═══ */
+.evt-covid-alarm{position:absolute;inset:0;z-index:229;pointer-events:none;animation:covidSiren .7s steps(1) infinite;mix-blend-mode:screen}
+@keyframes covidSiren{0%{background:radial-gradient(circle at 25% 40%,rgba(255,0,40,.5),transparent 60%)}50%{background:radial-gradient(circle at 75% 40%,rgba(0,90,255,.5),transparent 60%)}100%{background:radial-gradient(circle at 25% 40%,rgba(255,0,40,.5),transparent 60%)}}
+.evt-alarm-band{background:rgba(150,0,0,.78)!important;border-color:rgba(255,80,80,.6)!important;animation:bandPulse .7s ease-in-out infinite,alarmHue .7s steps(1) infinite!important}
+@keyframes alarmHue{0%{box-shadow:0 0 24px rgba(255,0,40,.8)}50%{box-shadow:0 0 24px rgba(0,90,255,.8)}100%{box-shadow:0 0 24px rgba(255,0,40,.8)}}
+.evt-virus{filter:drop-shadow(0 2px 5px rgba(120,0,0,.6))}
+
+/* ═══ Grande notification en haut du décor ═══ */
+.scene-notif{position:absolute;top:0;left:0;right:0;z-index:240;background:linear-gradient(180deg,rgba(10,16,32,.94),rgba(10,16,32,.78));color:#fff;font-size:22px;font-weight:900;text-align:center;padding:14px 16px;line-height:1.25;pointer-events:none;border-bottom:2px solid rgba(120,160,255,.3);text-shadow:0 2px 6px rgba(0,0,0,.6);box-shadow:0 6px 22px rgba(0,0,0,.45)}
+.scene-notif.hidden{display:none}
+.scene-notif-in{animation:sceneNotifIn .45s cubic-bezier(.2,1.2,.4,1)}
+@keyframes sceneNotifIn{0%{transform:translateY(-100%);opacity:0}100%{transform:translateY(0);opacity:1}}
+
 /* ═══ MINI-JEU intro + countdown circulaire ═══ */
 .mini-intro{text-align:center;padding:20px 16px}
 .mini-intro h3{font-size:22px;font-weight:900;color:#ffd633;margin:8px 0}
@@ -602,12 +615,13 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .prog-sub{font-size:11px;color:#9a85c0;margin-top:8px;font-weight:700}
 
 /* ═══ Événement — compte à rebours scène + chasseur ═══ */
-.evt-countdown{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:235;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+/* Positionné à 70% du bas de la scène, couleur ROUGE */
+.evt-countdown{position:absolute;bottom:70%;left:50%;top:auto;transform:translateX(-50%);z-index:235;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
 .evt-cd-ring{position:relative;width:72px;height:72px}
 .evt-cd-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-.evt-cd-track{fill:none;stroke:rgba(255,255,255,.25);stroke-width:4}
-.evt-cd-fill{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
-.evt-cd-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.7)}
-.evt-cd-label{font-size:13px;font-weight:800;color:#fff;background:rgba(0,0,0,.55);padding:4px 12px;border-radius:12px}
+.evt-cd-track{fill:none;stroke:rgba(255,40,40,.25);stroke-width:4}
+.evt-cd-fill{fill:none;stroke:#ff2b2b;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .9s linear;filter:drop-shadow(0 0 4px rgba(255,40,40,.8))}
+.evt-cd-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900;color:#ff3b3b;text-shadow:0 2px 6px rgba(0,0,0,.7)}
+.evt-cd-label{font-size:13px;font-weight:800;color:#fff;background:rgba(180,0,0,.6);padding:4px 12px;border-radius:12px}
 .evt-hunter{animation:hunterBob 1.2s ease-in-out infinite}
 @keyframes hunterBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
