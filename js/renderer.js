@@ -1,0 +1,540 @@
+var Renderer={
+    els:{},walkDir:1,walkTarget:50,currentPetX:50,
+    _lastMood:null,_lastSprite:'',_lastStade:-1,_curAnim:'idle',_curFlip:false,
+    _actionLock:false,
+
+    ANIMS:{
+        idle:'spriteIdle 2.5s ease-in-out infinite',
+        walking:'spriteWalk .4s ease-in-out infinite',
+        eating:'spriteEat .5s ease-in-out infinite',
+        sleeping:'spriteSleep 2s ease-in-out infinite',
+        happy:'spriteHappy .3s ease-in-out 3',
+        sad:'spriteSad 1.5s ease-in-out infinite',
+        sick:'spriteSick 1s ease-in-out infinite'
+    },
+
+    init:function(){
+        var g=function(id){return document.getElementById(id)};
+        this.els={pet:g('pet'),petSprite:g('pet-sprite'),petWrapper:g('pet-wrapper'),scene:g('scene'),sceneItems:g('scene-items'),poopContainer:g('poop-container'),emotionBubble:g('emotion-bubble'),emotionIcon:g('emotion-icon'),speechBubble:g('speech-bubble'),speechText:g('speech-text'),moodEmoji:g('mood-emoji')};
+        var style=document.createElement('style');
+        style.textContent='@keyframes spriteIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}@keyframes spriteWalk{0%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-3px) rotate(1deg)}}@keyframes spriteEat{0%,100%{transform:rotate(0)}25%{transform:rotate(6deg) translateY(3px)}75%{transform:rotate(-3deg)}}@keyframes spriteSleep{0%,100%{transform:scale(1)}50%{transform:scale(.97) translateY(2px)}}@keyframes spriteHappy{0%,100%{transform:translateY(0)}25%{transform:translateY(-10px) rotate(-3deg)}75%{transform:translateY(-10px) rotate(3deg)}}@keyframes spriteSad{0%,100%{transform:translateY(0)}50%{transform:translateY(2px) scale(.97)}}@keyframes spriteSick{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}';
+        document.head.appendChild(style);
+        this._applyAnim('idle');
+    },
+
+    _applyAnim:function(name){
+        if(this._curAnim===name||this._actionLock)return;
+        this._curAnim=name;
+        var s=this.els.petSprite;if(!s)return;
+        s.style.animation=this.ANIMS[name]||this.ANIMS.idle;
+    },
+    _forceAnim:function(name){
+        this._curAnim=name;
+        var s=this.els.petSprite;if(!s)return;
+        s.style.animation='none';var self=this;
+        requestAnimationFrame(function(){s.style.animation=self.ANIMS[name]||self.ANIMS.idle;});
+    },
+    _applyFlip:function(f){
+        if(this._curFlip===f)return;this._curFlip=f;
+        this.els.petWrapper.style.transform='translateX(-50%)'+(f?' scaleX(-1)':'');
+    },
+
+
+    update:function(pet){if(!pet)return;this.updateHUD(pet);this.updateStats(pet);this.updatePetSprite(pet);this.updatePoops(pet);this.updateSleepState(pet);this.updateMoodEmoji(pet);this.updateSleepButton(pet);},
+
+    updateHUD:function(pet){
+        var stage=Engine.STAGES[pet.stade];
+        var el=document.getElementById('hud-stage');if(el)el.textContent=Engine.tName(stage);
+        var lv=document.getElementById('hud-level');
+        if(lv){var stage=Engine.STAGES[pet.stade];var pct=stage.heures?Math.min(100,Math.round((Date.now()-pet.derniereEvolution)/3600000/stage.heures*100)):100;lv.textContent=Engine.tName(stage)+' '+pct+'%';}
+        var coins=document.getElementById('hud-coins');if(coins)coins.textContent='🪙 '+pet.coins;
+        var dot=document.getElementById('alert-dot');if(dot)dot.classList.toggle('hidden',!Engine.hasAlerts(pet));
+        var sprite=Engine.getSpriteForPet(pet);
+        var avi=document.getElementById('tb-avatar-img');if(avi&&this._lastSprite!==sprite)avi.src=sprite;
+        this.updateXPRing(pet);
+        var ce=document.getElementById('hud-coins');if(ce){var nh=Engine.HOUSING[pet.housingLevel+1];ce.classList.toggle('coins-pulse',pet.coins>=50||(nh&&pet.coins>=nh.cost));}
+    },
+    updateXPRing:function(pet){var ring=document.getElementById('xp-ring');if(!ring)return;var s=Engine.STAGES[pet.stade];var pct=s.heures?Math.min(1,(Date.now()-pet.derniereEvolution)/3600000/s.heures):1;ring.style.strokeDashoffset=(132*(1-pct)).toFixed(1);},
+
+    updateStats:function(pet){
+        // Bonheur = average of all gauges (displayed full width above)
+        var gauges=[pet.faim,pet.energie,pet.sante,pet.hygiene||50,pet.amour||30,(pet.jeu||0),(pet.travail||0)];
+        var avg=gauges.reduce(function(a,b){return a+b;},0)/gauges.length;
+        pet.bonheur=Math.max(0,Math.min(100,avg));
+
+        var bonBar=document.getElementById('stat-bonheur-main');
+        if(bonBar){bonBar.style.width=pet.bonheur+'%';bonBar.style.background=this._gc(pet.bonheur);
+            bonBar.classList.toggle('blink-danger',pet.bonheur<20);}
+        var bonPct=document.getElementById('pct-bonheur-main');
+        if(bonPct)bonPct.textContent=Math.round(pet.bonheur)+'%';
+
+        // Individual stats (jeu replaces bonheur slot)
+        var stats=[['faim',pet.faim],['jeu',pet.jeu||0],['energie',pet.energie],['sante',pet.sante],['hygiene',pet.hygiene||50],['amour',pet.amour||30]];
+        for(var i=0;i<stats.length;i++){
+            var n=stats[i][0],v=Math.max(0,Math.min(100,stats[i][1]));
+            var bar=document.getElementById('stat-'+n);
+            if(bar){bar.style.width=v+'%';bar.style.background=this._gc(v);
+                bar.classList.toggle('blink-danger',v<20);}
+            var txt=document.getElementById('pct-'+n);if(txt)txt.textContent=Math.round(v)+'%';
+        }
+        this._showHints(pet);
+    },
+    _gc:function(v){if(v>=70)return'#44cc66';if(v>=50)return'#a0cc44';if(v>=40)return'#ddcc00';if(v>=30)return'#e8a020';if(v>=20)return'#e06820';if(v>=15)return'#d83030';return'#cc1515';},
+
+    _showHints:function(pet){
+        var hint=document.getElementById('hint-bar');if(!hint)return;
+        var msg='';
+        if(pet.faim<20)msg=I18n.t('hint_hunger');
+        else if(pet.energie<20)msg=I18n.t('hint_energy');
+        else if(pet.sante<20)msg=I18n.t('hint_health');
+        else if((pet.hygiene||50)<20)msg=I18n.t('hint_hygiene');
+        else if((pet.amour||30)<20)msg=I18n.t('hint_love');
+        else if((pet.jeu||0)<20)msg=I18n.t('hint_play');
+        hint.textContent=msg;hint.style.display=msg?'block':'none';
+    },
+
+    updatePetSprite:function(pet){
+        var sprite=Engine.getSpriteForPet(pet);
+        if(this._lastSprite!==sprite){this._lastSprite=sprite;this.els.petSprite.src=sprite;}
+        var stage=Engine.STAGES[pet.stade];
+        if(this._lastStade!==pet.stade){this._lastStade=pet.stade;this.els.pet.style.width=stage.size+'px';this.els.pet.style.height=stage.size+'px';}
+        if(!this._actionLock&&this._curAnim!=='walking'){
+            var sm=Engine.getSpriteMood?Engine.getSpriteMood(pet):Engine.getMood(pet);
+            if(sm==='sleeping')this._applyAnim('sleeping');
+            else if(sm==='malade')this._applyAnim('sick');
+            else if(sm==='sad')this._applyAnim('sad');
+            else this._applyAnim('idle');
+        }
+    },
+
+    updateSleepState:function(pet){
+        this.els.petWrapper.classList.toggle('in-building',pet.isSleeping);
+        var zzz=document.getElementById('sleep-zzz');if(zzz)zzz.classList.toggle('hidden',!pet.isSleeping);
+    },
+    updateSleepButton:function(pet){
+        var btn=document.getElementById('btn-dormir');if(!btn)return;
+        var ic=btn.querySelector('.act-icon'),lb=btn.querySelector('.act-label');
+        if(pet.isSleeping){btn.classList.add('sleep-active');btn.classList.remove('on-cooldown');if(ic)ic.textContent='⏹️';if(lb)lb.textContent=I18n.t('act_wake');}
+        else{btn.classList.remove('sleep-active');if(ic)ic.textContent='💤';if(lb)lb.textContent=I18n.t('act_sleep');}
+    },
+    petPulse:function(){
+        var s=this.els.petSprite;if(!s)return;
+        s.style.transition='transform .14s ease';
+        s.style.transform='scale(.96)';
+        setTimeout(function(){s.style.transform='scale(1.02)';
+            setTimeout(function(){s.style.transform='scale(1)';},140);
+        },140);
+    },
+    _positionMoodEmoji:function(){
+        var el=this.els.moodEmoji;if(!el||el.classList.contains('hidden'))return;
+        var pw=this.els.petWrapper;if(!pw||!this.els.scene)return;
+        var sRect=this.els.scene.getBoundingClientRect();
+        var pRect=pw.getBoundingClientRect();
+        var leftPct=((pRect.left-sRect.left)+pRect.width/2)/sRect.width*100;
+        var bottomPct=((sRect.bottom-pRect.top)/sRect.height*100)+5;
+        el.style.left=leftPct+'%';
+        el.style.bottom=bottomPct+'%';
+        el.style.transform='translateX(-50%)';
+    },
+    updateMoodEmoji:function(pet){
+        var el=this.els.moodEmoji;if(!el)return;
+        var key='',emoji='';
+        if(pet.isSleeping){key='sleep';emoji='';}
+        else if((pet.poops||0)>=2){key='poop';emoji='🤢';}
+        else if((pet.hygiene||50)<30){key='dirty';emoji='🪥';}
+        else if((pet.amour||30)<30){key='lonely';emoji='💔';}
+        else if((pet.faim||50)<30){key='hungry';emoji='😫';}
+        else if((pet.energie||50)<30){key='tired';emoji='😴';}
+        else if((pet.sante||50)<30){key='sick';emoji='🤒';}
+        else{key='ok';}
+        if(key===this._lastMood)return;this._lastMood=key;
+        if(!emoji){el.classList.add('hidden');return;}
+        el.textContent=emoji;el.classList.remove('hidden');this._positionMoodEmoji();
+    },
+    updatePoops:function(pet){
+        var c=this.els.poopContainer;if(!c)return;
+        var tp=pet.poops||0,cp=c.querySelectorAll('.poop').length;
+        while(cp<tp){var p=document.createElement('div');p.className='poop';p.textContent='💩';p.style.left=(8+Math.random()*70)+'%';p.style.fontSize='42px';c.appendChild(p);cp++;}
+        while(cp>tp){var pp=c.querySelector('.poop');if(pp)pp.remove();cp--;}
+    },
+
+    tickMovement:function(pet){
+        this._positionMoodEmoji();
+        if(!pet||pet.isSleeping||pet.estMort||this._actionLock||this._calinLock||this._showerLock||this._studyLock)return;
+        var maxX=this._chantalActive?52:85;
+        if(Math.random()<.02)this.walkTarget=15+Math.random()*(maxX-15);
+        if(this.currentPetX>maxX){this.walkTarget=Math.min(this.walkTarget,maxX);}
+        var dx=this.walkTarget-this.currentPetX;
+        if(Math.abs(dx)>2){
+            this.walkDir=dx>0?1:-1;this.currentPetX+=this.walkDir*.3;
+            this.els.petWrapper.style.left=this.currentPetX+'%';
+            this._applyAnim('walking');
+        }else{
+            if(this._curAnim==='walking')this._applyAnim('idle');
+            if(Math.random()<.005)this.walkTarget=15+Math.random()*70;
+        }
+        this._applyFlip(this.walkDir<0);
+    },
+
+    // ═══ COUNTDOWN — styled with label + timer ═══
+    _countdown:function(label,seconds,color,onEnd){
+        if(typeof color==='function'){onEnd=color;color='#44cc66';}
+        var cd=document.createElement('div');cd.className='countdown-display';
+        cd.innerHTML='<div class="cd-label" style="color:'+color+'">'+label+'</div><div class="cd-ring"><svg viewBox="0 0 40 40"><circle class="cd-track" cx="20" cy="20" r="16"/><circle class="cd-fill" cx="20" cy="20" r="16" id="cd-arc-'+Date.now()+'"/></svg><span class="cd-num">'+seconds+'</span></div>';
+        this.els.scene.appendChild(cd);
+        var remaining=seconds;var total=seconds;
+        var arc=cd.querySelector('.cd-fill');var circ=100.5;
+        if(arc){arc.style.stroke=color;arc.style.strokeDasharray=circ;arc.style.strokeDashoffset=0;}
+        var iv=setInterval(function(){remaining--;
+            var numEl=cd.querySelector('.cd-num');if(numEl)numEl.textContent=remaining;
+            if(arc)arc.style.strokeDashoffset=(circ*(1-remaining/total));
+            if(remaining<=0){clearInterval(iv);cd.remove();if(onEnd)onEnd();}
+        },1000);
+        return{el:cd,interval:iv};
+    },
+
+    // ═══ GAUGE ANIMATION — animated bar rising +20% ═══
+    _statLabelKey:{faim:'stat_hunger',jeu:'stat_play',energie:'stat_energy',sante:'stat_health',hygiene:'stat_hygiene',amour:'stat_love',bonheur:'stat_happiness'},
+    animateGauge:function(statName,label,fromPct,toPct,color){
+        var bar=document.getElementById('stat-'+statName);
+        var txt=document.getElementById('pct-'+statName);
+        // Label localisé d'après la clé de stat (ignore le label passé)
+        var lk=this._statLabelKey[statName];
+        if(lk&&typeof I18n!=='undefined')label=I18n.t(lk);
+        // Color based on final value (correct gauge color) unless explicitly given
+        var gColor=color||this._gc(toPct);
+        var delta=Math.round(toPct-fromPct);
+        var deltaStr=(delta>=0?'+':'')+delta+'%';
+        var popup=document.createElement('div');popup.className='gauge-popup';
+        popup.innerHTML='<span class="gp-label">'+label+'</span><div class="gp-bar-wrap"><div class="gp-bar-bg"><div class="gp-bar-fill" style="width:'+fromPct+'%;background:'+gColor+'"></div></div><span class="gp-delta">'+deltaStr+'</span></div>';
+        if(this.els.scene)this.els.scene.appendChild(popup);
+        setTimeout(function(){var fill=popup.querySelector('.gp-bar-fill');if(fill)fill.style.width=toPct+'%';},100);
+        if(bar){bar.style.transition='width 1.5s ease';bar.style.width=toPct+'%';bar.style.background=gColor;}
+        if(txt)txt.textContent=Math.round(toPct)+'%';
+        setTimeout(function(){popup.remove();},3500);
+    },
+
+    // ═══ GAUGE RESULT ═══
+    showGaugeResult:function(label,pct){
+        var d=document.createElement('div');d.className='gauge-result';
+        d.innerHTML='<div class="gr-label">'+label+'</div><div class="gr-bar"><div class="gr-fill" style="width:0;background:'+this._gc(pct)+'"></div></div><div class="gr-pct">+20%</div>';
+        this.els.scene.appendChild(d);
+        requestAnimationFrame(function(){var f=d.querySelector('.gr-fill');if(f)f.style.width=pct+'%';});
+        setTimeout(function(){d.remove();},3000);
+    },
+
+    // ═══ NOURRIR — big food pulsing + flies to beak ═══
+    // ═══ Fly a small item from origin to pet, fade to 0 on arrival ═══
+    _flyItemToPet:function(emoji,rotate,startBottomPct){
+        var scene=this.els.scene;if(!scene)return;
+        var pw=this.els.petWrapper;if(!pw)return;
+        var sRect=scene.getBoundingClientRect();
+        var pRect=pw.getBoundingClientRect();
+        var sb=(startBottomPct!==undefined)?startBottomPct:55;
+        var startX=sRect.width*0.5;
+        var startY=sRect.height*(1-sb/100);
+        // Target: center of pet
+        var targetX=(pRect.left-sRect.left)+pRect.width/2;
+        var targetY=(pRect.top-sRect.top)+pRect.height*0.4;
+        var dx=targetX-startX, dy=targetY-startY;
+        var item=document.createElement('div');
+        item.style.cssText='position:absolute;font-size:30px;z-index:8;pointer-events:none;left:'+startX+'px;top:'+startY+'px';
+        item.textContent=emoji;
+        scene.appendChild(item);
+        var rot=rotate?' rotate(180deg)':'';
+        if(item.animate){
+            item.animate([
+                {transform:'translate(0,0) scale(1)'+rot,opacity:1},
+                {transform:'translate('+(dx*0.85)+'px,'+(dy*0.85)+'px) scale(.6)'+rot,opacity:.85,offset:.75},
+                {transform:'translate('+dx+'px,'+dy+'px) scale(.15)'+rot,opacity:0}
+            ],{duration:1300,easing:'ease-in',fill:'forwards'}).onfinish=function(){if(item.parentNode)item.remove();};
+        }else{setTimeout(function(){if(item.parentNode)item.remove();},1300);}
+    },
+
+    petEatAnimation:function(foodEmoji,onEnd,seconds){
+        this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('eating');
+        seconds=seconds||10;
+        var emoji=foodEmoji||'🌾';
+        var big=document.createElement('div');big.className='big-food-anim';big.textContent=emoji;
+        big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%)';
+        this.els.scene.appendChild(big);
+        var feedLoop=setInterval(function(){self._flyItemToPet(emoji,false);},1500);
+        var timer=this._countdown(I18n.t('lbl_eating'),seconds,'#44cc66',function(){
+            clearInterval(feedLoop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        });
+    },
+
+    // ═══ LECTURE — book at pet HEIGHT, pet looks right at it ───
+    _resetLocks:function(){
+        this._actionLock=false;this._studyLock=false;this._showerLock=false;this._calinLock=false;
+    },
+    showStudyAnimation:function(onEnd){
+        this._resetLocks();
+        var self=this;this._actionLock=true;this._studyLock=true;this._forceAnim('idle');
+        // Book beside pet (not overlapping), pages facing pet
+        var bookSide=(this.currentPetX>50)?-18:18; // place book on the side with more room
+        var bookX=Math.max(8,Math.min(82,this.currentPetX+bookSide));
+        var book=document.createElement('div');book.className='big-food-anim';book.textContent='📖';
+        book.style.top='auto';book.style.bottom='55%';book.style.left='55%';
+        // Flip book so open pages face the pet
+        var bookFlip=(bookX<this.currentPetX)?'':' scaleX(-1)';
+        book.style.transform='translateX(-50%)'+bookFlip;
+        this.els.scene.appendChild(book);
+        // Pet faces the book
+        this._applyFlip(bookX<this.currentPetX);
+        var loop=setInterval(function(){self._flyItemToPet('🧠',false);},1400);
+        var timer=this._countdown(I18n.t('lbl_reading'),40,'#4a90d9',function(){
+            clearInterval(loop);book.remove();self._actionLock=false;self._studyLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        });
+    },
+
+    // ═══ DOUCHE — 30s, showerhead above pet ═══
+    showHeavyShower:function(onEnd){
+        this._resetLocks();var self=this;this._actionLock=true;this._showerLock=true;this._forceAnim('idle');
+        var big=document.createElement('div');big.className='big-food-anim';big.textContent='🚿';
+        big.style.bottom='52%';big.style.top='auto';big.style.transform='translateX(-50%)';
+        this.els.scene.appendChild(big);
+        var loop=setInterval(function(){self._flyItemToPet('💧',false);},450);
+        var timer=this._countdown(I18n.t('lbl_washing'),30,'#3498db',function(){
+            clearInterval(loop);big.remove();self._actionLock=false;self._showerLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        });
+    },
+
+    // ═══ BALAI — broom sweeps poops, they fade ═══
+    showBigBroom:function(onEnd,poopCount){
+        this._resetLocks();var self=this;this._actionLock=true;
+        // One broom per poop, placed ON each poop, fading progressively over the countdown
+        var poops=this.els.poopContainer?Array.prototype.slice.call(this.els.poopContainer.querySelectorAll('.poop')):[];
+        var n=poopCount||poops.length||1;
+        var dur=Math.max(3,n*2); // ~2s per poop
+        var brooms=[];
+        for(var i=0;i<poops.length;i++){
+            var poop=poops[i];
+            var left=parseFloat(poop.style.left)||(20+i*20);
+            var bottom=parseFloat(poop.style.bottom)||6;
+            var broom=document.createElement('div');
+            broom.textContent='🧹';
+            broom.style.cssText='position:absolute;font-size:44px;z-index:8;pointer-events:none;left:'+left+'%;bottom:'+(bottom+2)+'%;transform:translateX(-50%);animation:broomSwing .5s ease-in-out infinite';
+            this.els.scene.appendChild(broom);
+            brooms.push(broom);
+            // Fade the poop progressively over the countdown
+            (function(p,delay){p.style.transition='opacity '+dur+'s linear';setTimeout(function(){p.style.opacity='0';},80);})(poop);
+        }
+        var timer=this._countdown(I18n.t('lbl_cleaning'),dur,'#e8a020',function(){
+            for(var b=0;b<brooms.length;b++)brooms[b].remove();
+            for(var pp=0;pp<poops.length;pp++){if(poops[pp].parentNode)poops[pp].remove();}
+            self._actionLock=false;if(onEnd)onEnd();
+        });
+    },
+
+    // ═══ SERINGUE — 180°, flies to pet ═══
+    showBigSyringe:function(onEnd,opts){
+        opts=opts||{};
+        this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('sick');
+        var big=document.createElement('div');big.className='big-food-anim';big.textContent='💉';
+        big.style.bottom='45%';big.style.top='auto';big.style.transform='translateX(-50%) rotate(180deg)';
+        this.els.scene.appendChild(big);
+        var loop=setInterval(function(){self._flyItemToPet('💉',true,45);},1500);
+        var dur=opts.duration||20;
+        var finish=function(){clearInterval(loop);if(big.parentNode)big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();};
+        if(opts.noTimer){
+            // Pas de compte à rebours propre (géré par l'appelant) — on s'arrête après dur secondes
+            setTimeout(finish,dur*1000);
+        }else{
+            this._countdown(I18n.t('lbl_healing'),dur,'#e74c3c',finish);
+        }
+    },
+
+    // ═══ BROSSAGE — big toothbrush, small ones fly to pet, 20s +20% ═══
+    showToothbrush:function(onEnd){
+        this._resetLocks();var self=this;this._actionLock=true;this._forceAnim('idle');
+        var big=document.createElement('div');big.className='big-food-anim';big.textContent='🪥';
+        big.style.bottom='55%';big.style.top='auto';big.style.transform='translateX(-50%)';
+        this.els.scene.appendChild(big);
+        var loop=setInterval(function(){self._flyItemToPet('🪥',false,55);},1500);
+        var timer=this._countdown(I18n.t('lbl_brushing'),20,'#3498db',function(){
+            clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        });
+    },
+
+    // ═══ CALINER — hen static left, pet locked, countdown ═══
+    showHenVisit:function(henSprite,petSize,onAmourEnd,henBottom){
+        var w=document.getElementById('hen-wrapper'),img=document.getElementById('hen-sprite');
+        img.src=henSprite;img.style.width=(petSize||120)+'px';img.style.height=(petSize||120)+'px';
+        w.style.left='3%';w.style.bottom=(henBottom!==undefined?henBottom:10)+'%';w.style.position='absolute';
+        w.style.transition='none';
+        w.classList.remove('hidden');
+        // Lock pet — push right
+        var self=this;
+        var safePetX=Math.max(45,this.currentPetX); // Strong exclusion: pet stays right half
+        this.currentPetX=safePetX;this.walkTarget=Math.max(55,safePetX); // Walk target also stays right
+        this.els.petWrapper.style.left=safePetX+'%';
+        this._calinLock=true;
+        var heartLoop=setInterval(function(){
+            var hrt=document.createElement('div');hrt.className='float-item';
+            hrt.textContent=['💕','❤️','💗','💖'][Math.floor(Math.random()*4)];
+            hrt.style.left=(5+Math.random()*22)+'%';
+            hrt.style.top=(28+Math.random()*28)+'%';
+            hrt.style.fontSize='48px';
+            self.els.sceneItems.appendChild(hrt);setTimeout(function(){hrt.remove();},1500);
+        },800);
+        var timer=this._countdown(I18n.t('lbl_intimate'),60,'#e84393',function(){
+            clearInterval(heartLoop);w.classList.add('hidden');self._calinLock=false;
+            if(onAmourEnd)onAmourEnd();
+        });
+    },
+
+    // ═══ DORMIR — 10s with Zzz, gauge at end ═══
+    showSleepAnimation:function(onEnd,seconds){
+        this._resetLocks();var self=this;this._actionLock=true;
+        seconds=seconds||10;
+        this._forceAnim('sleeping');
+        this._sleepZLoop=setInterval(function(){
+            var z=document.createElement('div');z.className='zzz';z.textContent='Z';
+            z.style.left=(self.currentPetX+5+Math.random()*5)+'%';z.style.top=(35+Math.random()*10)+'%';
+            z.style.fontSize=(20+Math.random()*16)+'px';
+            self.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);
+        },800);
+        this._sleepTimer=this._countdown(I18n.t('lbl_sleeping'),seconds,'#9b59b6',function(){
+            clearInterval(self._sleepZLoop);self._sleepZLoop=null;self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
+        });
+    },
+    stopSleepAnimation:function(){
+        if(this._sleepZLoop){clearInterval(this._sleepZLoop);this._sleepZLoop=null;}
+        if(this._sleepTimer){if(this._sleepTimer.interval)clearInterval(this._sleepTimer.interval);if(this._sleepTimer.el)this._sleepTimer.el.remove();this._sleepTimer=null;}
+        // Remove lingering zzz
+        if(this.els.sceneItems){var zs=this.els.sceneItems.querySelectorAll('.zzz');for(var i=0;i<zs.length;i++)zs[i].remove();}
+        this._actionLock=false;this._forceAnim('idle');
+    },
+
+    petHappyAnimation:function(){this._forceAnim('happy');var s=this;setTimeout(function(){s._forceAnim('idle');},1200);},
+    showEmotion:function(e,d){this.els.emotionIcon.textContent=e;this.els.emotionBubble.classList.remove('hidden');var s=this;setTimeout(function(){s.els.emotionBubble.classList.add('hidden');},d||1500);},
+    showSpeech:function(t){
+        var b=this.els.speechBubble,tx=this.els.speechText;
+        tx.textContent=t;
+        b.setAttribute('dir','ltr');
+        // Position above current pet (bubble is now OUTSIDE pet-wrapper, no mirror)
+        var petBottom=8; // pet wrapper bottom %
+        b.style.left=this.currentPetX+'%';
+        b.style.bottom='42%';
+        b.style.transform='translateX(-50%)';
+        b.classList.remove('hidden');
+        var s=this;clearTimeout(this._speechT);
+        this._speechT=setTimeout(function(){b.classList.add('hidden');},3000);
+    },
+    showSleepZ:function(){var z=document.createElement('div');z.className='zzz';z.textContent='Z';z.style.left=(this.currentPetX+5)+'%';z.style.top='35%';this.els.sceneItems.appendChild(z);setTimeout(function(){z.remove();},2000);},
+    showHeartAt:function(x,y){
+        // Flood screen with hearts on caress
+        for(var i=0;i<8;i++){
+            (function(idx){
+                setTimeout(function(){
+                    var h=document.createElement('div');h.className='caress-heart';
+                    h.textContent=['💕','❤️','💗','💖','💝'][Math.floor(Math.random()*5)];
+                    h.style.left=(10+Math.random()*80)+'vw';
+                    h.style.top=(20+Math.random()*60)+'vh';
+                    h.style.setProperty('--rot',(Math.random()*40-20)+'deg');
+                    h.style.fontSize=(28+Math.random()*30)+'px';
+                    document.body.appendChild(h);setTimeout(function(){h.remove();},1500);
+                },idx*80);
+            })(i);
+        }
+        // "+1% amour" label
+        var lbl=document.createElement('div');lbl.className='amour-label';lbl.textContent='+1% 💕';
+        lbl.style.left='50%';lbl.style.top='35%';
+        document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1800);
+    },
+    showCoinAt:function(x,y){
+        // Une seule pièce qui s'envole (plus fluide)
+        var c=document.createElement('div');c.className='coin-burst';
+        c.textContent='🪙';
+        c.style.left=x+'px';c.style.top=y+'px';
+        c.style.setProperty('--dx',(Math.random()*30-15)+'px');
+        document.body.appendChild(c);setTimeout(function(){c.remove();},1000);
+        var lbl=document.createElement('div');lbl.className='coin-label';lbl.textContent='+1';
+        lbl.style.left=x+'px';lbl.style.top=(y-20)+'px';
+        document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1200);
+    },
+    showFloatingItem:function(e,x,y){var d=document.createElement('div');d.className='float-item';d.textContent=e;d.style.left=(x||50)+'%';d.style.top=(y||60)+'%';this.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},1500);},
+    showEvolution:function(o,n){document.getElementById('evo-old').textContent=o.emoji;document.getElementById('evo-new').textContent=n.emoji;document.getElementById('evo-desc').textContent=Engine.tName(n);document.getElementById('evolution-screen').classList.remove('hidden');this.launchFireworks();},
+    launchFireworks:function(){
+        var host=document.getElementById('evolution-screen')||document.body;
+        var colors=['#ff5252','#ffd740','#69f0ae','#40c4ff','#e040fb','#ffab40'];
+        var bursts=8;
+        for(var b=0;b<bursts;b++){
+            (function(bi){setTimeout(function(){
+                var cx=15+Math.random()*70, cy=15+Math.random()*45;
+                var col=colors[Math.floor(Math.random()*colors.length)];
+                for(var p=0;p<18;p++){
+                    var ang=(p/18)*Math.PI*2, dist=60+Math.random()*70;
+                    var dot=document.createElement('div');
+                    dot.style.cssText='position:fixed;left:'+cx+'vw;top:'+cy+'vh;width:8px;height:8px;border-radius:50%;background:'+col+';z-index:400;pointer-events:none;box-shadow:0 0 8px '+col+';';
+                    host.appendChild(dot);
+                    dot.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},{transform:'translate(calc(-50% + '+Math.cos(ang)*dist+'px),calc(-50% + '+Math.sin(ang)*dist+'px)) scale(.3)',opacity:0}],{duration:1100+Math.random()*400,easing:'cubic-bezier(.2,.6,.3,1)',fill:'forwards'}).onfinish=function(){dot.remove();};
+                }
+            },bi*350);})(b);
+        }
+    },
+    hideEvolution:function(){document.getElementById('evolution-screen').classList.add('hidden');},
+    showDeath:function(pet){var age=Engine.getAge(pet);document.getElementById('death-desc').textContent=I18n.t('death_lived',{nom:pet.nom,d:age.days,cause:(pet.causeMortKey?I18n.t(pet.causeMortKey):(pet.causeMort||I18n.t('cause_unknown')))});document.getElementById('death-stats').innerHTML='<p style="color:#8899bb">XP:'+pet.experience+' 🪙'+pet.coins+'</p>';document.getElementById('death-screen').classList.remove('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.add('dead-scene');},
+    hideDeath:function(){document.getElementById('death-screen').classList.add('hidden');var sc=document.getElementById('scene');if(sc)sc.classList.remove('dead-scene');},
+    toast:function(m){var el=document.getElementById('toast'),tx=document.getElementById('toast-text');tx.textContent=m;el.classList.remove('hidden');clearTimeout(this._tt);this._tt=setTimeout(function(){el.classList.add('hidden');},2500);},
+
+    // Grande notification en haut du décor de jeu (visible dans la scène)
+    sceneNotif:function(m){
+        var el=document.getElementById('scene-notif'),tx=document.getElementById('scene-notif-text');
+        if(!el||!tx){this.toast(m);return;}
+        tx.textContent=m;
+        el.classList.remove('hidden');
+        el.classList.remove('scene-notif-in');void el.offsetWidth;el.classList.add('scene-notif-in');
+        clearTimeout(this._snt);
+        this._snt=setTimeout(function(){el.classList.add('hidden');},5000);
+    },
+
+    // Nettoie tous les artefacts d'événement (tornades, renards, virus, sirène, overlays, compte à rebours)
+    clearEventArtifacts:function(){
+        var scene=document.getElementById('scene');
+        if(scene){
+            var sel=['.evt-tmp','.evt-fox','.evt-siren','.evt-storm-dark','.evt-rain-overlay','.evt-hunter','.evt-chantal','#evt-countdown','#evt-storm-band','.evt-covid-alarm'];
+            for(var i=0;i<sel.length;i++){var els=scene.querySelectorAll(sel[i]);for(var j=0;j<els.length;j++)els[j].remove();}
+        }
+        var pw=document.getElementById('pet-wrapper');if(pw)pw.style.visibility='visible';
+        this._chantalActive=false;
+        try{if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(false);}catch(e){}
+        try{if(typeof App!=='undefined'&&App._rainAudio)App._rainAudio.pause();}catch(e){}
+        try{if(typeof App!=='undefined'&&App._alarmAudio){App._alarmAudio.pause();App._alarmAudio.currentTime=0;}}catch(e){}
+    },
+    haptic:function(){},
+    renderFoodGrid:function(){return Engine.FOODS.map(function(f){return'<div class="food-item" data-food="'+f.id+'"><span class="food-icon">'+f.emoji+'</span><span class="food-name">'+Engine.tName(f)+'</span><span class="food-stats">'+I18n.t('food_plus',{n:f.faim})+'</span></div>';}).join('');},
+    _circGauge:function(pct,color,centerText,sub){
+        var circ=100.5;var off=circ*(1-pct);
+        return '<div class="prog-circ"><svg viewBox="0 0 40 40"><circle class="prog-track" cx="20" cy="20" r="16"/><circle class="prog-fill" cx="20" cy="20" r="16" style="stroke:'+color+';stroke-dasharray:'+circ+';stroke-dashoffset:'+off+'"/></svg><div class="prog-center">'+centerText+'</div></div><div class="prog-sub">'+sub+'</div>';
+    },
+    renderStatsDetail:function(pet){
+        var sc=function(v){return v>=70?'#44cc66':v>=40?'#f0c040':'#e74c3c';};
+        var stage=Engine.STAGES[pet.stade],age=Engine.getAge(pet);
+        var xp=Engine.getXPProgress(pet);
+        var evo=Engine.getEvolutionProgress(pet);
+        // ── Bloc progression EN HAUT ──
+        var html='<div class="stats-progress-row">';
+        // XP
+        html+='<div class="prog-card"><div class="prog-title">⭐ Expérience</div>'+
+            this._circGauge(xp.done,'#b388ff',Math.round(xp.done*100)+'%',xp.xp+' / '+xp.target+' XP')+'</div>';
+        // Évolution
+        if(evo.total>0){
+            html+='<div class="prog-card"><div class="prog-title">🥚 Évolution</div>'+
+                this._circGauge(evo.done,'#4a90d9',Math.round(evo.done*100)+'%',Math.floor(evo.elapsed)+'h / '+evo.total+'h')+'</div>';
+        }else{
+            html+='<div class="prog-card"><div class="prog-title">🏆 Stade final</div>'+
+                this._circGauge(1,'#f0c040','MAX','Coq Vieux')+'</div>';
+        }
+        html+='</div>';
+        // Cartes infos
+        html+='<div class="stats-info-grid"><div class="stats-info-card"><div class="label">'+I18n.t('info_stage')+'</div><div class="value">'+stage.emoji+' '+Engine.tName(stage)+'</div></div><div class="stats-info-card"><div class="label">'+I18n.t('info_age')+'</div><div class="value">'+age.days+'j '+age.hours+'h '+age.minutes+'min</div></div></div>';
+        // Bonheur
+        html+='<div class="stats-section-title">Jauges</div>';
+        html+='<div class="bonheur-main-row"><span class="stat-emoji">😊</span><div class="stat-info"><div class="stat-name">Bonheur général</div><div class="stat-value" style="color:'+sc(pet.bonheur)+'">'+Math.round(pet.bonheur)+'%</div><div class="stat-bar-big"><div class="stat-bar-fill" style="width:'+pet.bonheur+'%;background:'+sc(pet.bonheur)+'"></div></div></div></div>';
+        var rows=[{e:'🌾',n:'Faim',v:pet.faim},{e:'🎮',n:'Jeu',v:pet.jeu||0},{e:'⚡',n:'Énergie',v:pet.energie},{e:'❤️',n:'Santé',v:pet.sante},{e:'🧼',n:'Hygiène',v:pet.hygiene||50},{e:'🧠',n:'Intellect',v:pet.intellect||30},{e:'💕',n:'Amour',v:pet.amour||30},{e:'👷',n:'Travail',v:pet.travail||0}];
+        html+=rows.map(function(s){return'<div class="stat-row"><span class="stat-emoji">'+s.e+'</span><div class="stat-info"><div class="stat-name">'+s.n+'</div><div class="stat-value" style="color:'+sc(s.v)+'">'+Math.round(s.v)+'%</div><div class="stat-bar-big"><div class="stat-bar-fill" style="width:'+s.v+'%;background:'+sc(s.v)+'"></div></div></div></div>';}).join('');
+        return html;
+    }
+};
