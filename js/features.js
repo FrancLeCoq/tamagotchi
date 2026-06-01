@@ -182,11 +182,17 @@ var Features = {
     _showChantal:function(){
         var scene=document.getElementById('scene');if(!scene)return;
         var old=document.getElementById('evt-chantal');if(old)old.remove();
+        var oldb=document.getElementById('evt-chantal-bubble');if(oldb)oldb.remove();
         var img=document.createElement('img');
         img.src='assets/events/chantal.png';img.id='evt-chantal';img.className='evt-chantal';
-        // À DROITE de l'écran, position basse (5% du bas)
+        // À DROITE de l'écran, position basse
         img.style.cssText='position:absolute;right:3%;bottom:-5%;width:150px;z-index:14;pointer-events:none';
         scene.appendChild(img);
+        // Bulle de dialogue au-dessus de la tête de Chantal
+        var bubble=document.createElement('div');
+        bubble.id='evt-chantal-bubble';bubble.className='evt-chantal-bubble evt-tmp';
+        bubble.textContent=I18n.t('ev_friend_bubble');
+        scene.appendChild(bubble);
         // Pousser Francis à gauche pour éviter la superposition
         if(typeof Renderer!=='undefined')Renderer._chantalActive=true;
     },
@@ -201,12 +207,9 @@ var Features = {
         var hunter=document.createElement('img');hunter.src='assets/events/chasseur.png';hunter.className='evt-hunter evt-tmp';
         hunter.style.cssText='position:absolute;left:50%;bottom:4%;height:80%;transform:translateX(-50%);z-index:233;pointer-events:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5))';
         scene.appendChild(hunter);
-        // Bandeau précisant le coût de l'intervention
-        var band=document.createElement('div');band.className='evt-storm-band evt-tmp';
-        band.textContent=I18n.t('ev_band_hunter')+(cout?' (-'+cout+' 🪙)':'');
-        scene.appendChild(band);
+        // Message affiché en haut comme l'événement tempête (bannière scène, pas de débordement)
+        if(typeof Renderer!=='undefined')Renderer.sceneNotif(I18n.t('ev_band_hunter')+(cout?' (-'+cout+' 🪙)':''));
         this._sceneCountdown(10,'',function(){
-            if(band.parentNode)band.remove();
             // Prélèvement EFFECTIF de la taxe au moment où le chasseur part
             if(cout&&cout>0&&pet){
                 pet.coins=Math.max(0,(pet.coins||0)-cout);
@@ -215,8 +218,7 @@ var Features = {
             }
             if(hunter.parentNode)hunter.remove();
             self._stopAlarm();
-            if(typeof Renderer!=='undefined')Renderer.update(pet||App.pet);
-            if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('ev_toast_secured'));
+            if(typeof Renderer!=='undefined'){Renderer.update(pet||App.pet);Renderer.sceneNotif(I18n.t('ev_toast_secured'));}
         });
     },
     // Pièces qui s'envolent (perte) — affiché quand le chasseur part
@@ -278,9 +280,10 @@ var Features = {
         var scene=document.getElementById('scene');
         var self=this;
         p.sante=100;
-        // Bandeau vaccination (animation conservée)
-        var band=null;
-        if(scene){band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.textContent=I18n.t('ev_band_vaccine');scene.appendChild(band);}
+        // Phase 2 : on retire le bandeau "HEALTH ALERT" et on affiche "VACCINATION IN PROGRESS"
+        // en haut, selon le même schéma que le message tempête (bannière scène)
+        var ab=document.getElementById('evt-covid-band');if(ab)ab.remove();
+        if(typeof Renderer!=='undefined')Renderer.sceneNotif(I18n.t('ev_band_vaccine'));
         // Seringue SANS son propre compte à rebours (un seul countdown géré ci-dessous)
         if(typeof Renderer!=='undefined'&&Renderer.showBigSyringe){
             Renderer.showBigSyringe(function(){if(typeof Renderer!=='undefined')Renderer.update(p);},{noTimer:true,duration:10});
@@ -299,7 +302,6 @@ var Features = {
             self._stopCovidDecor();
             self._clearTmp();
             self._stopAlarm();
-            if(band&&band.parentNode)band.remove();
             if(typeof Renderer!=='undefined')Renderer.update(p);
         });
     },
@@ -322,9 +324,9 @@ var Features = {
         this._sceneCountdown(10,'',function(){
             clearInterval(iv);
             if(lbl.parentNode)lbl.remove();
-            var ch=document.getElementById('evt-chantal');if(ch)ch.remove();
+            var ch=document.getElementById('evt-chantal');if(ch)ch.remove();var chb=document.getElementById('evt-chantal-bubble');if(chb)chb.remove();
             if(typeof Renderer!=='undefined')Renderer._chantalActive=false;
-        });
+        },'pink');
     },
     _runEggCoins:function(){
         var scene=document.getElementById('scene');if(!scene)return;
@@ -345,9 +347,9 @@ var Features = {
         this._sceneCountdown(10,'',function(){
             clearInterval(iv);
             if(lbl.parentNode)lbl.remove();
-            var ch=document.getElementById('evt-chantal');if(ch)ch.remove();
+            var ch=document.getElementById('evt-chantal');if(ch)ch.remove();var chb=document.getElementById('evt-chantal-bubble');if(chb)chb.remove();
             if(typeof Renderer!=='undefined')Renderer._chantalActive=false;
-        });
+        },'pink');
     },
     _clearTmp:function(){
         var scene=document.getElementById('scene');if(!scene)return;
@@ -356,10 +358,10 @@ var Features = {
     },
 
     // Compte à rebours circulaire affiché sur la scène (pour les phases d'événement)
-    _sceneCountdown:function(seconds,label,onEnd){
+    _sceneCountdown:function(seconds,label,onEnd,color){
         var scene=document.getElementById('scene');if(!scene){if(onEnd)onEnd();return;}
         var old=document.getElementById('evt-countdown');if(old)old.remove();
-        var cd=document.createElement('div');cd.id='evt-countdown';cd.className='evt-countdown';
+        var cd=document.createElement('div');cd.id='evt-countdown';cd.className='evt-countdown'+(color==='pink'?' evt-countdown-pink':'');
         cd.innerHTML='<div class="evt-cd-ring"><svg viewBox="0 0 40 40"><circle class="evt-cd-track" cx="20" cy="20" r="16"/><circle class="evt-cd-fill" cx="20" cy="20" r="16" id="evt-cd-arc"/></svg><span class="evt-cd-num" id="evt-cd-num">'+seconds+'</span></div>'+(label?'<div class="evt-cd-label">'+label+'</div>':'');
         scene.appendChild(cd);
         var arc=cd.querySelector('#evt-cd-arc');var circ=100.5;if(arc){arc.style.strokeDasharray=circ;arc.style.strokeDashoffset=0;}
@@ -375,14 +377,16 @@ var Features = {
 
     showEvent:function(ev,pet){
         var self=this;
-        // Phase 1 : animation d'intro (5s) avec décor + compte à rebours
+        // Phase 1 : animation d'intro avec décor + compte à rebours
         this._startEventIntro(ev);
         var introSec=ev.intro||5;
+        // Compte à rebours rose pour l'événement Ami (Chantal)
+        var cdColor=(ev.id==='ami')?'pink':null;
         this._sceneCountdown(introSec,'',function(){
             self._stopEventIntro(ev);
             // Phase 2 : modale de choix
             self._showEventChoice(ev,pet);
-        });
+        },cdColor);
     },
     _startEventIntro:function(ev){
         // Son d'alarme pendant toute la durée des événements tempête / renard / covid
