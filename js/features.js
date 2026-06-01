@@ -185,7 +185,7 @@ var Features = {
         var img=document.createElement('img');
         img.src='assets/events/chantal.png';img.id='evt-chantal';img.className='evt-chantal';
         // À DROITE de l'écran, position basse (5% du bas)
-        img.style.cssText='position:absolute;right:3%;bottom:5%;width:150px;z-index:14;pointer-events:none';
+        img.style.cssText='position:absolute;right:3%;bottom:-5%;width:150px;z-index:14;pointer-events:none';
         scene.appendChild(img);
         // Pousser Francis à gauche pour éviter la superposition
         if(typeof Renderer!=='undefined')Renderer._chantalActive=true;

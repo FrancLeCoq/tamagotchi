@@ -310,8 +310,8 @@ var I18n = {
 
         // ─── Roost clicker ───
         mg_roost_title:        {en:'Roost Clicker! 👆',                  fr:'Roost Clicker ! 👆'},
-        mg_roost_intro:        {en:'<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tap Francis as much as you can in 60 seconds!<br>Each tap earns coins: <b>×2</b> by default,<br><b>×3 beyond 500 taps</b>, <b>×4 beyond 1000 taps</b> 🪙<br>and you gain <b>+20% in the Play gauge</b> 🎮</p><button class="mini-btn" id="mg-start">Let\u2019s go! 🐓</button></div>',
-                                fr:'<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tapote Francis un max en 60 secondes !<br>Chaque tap rapporte des pièces : <b>×2</b> par défaut,<br><b>×3 au-delà de 500 taps</b>, <b>×4 au-delà de 1000 taps</b> 🪙<br>et tu gagnes <b>+20% dans la jauge Jeu</b> 🎮</p><button class="mini-btn" id="mg-start">C\u2019est parti ! 🐓</button></div>'},
+        mg_roost_intro:        {en:'<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tap Francis as much as you can in 60 seconds!<br>Each tap earns coins: <b>×2</b> by default,<br><b>×3 past 500 coins</b>, <b>×4 past 1000 coins</b> 🪙<br>and you gain <b>+20% in the Play gauge</b> 🎮</p><button class="mini-btn" id="mg-start">Let\u2019s go! 🐓</button></div>',
+                                fr:'<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tapote Francis un max en 60 secondes !<br>Chaque tap rapporte des pièces : <b>×2</b> par défaut,<br><b>×3 au-delà de 500 pièces</b>, <b>×4 au-delà de 1000 pièces</b> 🪙<br>et tu gagnes <b>+20% dans la jauge Jeu</b> 🎮</p><button class="mini-btn" id="mg-start">C\u2019est parti ! 🐓</button></div>'},
         mg_roost_coins:        {en:'{n} coins (×2!)',                    fr:'{n} pièces (×2 !)'},
         mg_roost_result:       {en:'🪙 +{c} coins<br>🎮 +20% play',      fr:'🪙 +{c} pièces<br>🎮 +20% jeu'},
 

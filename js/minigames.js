@@ -144,8 +144,8 @@ const Minigames = {
             if(!self.active)return;
             e.preventDefault();e.stopPropagation();
             self.taps++;
-            // Multiplicateur par paliers : >1000 = x4, >500 = x3, sinon x2
-            var mult=self.taps>1000?4:(self.taps>500?3:2);
+            // Multiplicateur par paliers basés sur les PIÈCES gagnées : >1000 = x4, >500 = x3, sinon x2
+            var mult=self.score>=1000?4:(self.score>=500?3:2);
             self.score+=mult;
             scoreEl.textContent=self.score;
             coq.style.transition='transform .1s ease';

@@ -236,8 +236,13 @@ var Weather={
         }
         return false;
     },
+    _suspend:function(){this._suspended=true;},
+    _resume:function(){if(this._suspended){this._suspended=false;if(this.ctx&&!this._looping){this._looping=true;var s=this;requestAnimationFrame(function(){s._loop();});}}},
     _loop:function(){
-        if(!this.ctx)return;
+        if(!this.ctx){this._looping=false;return;}
+        // En arrière-plan : on stoppe la boucle (reprise via _resume)
+        if(this._suspended){this._looping=false;return;}
+        this._looping=true;
         if(typeof App!=='undefined'&&App.paused){var s=this;requestAnimationFrame(function(){s._loop();});return;}
         var ctx=this.ctx,cw=this.canvas.width,ch=this.canvas.height,h=this.getHour();
         ctx.clearRect(0,0,cw,ch);

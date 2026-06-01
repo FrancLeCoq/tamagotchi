@@ -195,9 +195,9 @@ var Farm = {
         for(var i=0;i<count;i++){
             this.hens.push({
                 x:30+Math.random()*(this.canvas.width-80),
-                y:this.canvas.height*0.45+Math.random()*(this.canvas.height*0.4),
+                y:this.canvas.height*0.50+Math.random()*(this.canvas.height*0.35),
                 targetX:this.canvas.width*0.28+Math.random()*(this.canvas.width*0.65),
-                targetY:this.canvas.height*0.35+Math.random()*(this.canvas.height*0.37),
+                targetY:this.canvas.height*0.40+Math.random()*(this.canvas.height*0.32),
                 speed:0.3+Math.random()*0.5, flipX:Math.random()>0.5,
                 state:'idle', stateTimer:Math.random()*200, bob:Math.random()*Math.PI*2
             });
@@ -226,7 +226,7 @@ var Farm = {
                 if(r<0.4){
                     h.state='walking';
                     h.targetX=this.canvas.width*0.28+Math.random()*(this.canvas.width*0.65);
-                    h.targetY=this.canvas.height*0.40+Math.random()*(this.canvas.height*0.30);
+                    h.targetY=this.canvas.height*0.45+Math.random()*(this.canvas.height*0.27);
                     h.stateTimer=100+Math.random()*200;
                 } else if(r<0.7){h.state='pecking';h.stateTimer=30+Math.random()*60;}
                 else {h.state='idle';h.stateTimer=50+Math.random()*150;}
@@ -307,9 +307,9 @@ var Farm = {
     addHenToScene:function(){
         if(!this.canvas) return;
         this.hens.push({
-            x:-40, y:this.canvas.height*0.5+Math.random()*(this.canvas.height*0.3),
+            x:-40, y:this.canvas.height*0.55+Math.random()*(this.canvas.height*0.27),
             targetX:this.canvas.width*0.28+Math.random()*(this.canvas.width*0.65),
-            targetY:this.canvas.height*0.35+Math.random()*(this.canvas.height*0.37),
+            targetY:this.canvas.height*0.40+Math.random()*(this.canvas.height*0.32),
             speed:0.5+Math.random()*0.5, flipX:false,
             state:'walking', stateTimer:200, bob:Math.random()*Math.PI*2
         });

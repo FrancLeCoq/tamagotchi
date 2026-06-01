@@ -87,16 +87,17 @@ const Engine = {
     checkFranc:function(cb){
         var self=this;
         var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
-        if(!tg||!tg.initData){
-            try{console.log('[franc] no initData (hors Telegram ou lancé sans Mini App button)');}catch(e){}
+        try{if(tg){tg.ready();tg.expand();}}catch(e){}
+        var initData=tg&&tg.initData?tg.initData:'';
+        if(!initData){
+            try{console.log('[franc] initData empty yet — will retry on next visibility/interval');}catch(e){}
             this._franc.checked=true;
             if(cb)cb(this._franc);
             return;
         }
-        try{tg.ready();tg.expand();}catch(e){}
         fetch(this.SUPABASE+'/check-franc',{
             method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({initData:tg.initData,game_id:this.GAME_ID})
+            body:JSON.stringify({initData:initData,game_id:this.GAME_ID})
         }).then(function(r){return r.ok?r.json():null;}).then(function(d){
             try{console.log('check-franc:',JSON.stringify(d));}catch(e){}
             if(d){

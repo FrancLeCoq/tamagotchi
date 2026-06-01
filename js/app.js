@@ -8,21 +8,73 @@ var App={
         if(typeof I18n!=='undefined')I18n.init();
         try{this.notifEnabled=(localStorage.getItem('francis_notif')==='on');}catch(e){}
         Storage.init();Renderer.init();this.showSplash();this.bindEvents();
-        // Vérifie l'état $FRANC au démarrage (backend), puis rafraîchit le badge
-        this.detectFranc();
-        // Re-vérifie au retour de la page wallet (Telegram revient en visible)
         var self=this;
+        // Appelle ready() tôt pour que initData soit disponible
+        try{var tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand();}}catch(e){}
+        // Vérifie l'état $FRANC au démarrage, avec quelques retries (initData peut arriver avec un léger délai)
+        this.detectFranc();
+        [500,1500,3500].forEach(function(ms){setTimeout(function(){self.detectFranc(true);},ms);});
+        // Re-vérifie au retour sur l'appli (visibilitychange + focus + pageshow)
         document.addEventListener('visibilitychange',function(){
-            if(document.visibilityState==='visible')self.detectFranc();
+            if(document.visibilityState==='visible')self.detectFranc(true);
         });
+        window.addEventListener('focus',function(){self.detectFranc(true);});
+        window.addEventListener('pageshow',function(){self.detectFranc(true);});
         setInterval(function(){
-            if(document.visibilityState==='visible')self.detectFranc();
-        },20000);
+            if(document.visibilityState==='visible')self.detectFranc(true);
+        },15000);
+        // ── Mise en veille / arrière-plan : on stoppe le jeu, on reprend au retour ──
+        document.addEventListener('visibilitychange',function(){
+            if(document.visibilityState==='hidden')self.suspendGame();
+            else self.resumeGame();
+        });
+        window.addEventListener('blur',function(){self.suspendGame();});
+        window.addEventListener('pagehide',function(){self.suspendGame();});
+    },
+
+    _suspended:false,
+    // Arrière-plan : stoppe les boucles + coupe tout son (corrige le bruit de pluie qui continuait)
+    suspendGame:function(){
+        if(this._suspended)return;this._suspended=true;
+        try{this.stopLoops();}catch(e){}
+        // Sauvegarde l'état pour reprise propre selon l'horloge réelle du téléphone
+        try{if(this.pet)Storage.save(this.pet);}catch(e){}
+        // Coupe tous les sons
+        try{if(this._ambientAudio)this._ambientAudio.pause();}catch(e){}
+        try{if(this._rainAudio)this._rainAudio.pause();}catch(e){}
+        try{if(this._alarmAudio){this._alarmAudio.pause();this._alarmAudio.currentTime=0;}}catch(e){}
+        // Stoppe l'animation météo
+        try{if(typeof Weather!=='undefined'&&Weather._suspend)Weather._suspend();}catch(e){}
+    },
+    // Retour au premier plan : recalcule l'heure/les jauges et relance le jeu
+    resumeGame:function(){
+        if(!this._suspended){ // 1er retour éventuel sans suspension préalable
+            this.detectFranc(true);
+            return;
+        }
+        this._suspended=false;
+        // Recalcule l'horloge de jeu et les jauges depuis l'heure réelle du téléphone
+        try{if(typeof Weather!=='undefined'&&Weather._resume)Weather._resume();}catch(e){}
+        if(this.pet&&!this.pet.estMort){
+            try{Engine.updateStats(this.pet);}catch(e){}
+            try{if(typeof Renderer!=='undefined')Renderer.update(this.pet);}catch(e){}
+        }
+        // Ne relance les boucles que si on est bien en jeu
+        var gameVisible=document.getElementById('game-screen')&&document.getElementById('game-screen').classList.contains('active');
+        if(gameVisible&&this.pet&&!this.pet.estMort){
+            this.startLoops();
+            this.requestWakeLock();
+        }
+        // Resynchronise le son selon l'état courant
+        try{this.updateAudio();}catch(e){}
+        // Re-vérifie le $FRANC au retour
+        this.detectFranc(true);
     },
 
     _detecting:false,
-    detectFranc:function(){
-        if(this._detecting)return;this._detecting=true;
+    detectFranc:function(force){
+        if(this._detecting&&!force)return;
+        this._detecting=true;
         var self=this;
         Engine.checkFranc(function(){
             self._detecting=false;
@@ -229,6 +281,11 @@ var App={
     updateAudio:function(){
         this.initAudio();
         var self=this;
+        // En arrière-plan : aucun son
+        if(this._suspended||document.visibilityState==='hidden'){
+            this._ambientAudio.pause();this._rainAudio.pause();if(this._alarmAudio)this._alarmAudio.pause();
+            return;
+        }
         if(this.soundOn){
             // Ambient farm music always plays
             this._ambientAudio.play().catch(function(){});
