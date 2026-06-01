@@ -83,12 +83,23 @@ var App={
             self._detecting=false;
             clearTimeout(self._detectTimeout);
             self.updateHolderBadge();
+            self.updateWalletDebug();
             // Si on était bloqué par la gate et que le $FRANC vient d'être détecté, on relance
             if(Engine.hasFranc()){
                 var gate=document.getElementById('wallet-gate');
                 if(gate&&!gate.classList.contains('hidden')){gate.classList.add('hidden');if(self.pet)self.showGame();}
             }
         });
+    },
+
+    // Panneau de diagnostic wallet (temporaire) affiché sur l'écran d'accueil
+    updateWalletDebug:function(){
+        var el=document.getElementById('wallet-debug');if(!el)return;
+        var d=(Engine._franc&&Engine._franc.debug)?Engine._franc.debug:[];
+        var lines=['🔎 $FRANC DEBUG'];
+        lines=lines.concat(d);
+        lines.push('— hasFranc: '+Engine.hasFranc()+' · walletLinked: '+Engine.walletLinked());
+        el.textContent=lines.join('\n');
     },
 
     // Badge holder : ORANGE si non connecté / VERT + cadenas ouvert si $FRANC détecté
@@ -128,6 +139,7 @@ var App={
         var lbEl=document.getElementById('lb-record');
         if(lbEl){var rec=this.getRecord();var unit=(typeof I18n!=='undefined')?I18n.t('days_suffix'):'days';lbEl.textContent=rec>0?(rec<1?Math.round(rec*24)+'h':rec.toFixed(1)+' '+unit):(I18n.lang==='fr'?'Aucun record':'No record');}
         this.updateHolderBadge();
+        this.updateWalletDebug();
     },
 
     bindEvents:function(){

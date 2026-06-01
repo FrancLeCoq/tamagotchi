@@ -93,6 +93,10 @@ const Engine = {
         var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
         try{if(tg){tg.ready();tg.expand();}}catch(e){}
         var initData=(tg&&tg.initData)?tg.initData:'';
+        // Diagnostic visible en jeu
+        self._franc.debug=[];
+        self._franc.debug.push(tg?('Telegram: OK'):('Telegram: ABSENT (hors app)'));
+        self._franc.debug.push('initData: '+(initData?('présent ('+initData.length+' car.)'):'VIDE'));
         var ids=['tamagotchi','francrun','hormuz']; // 1er = le nôtre, repli = jeux connus (user-scoped)
         function query(i){
             if(i>=ids.length){self._franc.checked=true;if(cb)cb(self._franc);return;}
@@ -101,6 +105,7 @@ const Engine = {
                 body:JSON.stringify({initData:initData,game_id:ids[i]})
             }).then(function(r){return r.ok?r.json():null;}).then(function(d){
                 try{console.log('check-franc('+ids[i]+'):',JSON.stringify(d));}catch(e){}
+                self._franc.debug.push(ids[i]+' → '+(d?JSON.stringify(d):'(réponse vide / erreur HTTP)'));
                 if(d){
                     if(d.walletLinked)self._franc.walletLinked=true;
                     if(d.hasFranc){
@@ -114,7 +119,7 @@ const Engine = {
                 // Détecté → on s'arrête ; sinon on tente le game_id suivant
                 if(self._franc.hasFranc){self._franc.checked=true;if(cb)cb(self._franc);return;}
                 query(i+1);
-            }).catch(function(e){try{console.error('check-franc error:',e);}catch(_){}query(i+1);});
+            }).catch(function(e){try{console.error('check-franc error:',e);}catch(_){}self._franc.debug.push(ids[i]+' → ERREUR: '+(e&&e.message?e.message:e));query(i+1);});
         }
         query(0);
     },
