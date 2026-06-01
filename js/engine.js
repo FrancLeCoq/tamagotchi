@@ -83,7 +83,7 @@ const Engine = {
     getFrancBalance(){ return this._franc.balance||0; },
 
     // Vérifie l'état $FRANC auprès du backend (POST check-franc)
-    // Robuste : log de debug + repli sur game_id 'francrun' (wallet lié au user)
+    // game_id 'tamagotchi' (sauvegarde 100% locale, backend uniquement pour la détection)
     checkFranc:function(cb){
         var self=this;
         var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
@@ -94,27 +94,20 @@ const Engine = {
             return;
         }
         try{tg.ready();tg.expand();}catch(e){}
-        var initData=tg.initData;
-        var tried=[this.GAME_ID,'francrun']; // user-scoped : on tente le game_id puis le repli
-        function query(idx){
-            if(idx>=tried.length){self._franc.checked=true;if(cb)cb(self._franc);return;}
-            fetch(self.SUPABASE+'/check-franc',{
-                method:'POST',headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({initData:initData,game_id:tried[idx]})
-            }).then(function(r){return r.ok?r.json():null;}).then(function(d){
-                try{console.log('[franc] check-franc('+tried[idx]+'):',JSON.stringify(d));}catch(e){}
-                if(d){
-                    // On garde le meilleur résultat (un linked/holder positif l'emporte)
-                    if(d.walletLinked)self._franc.walletLinked=true;
-                    if(d.hasFranc){self._franc.hasFranc=true;self._franc.balance=d.balance||self._franc.balance||0;self._franc.address=d.walletAddress||self._franc.address||'';}
-                    else if(d.walletAddress&&!self._franc.address)self._franc.address=d.walletAddress;
-                }
-                // Si on a déjà détecté le $FRANC, inutile de tenter le repli
-                if(self._franc.hasFranc){self._franc.checked=true;if(cb)cb(self._franc);return;}
-                query(idx+1);
-            }).catch(function(e){try{console.log('[franc] error:',e&&e.message);}catch(_){}query(idx+1);});
-        }
-        query(0);
+        fetch(this.SUPABASE+'/check-franc',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({initData:tg.initData,game_id:this.GAME_ID})
+        }).then(function(r){return r.ok?r.json():null;}).then(function(d){
+            try{console.log('check-franc:',JSON.stringify(d));}catch(e){}
+            if(d){
+                self._franc.hasFranc=!!d.hasFranc;
+                self._franc.walletLinked=!!d.walletLinked;
+                self._franc.balance=d.balance||0;
+                self._franc.address=d.walletAddress||'';
+            }
+            self._franc.checked=true;
+            if(cb)cb(self._franc);
+        }).catch(function(e){try{console.error('check-franc error:',e);}catch(_){}self._franc.checked=true;if(cb)cb(self._franc);});
     },
 
     // Ouvre la Mini App wallet Telegram (repo dédié FrancLeCoq/Wallet).
@@ -239,7 +232,7 @@ const Engine = {
         if((pet.jeu||0)<20&&Math.random()<.3)pool=get('jeu');
         return pool[Math.floor(Math.random()*pool.length)];},
     hasAlerts(pet){return pet.faim<10||pet.bonheur<10||pet.energie<10||pet.sante<10||pet.hygiene<10||pet.amour<10;},
-    getAge(pet){var ms=Date.now()-pet.neLe,h=ms/3600000;return{days:Math.floor(h/24),hours:Math.floor(h%24)};},
+    getAge(pet){var ms=Date.now()-pet.neLe,totalMin=ms/60000;return{days:Math.floor(totalMin/1440),hours:Math.floor((totalMin%1440)/60),minutes:Math.floor(totalMin%60)};},
 
     checkEvolution(pet){
         if(pet.estMort||pet.stade>=4) return false;

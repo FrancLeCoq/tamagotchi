@@ -44,6 +44,8 @@ var Weather={
     },
 
     getHour:function(){return(this.startHour+(Date.now()-this.startTime)/this.HOUR_MS)%24;},
+    // Jour de jeu cumulé (1 jour = 24 heures de jeu). Sert au cycle de l'enclos.
+    gameDay:function(){if(!this.startTime)return 0;return Math.floor((this.startHour+(Date.now()-this.startTime)/this.HOUR_MS)/24);},
     jumpHours:function(h){
         this.startHour=(this.startHour+h)%24;
         this._applySky();this._moveCelestial();this.updateBuilding();this.updateClock();

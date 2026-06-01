@@ -134,7 +134,7 @@ const Minigames = {
         document.getElementById('mg-start').addEventListener('click',function(){self.startRoostGame();});
     },
     startRoostGame() {
-        this.active=true; this.score=0; var timeLeft=60000;
+        this.active=true; this.score=0; this.taps=0; var timeLeft=60000;
         var area=document.getElementById('minigame-area');
         this._startTitleCD(60);
         area.innerHTML='<div class="mini-score" id="mg-score">0</div><div class="mini-timer-bar" id="mg-timer" style="width:100%"></div><div class="mini-field roost-field" id="mg-field"><div class="roost-coq" id="roost-coq">🐓</div></div>';
@@ -143,14 +143,18 @@ const Minigames = {
         function tap(e){
             if(!self.active)return;
             e.preventDefault();e.stopPropagation();
-            self.score+=2; // tapotages x2
+            self.taps++;
+            // Multiplicateur par paliers : >1000 = x4, >500 = x3, sinon x2
+            var mult=self.taps>1000?4:(self.taps>500?3:2);
+            self.score+=mult;
             scoreEl.textContent=self.score;
             coq.style.transition='transform .1s ease';
             coq.style.transform='scale(1.5)';
             setTimeout(function(){coq.style.transform='scale(1)';},120);
-            // +1 pièce qui s'envole haut et s'estompe
-            var fl=document.createElement('div');fl.className='roost-float';fl.textContent='+1🪙';
+            // pièce qui s'envole, affiche le multiplicateur courant
+            var fl=document.createElement('div');fl.className='roost-float';fl.textContent='+'+mult+'🪙';
             fl.style.left=(35+Math.random()*30)+'%';fl.style.top='55%';
+            if(mult>=4)fl.style.color='#ffd700';else if(mult>=3)fl.style.color='#a3e635';
             field.appendChild(fl);
             if(fl.animate){fl.animate([
                 {transform:'translateY(0) scale(1)',opacity:1},

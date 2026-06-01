@@ -107,6 +107,7 @@ var I18n = {
         t_notif_already:       {en:'🔔 Notifications already enabled!',  fr:'🔔 Notifications déjà activées !'},
         t_notif_blocked:       {en:'🔕 Notifications blocked — allow them in your browser settings', fr:'🔕 Notifications bloquées — autorise-les dans les réglages du navigateur'},
         t_notif_on:            {en:'🔔 Notifications enabled!',          fr:'🔔 Notifications activées !'},
+        t_notif_off:           {en:'🔕 Notifications disabled',           fr:'🔕 Notifications désactivées'},
         t_notif_test:          {en:'Francis says hello! 🐓',             fr:'Francis te dit bonjour ! 🐓'},
         t_notif_refused:       {en:'🔕 Notifications declined',          fr:'🔕 Notifications refusées'},
         t_reset_confirm:       {en:'Reset?',                             fr:'Réinitialiser ?'},
@@ -153,7 +154,7 @@ var I18n = {
         // ─── Events (features) ───
         ev_fox_title:          {en:'The foxes attack!',                  fr:'Les renards attaquent !'},
         ev_fox_text:           {en:'Foxes are invading the henhouse! What do you do?', fr:'Les renards envahissent le poulailler ! Que fais-tu ?'},
-        ev_fox_c1:             {en:'Hide Francis + call the hunter 🔫 + pay the −10% pot tax', fr:'Cacher Francis + appeler le chasseur 🔫 + payer la taxe de −10% de la cagnotte'},
+        ev_fox_c1:             {en:'Hide Francis + hunter intervention 🔫 (−10% pot tax 💰)', fr:'Cacher Francis + intervention d\u2019un chasseur 🔫 (taxe de −10% sur votre cagnotte 💰)'},
         ev_fox_c2:             {en:'Hide Francis without paying 🙈',     fr:'Cacher Francis sans payer 🙈'},
         ev_fox_r1:             {en:'The hunter secures the henhouse! (-{c} 🪙)', fr:'Le chasseur sécurise le poulailler ! (-{c} 🪙)'},
         ev_fox_r2:             {en:'Francis was devoured by the foxes... 💀', fr:'Francis a été dévoré par les renards... 💀'},
@@ -177,17 +178,18 @@ var I18n = {
         ev_friend_title:       {en:'Chantal\u2019s visit',               fr:'Visite de Chantal'},
         ev_friend_text:        {en:'Chantal, his breeder, comes to visit him!', fr:'Chantal, son éleveuse, vient lui rendre visite !'},
         ev_friend_c1:          {en:'Give a hug 🤗',                      fr:'Faire un câlin 🤗'},
-        ev_friend_c2:          {en:'Collect the eggs 🥚',               fr:'Récupérer les œufs 🥚'},
+        ev_friend_c2:          {en:'Collect & sell the eggs 🥚',          fr:'Récupérer les œufs et les vendre 🥚'},
         ev_friend_r1:          {en:'+40% love 💕',                       fr:'+40% amour 💕'},
-        ev_friend_r2:          {en:'+50 eggs! 🥚',                       fr:'+50 œufs ! 🥚'},
+        ev_friend_r2:          {en:'🥚→🪙 +50 coins!',                    fr:'🥚→🪙 +50 pièces !'},
 
         ev_band_hunter:        {en:'🔫 The hunter secures the henhouse', fr:'🔫 Le chasseur sécurise le poulailler'},
         ev_band_shelter:       {en:'🏠 Francis is sheltered',           fr:'🏠 Francis est à l\u2019abri'},
         ev_band_love:          {en:'💕 +40% love',                      fr:'💕 +40% amour'},
-        ev_band_eggs:          {en:'🥚 +50 eggs!',                      fr:'🥚 +50 œufs !'},
+        ev_band_eggs:          {en:'🥚→🪙 +50 coins!',                   fr:'🥚→🪙 +50 pièces !'},
         ev_band_vaccine:       {en:'💉 Vaccination in progress',        fr:'💉 Vaccination en cours'},
         ev_toast_secured:      {en:'✅ Henhouse secured!',              fr:'✅ Poulailler sécurisé !'},
         ev_toast_stormgone:    {en:'☀️ The storm has passed!',          fr:'☀️ La tempête est passée !'},
+        ev_storm_fear:         {en:'😰 Francis got scared: −5% on all gauges', fr:'😰 Francis a eu peur : −5% sur toutes les jauges'},
         ev_sick_choose:        {en:'Make your choice!',                  fr:'Fais ton choix !'},
         ev_sick_alarm:         {en:'🚨 HEALTH ALERT 🚨',                fr:'🚨 ALERTE SANITAIRE 🚨'},
 
@@ -308,8 +310,8 @@ var I18n = {
 
         // ─── Roost clicker ───
         mg_roost_title:        {en:'Roost Clicker! 👆',                  fr:'Roost Clicker ! 👆'},
-        mg_roost_intro:        {en:'<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tap Francis as much as you can in 60 seconds!<br>Each tap earns <b>×2 coins</b> 🪙<br>and you gain <b>+20% in the Play gauge</b> 🎮</p><button class="mini-btn" id="mg-start">Let\u2019s go! 🐓</button></div>',
-                                fr:'<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tapote Francis un max en 60 secondes !<br>Chaque tap rapporte <b>×2 pièces</b> 🪙<br>et tu gagnes <b>+20% dans la jauge Jeu</b> 🎮</p><button class="mini-btn" id="mg-start">C\u2019est parti ! 🐓</button></div>'},
+        mg_roost_intro:        {en:'<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tap Francis as much as you can in 60 seconds!<br>Each tap earns coins: <b>×2</b> by default,<br><b>×3 beyond 500 taps</b>, <b>×4 beyond 1000 taps</b> 🪙<br>and you gain <b>+20% in the Play gauge</b> 🎮</p><button class="mini-btn" id="mg-start">Let\u2019s go! 🐓</button></div>',
+                                fr:'<div class="mini-intro"><div style="font-size:54px">👆</div><h3>Roost Clicker</h3><p>Tapote Francis un max en 60 secondes !<br>Chaque tap rapporte des pièces : <b>×2</b> par défaut,<br><b>×3 au-delà de 500 taps</b>, <b>×4 au-delà de 1000 taps</b> 🪙<br>et tu gagnes <b>+20% dans la jauge Jeu</b> 🎮</p><button class="mini-btn" id="mg-start">C\u2019est parti ! 🐓</button></div>'},
         mg_roost_coins:        {en:'{n} coins (×2!)',                    fr:'{n} pièces (×2 !)'},
         mg_roost_result:       {en:'🪙 +{c} coins<br>🎮 +20% play',      fr:'🪙 +{c} pièces<br>🎮 +20% jeu'},
 

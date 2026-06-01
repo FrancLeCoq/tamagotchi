@@ -529,7 +529,7 @@ var Renderer={
         }
         html+='</div>';
         // Cartes infos
-        html+='<div class="stats-info-grid"><div class="stats-info-card"><div class="label">'+I18n.t('info_stage')+'</div><div class="value">'+stage.emoji+' '+Engine.tName(stage)+'</div></div><div class="stats-info-card"><div class="label">'+I18n.t('info_age')+'</div><div class="value">'+age.days+'j '+age.hours+'h</div></div></div>';
+        html+='<div class="stats-info-grid"><div class="stats-info-card"><div class="label">'+I18n.t('info_stage')+'</div><div class="value">'+stage.emoji+' '+Engine.tName(stage)+'</div></div><div class="stats-info-card"><div class="label">'+I18n.t('info_age')+'</div><div class="value">'+age.days+'j '+age.hours+'h '+age.minutes+'min</div></div></div>';
         // Bonheur
         html+='<div class="stats-section-title">Jauges</div>';
         html+='<div class="bonheur-main-row"><span class="stat-emoji">😊</span><div class="stat-info"><div class="stat-name">Bonheur général</div><div class="stat-value" style="color:'+sc(pet.bonheur)+'">'+Math.round(pet.bonheur)+'%</div><div class="stat-bar-big"><div class="stat-bar-fill" style="width:'+pet.bonheur+'%;background:'+sc(pet.bonheur)+'"></div></div></div></div>';

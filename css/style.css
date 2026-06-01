@@ -568,7 +568,8 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .journal-txt{font-size:12.5px;color:#d8c8f0;line-height:1.4}
 
 /* ═══ GOLDEN ENVELOPE (quête à réclamer) ═══ */
-.tb-envelope{background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;animation:envBlink 1s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,200,40,1)) saturate(1.6) hue-rotate(-12deg) brightness(1.15);line-height:1}
+.tb-envelope{background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;line-height:1;transition:filter .3s}
+.tb-envelope.envelope-blink{animation:envBlink 1s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,200,40,1)) saturate(1.6) hue-rotate(-12deg) brightness(1.15)}
 @keyframes envBlink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.15)}}
 
 /* ═══ JEU ATTRAPE (catch) ═══ */

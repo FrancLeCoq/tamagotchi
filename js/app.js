@@ -1,11 +1,12 @@
 var App={
     pet:null,gameLoop:null,moveLoop:null,saveInterval:null,speechInterval:null,sleepZInterval:null,
-    farmWalkLoop:null,soundOn:false,paused:false,
+    farmWalkLoop:null,soundOn:true,paused:false,notifEnabled:false,
     touchStartX:0,touchStartY:0,isSwiping:false,
     _cheatBuffer:'',_cheatTimer:null,_visitTimer:null,
 
     init:function(){
         if(typeof I18n!=='undefined')I18n.init();
+        try{this.notifEnabled=(localStorage.getItem('francis_notif')==='on');}catch(e){}
         Storage.init();Renderer.init();this.showSplash();this.bindEvents();
         // Vérifie l'état $FRANC au démarrage (backend), puis rafraîchit le badge
         this.detectFranc();
@@ -116,7 +117,7 @@ var App={
         });
         document.getElementById('btn-pause').addEventListener('click',function(){self.togglePause();});
         var pr=document.getElementById('btn-pause-resume');if(pr)pr.addEventListener('click',function(){self.setPause(false);});
-        var be=document.getElementById('btn-envelope');if(be)be.addEventListener('click',function(){Features.renderQuests(self.pet);document.getElementById('quests-screen').classList.remove('hidden');});
+        var be=document.getElementById('btn-envelope');if(be)be.addEventListener('click',function(){Features.renderQuests(self.pet);document.getElementById('quests-screen').classList.remove('hidden');self.markQuestsSeen();});
         var bj=document.getElementById('btn-journal');if(bj)bj.addEventListener('click',function(){Features.renderJournal(self.pet);document.getElementById('more-screen').classList.add('hidden');document.getElementById('journal-screen').classList.remove('hidden');});
         document.getElementById('btn-nav-more').addEventListener('click',function(){document.getElementById('more-screen').classList.remove('hidden');});
         document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
@@ -127,10 +128,22 @@ var App={
         document.getElementById('btn-notif').addEventListener('click',function(){
             document.getElementById('more-screen').classList.add('hidden');
             if(!('Notification' in window)){Renderer.toast(I18n.t('t_notif_unsupported'));return;}
-            if(Notification.permission==='granted'){Renderer.toast(I18n.t('t_notif_already'));return;}
+            // Si déjà activé dans l'app → on désactive (bascule)
+            if(self.notifEnabled){
+                self.notifEnabled=false;
+                try{localStorage.setItem('francis_notif','off');}catch(e){}
+                Renderer.toast(I18n.t('t_notif_off'));
+                return;
+            }
+            // Activation : demande la permission si besoin
             if(Notification.permission==='denied'){Renderer.toast(I18n.t('t_notif_blocked'));return;}
+            if(Notification.permission==='granted'){
+                self.notifEnabled=true;try{localStorage.setItem('francis_notif','on');}catch(e){}
+                Renderer.toast(I18n.t('t_notif_on'));try{new Notification('🐓 Francis le Coq',{body:I18n.t('t_notif_test')});}catch(e){}
+                return;
+            }
             Notification.requestPermission().then(function(p){
-                if(p==='granted'){Renderer.toast(I18n.t('t_notif_on'));try{new Notification('🐓 Francis le Coq',{body:I18n.t('t_notif_test')});}catch(e){}}
+                if(p==='granted'){self.notifEnabled=true;try{localStorage.setItem('francis_notif','on');}catch(e){}Renderer.toast(I18n.t('t_notif_on'));try{new Notification('🐓 Francis le Coq',{body:I18n.t('t_notif_test')});}catch(e){}}
                 else Renderer.toast(I18n.t('t_notif_refused'));
             });
         });
@@ -210,7 +223,7 @@ var App={
         this._rainAudio=new Audio('assets/sounds/rain.mp3');
         this._rainAudio.loop=true;this._rainAudio.volume=0.5;
         this._alarmAudio=new Audio('assets/sounds/alarme.mp3');
-        this._alarmAudio.loop=true;this._alarmAudio.volume=0.6;
+        this._alarmAudio.loop=false;this._alarmAudio.volume=0.6;
         this._audioReady=true;
     },
     updateAudio:function(){
@@ -253,9 +266,11 @@ var App={
         if(!this._audioSyncIv)this._audioSyncIv=setInterval(function(){if(self.soundOn)self.updateAudio();},5000);
         document.getElementById('splash-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
+        // Son actif par défaut : icône + démarrage audio (au 1er geste utilisateur si besoin)
+        var si=document.getElementById('sound-icon');if(si)si.textContent=self.soundOn?'🔊':'🔇';
+        this.initAudio();this.updateAudio();
         Storage.save(this.pet);
-        var self=this;
-        requestAnimationFrame(function(){requestAnimationFrame(function(){Renderer.update(self.pet);Weather.init();self.startLoops();});});
+        requestAnimationFrame(function(){requestAnimationFrame(function(){Renderer.update(self.pet);Weather.init();self.startLoops();self.updateQuestDot();});});
     },
     startLoops:function(){this.stopLoops();var self=this;
         this.gameLoop=setInterval(function(){self.gameTick();},5000);
@@ -326,9 +341,23 @@ var App={
     updateQuestDot:function(){
         if(!this.pet)return;
         var f=Features.ensure(this.pet);var env=document.getElementById('btn-envelope');
-        if(!env||!f.quests)return;
-        var hasClaim=f.quests.some(function(q){return q.done&&!q.claimed;});
-        env.classList.toggle('hidden',!hasClaim);
+        if(!env)return;
+        env.classList.remove('hidden'); // toujours visible (emplacement réservé dans la barre du haut)
+        var quests=f.quests||[];
+        var hasClaim=quests.some(function(q){return q.done&&!q.claimed;});
+        // "Nouvelle quête" = une quête non terminée et pas encore vue par le joueur
+        var hasNew=quests.some(function(q){return !q.done&&!q.seen;});
+        var active=hasClaim||hasNew;
+        // Enveloppe fermée + clignotement si action possible ; ouverte si tout est lu/rien à faire
+        env.textContent=active?'📩':'📭';
+        env.classList.toggle('envelope-blink',active);
+    },
+    // Marque les quêtes comme vues (appelé à l'ouverture du panneau quêtes)
+    markQuestsSeen:function(){
+        if(!this.pet)return;
+        var f=Features.ensure(this.pet);
+        if(f.quests){f.quests.forEach(function(q){q.seen=true;});Storage.save(this.pet);}
+        this.updateQuestDot();
     },
 
     _lastAlertLevel:100,
@@ -361,8 +390,8 @@ var App={
                 Renderer.sceneNotif(fullMsg);
                 // Try Telegram notification
                 try{if(window.Telegram&&Telegram.WebApp)Telegram.WebApp.showAlert(fullMsg);}catch(e){}
-                // Try browser notification
-                try{if(window.Notification&&Notification.permission==='granted')new Notification('🐓 Francis le Coq',{body:fullMsg,icon:'assets/sprites/francis.png'});}catch(e){}
+                // Try browser notification (uniquement si activé dans l'app)
+                try{if(App.notifEnabled&&window.Notification&&Notification.permission==='granted')new Notification('🐓 Francis le Coq',{body:fullMsg,icon:'assets/sprites/francis.png'});}catch(e){}
                 break;
             }
         }

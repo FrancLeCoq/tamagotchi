@@ -27,8 +27,9 @@ var Features = {
             texteKey:'ev_fox_text',
             choix:[
                 {labelKey:'ev_fox_c1', effet:function(p){
-                    var cout=Math.floor((p.coins||0)*0.1);p.coins-=cout;
-                    Features._runChasseur(cout);
+                    var cout=Math.floor((p.coins||0)*0.1);
+                    // La taxe est prélevée à la fin (quand le chasseur part), de façon synchronisée avec l'animation
+                    Features._runChasseur(p,cout);
                     return I18n.t('ev_fox_r1',{c:cout});
                 }},
                 {labelKey:'ev_fox_c2', effet:function(p){
@@ -43,7 +44,7 @@ var Features = {
             texteKey:'ev_storm_text',
             choix:[
                 {labelKey:'ev_storm_c1', effet:function(p){
-                    Features._runTempeteHide();
+                    Features._runTempeteHide(p);
                     return I18n.t('ev_storm_r1');
                 }},
                 {labelKey:'ev_storm_c2', effet:function(p){
@@ -67,7 +68,7 @@ var Features = {
             texteKey:'ev_friend_text',
             choix:[
                 {labelKey:'ev_friend_c1', effet:function(p){p.amour=Engine.cl((p.amour||0)+40);Features._runHearts();return I18n.t('ev_friend_r1');}},
-                {labelKey:'ev_friend_c2', effet:function(p){if(!p.farm)p.farm={};p.farm.pendingEggs=(p.farm.pendingEggs||0)+50;p.farm.totalEggs=(p.farm.totalEggs||0)+50;Features._runEggCoins();return I18n.t('ev_friend_r2');}}
+                {labelKey:'ev_friend_c2', effet:function(p){p.coins=(p.coins||0)+50;Features._runEggCoins();return I18n.t('ev_friend_r2');}}
             ]
         }
     ],
@@ -79,6 +80,11 @@ var Features = {
     maybeTriggerEvent:function(pet){
         if(!pet||pet.estMort||pet.isSleeping)return;
         if(App.paused)return;
+        // Ne pas déclencher d'événement si une action/animation est en cours (évite la superposition)
+        if(typeof Renderer!=='undefined'&&Renderer._actionLock)return;
+        // Ni si une modale d'événement ou un compte à rebours est déjà à l'écran
+        var ov=document.getElementById('event-overlay');if(ov&&!ov.classList.contains('hidden'))return;
+        if(document.querySelector('.countdown-display, .evt-countdown'))return;
         var f=this.ensure(pet);
         if(Date.now()-f.lastEventAt < this.EVENT_INTERVAL)return;
         f.lastEventAt=Date.now();
@@ -186,7 +192,7 @@ var Features = {
     },
 
     // ─── Issues (outcomes) ───
-    _runChasseur:function(cout){
+    _runChasseur:function(pet,cout){
         var scene=document.getElementById('scene');if(!scene)return;
         var self=this;
         // Nettoyer les renards
@@ -201,10 +207,15 @@ var Features = {
         scene.appendChild(band);
         this._sceneCountdown(10,'',function(){
             if(band.parentNode)band.remove();
-            // Animation des pièces perdues au moment où le chasseur disparaît
-            if(cout&&cout>0)self._runCoinLoss(cout);
+            // Prélèvement EFFECTIF de la taxe au moment où le chasseur part
+            if(cout&&cout>0&&pet){
+                pet.coins=Math.max(0,(pet.coins||0)-cout);
+                self._runCoinLoss(cout);
+                if(typeof Storage!=='undefined')Storage.save(pet);
+            }
             if(hunter.parentNode)hunter.remove();
             self._stopAlarm();
+            if(typeof Renderer!=='undefined')Renderer.update(pet||App.pet);
             if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('ev_toast_secured'));
         });
     },
@@ -234,25 +245,33 @@ var Features = {
         }
         if(typeof Renderer!=='undefined'&&Renderer.haptic)Renderer.haptic('medium');
     },
-    _runTempeteHide:function(){
+    _runTempeteHide:function(pet){
         var scene=document.getElementById('scene');if(!scene)return;
         var self=this;
         var pw=document.getElementById('pet-wrapper');if(pw)pw.style.visibility='hidden';
         var band=document.createElement('div');band.className='evt-storm-band evt-tmp';band.id='evt-storm-band';band.textContent=I18n.t('ev_band_shelter');scene.appendChild(band);
-        // La tempête continue de faire rage : on relance des tornades mobiles + pluie + son
+        // La tempête continue de faire rage visuellement : tornades mobiles + pluie (l'alarme reste celle lancée au début)
         var dark=document.getElementById('evt-storm-dark');if(!dark){dark=document.createElement('div');dark.className='evt-storm-dark evt-tmp';dark.id='evt-storm-dark';scene.appendChild(dark);}
         this._spawnTornadoes(scene,8,10000);
         if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(true);
-        try{if(typeof App!=='undefined'&&App._rainAudio){App._rainAudio.currentTime=0;App._rainAudio.play();}}catch(e){}
         this._sceneCountdown(10,'',function(){
             // Calme progressif
             self._clearTmp();
             var d=document.getElementById('evt-storm-dark');if(d)d.remove();
             if(pw)pw.style.visibility='visible';
             if(typeof Weather!=='undefined'&&Weather._forceRain)Weather._forceRain(false);
-            try{if(typeof App!=='undefined'&&App._rainAudio)App._rainAudio.pause();}catch(e){}
             self._stopAlarm();
-            if(typeof Renderer!=='undefined')Renderer.toast(I18n.t('ev_toast_stormgone'));
+            // Francis a eu peur : -5% sur TOUTES les jauges
+            if(pet){
+                var keys=['faim','bonheur','energie','sante','hygiene','amour','jeu'];
+                for(var i=0;i<keys.length;i++){if(typeof pet[keys[i]]==='number')pet[keys[i]]=Math.max(0,pet[keys[i]]-5);}
+                if(typeof Storage!=='undefined')Storage.save(pet);
+                if(typeof Renderer!=='undefined')Renderer.update(pet);
+            }
+            if(typeof Renderer!=='undefined'){
+                Renderer.sceneNotif(I18n.t('ev_storm_fear'));
+                Renderer.toast(I18n.t('ev_toast_stormgone'));
+            }
         });
     },
     _runVaccin:function(p){
@@ -456,7 +475,7 @@ var Features = {
         for(var i=0;i<3&&pool.length;i++){
             var idx=Math.floor(Math.random()*pool.length);
             var q=pool.splice(idx,1)[0];
-            picked.push({id:q.id,texteKey:q.texteKey,cible:q.cible,reward:q.reward,track:q.track,progress:0,done:false,claimed:false});
+            picked.push({id:q.id,texteKey:q.texteKey,cible:q.cible,reward:q.reward,track:q.track,progress:0,done:false,claimed:false,seen:false});
         }
         f.quests=picked; f.questDay=today;
         return f.quests;

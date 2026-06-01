@@ -5,7 +5,17 @@ var Farm = {
 
     ensureData:function(pet){
         if(!pet.farm) pet.farm={hens:0,feedLevel:100,cleanLevel:100,lastUpdate:Date.now(),deadRecent:0,totalEggs:0,farmPoops:0,pendingEggs:0,eggAccum:0};
-        return pet.farm;
+        var f=pet.farm;
+        // Sanitation : évite tout NaN/undefined hérité d'anciennes sauvegardes
+        if(typeof f.hens!=='number'||isNaN(f.hens))f.hens=0;
+        f.hens=Math.max(0,Math.min(this.MAX_HENS,Math.floor(f.hens)));
+        if(typeof f.feedLevel!=='number'||isNaN(f.feedLevel))f.feedLevel=100;
+        if(typeof f.cleanLevel!=='number'||isNaN(f.cleanLevel))f.cleanLevel=100;
+        if(typeof f.eggAccum!=='number'||isNaN(f.eggAccum))f.eggAccum=0;
+        if(typeof f.pendingEggs!=='number'||isNaN(f.pendingEggs))f.pendingEggs=0;
+        if(typeof f.lastUpdate!=='number'||isNaN(f.lastUpdate))f.lastUpdate=Date.now();
+        if(typeof f.lastReaperDay!=='number'||isNaN(f.lastReaperDay))f.lastReaperDay=0;
+        return f;
     },
 
     showHenDeathAnimation:function(deaths){
@@ -101,6 +111,17 @@ var Farm = {
             farm.eggAccum=(farm.eggAccum||0)+elapsed*farm.hens; // 1/h/hen
             var newEggs=Math.floor(farm.eggAccum);
             if(newEggs>0){farm.eggAccum-=newEggs;farm.pendingEggs=(farm.pendingEggs||0)+newEggs;farm.totalEggs+=newEggs;}
+        }
+        // À 20/20 : la faucheuse retire 1 poule environ tous les 5 jours de jeu (surpopulation)
+        if(farm.hens>=this.MAX_HENS&&typeof Weather!=='undefined'&&Weather.gameDay){
+            var gd=Weather.gameDay();
+            if(!farm.lastReaperDay)farm.lastReaperDay=gd;
+            if(gd-farm.lastReaperDay>=5){
+                farm.lastReaperDay=gd;
+                farm.hens=Math.max(0,farm.hens-1);
+                farm.deadRecent=(farm.deadRecent||0)+1;
+                if(this.isOpen&&this.hens&&this.hens.length>0){var ri=Math.floor(Math.random()*this.hens.length);var dpos=[{x:this.hens[ri].x,y:this.hens[ri].y}];this.hens.splice(ri,1);this.showHenDeathAnimation(dpos);}
+            }
         }
         farm.lastUpdate=now;
         return farm;
@@ -404,6 +425,11 @@ var Farm = {
         scene.style.backgroundImage="url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,"+top+" 0%,"+mid+" 48%,#3a6a28 48%,#3a6a28 100%)";
         scene.style.backgroundSize='cover,100% 100%';
         scene.style.backgroundPosition='center bottom,center';
+        // Assombrissement nuit identique à la scène principale
+        var ov=document.getElementById('farm-night-overlay');
+        if(!ov){ov=document.createElement('div');ov.id='farm-night-overlay';ov.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none;transition:background .8s';scene.appendChild(ov);}
+        var bri=(typeof Weather!=='undefined'&&Weather.getBri)?Weather.getBri():1;
+        ov.style.background='rgba(5,5,30,'+((1-bri)*0.45)+')';
     }
 ,
 
