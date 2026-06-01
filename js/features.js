@@ -430,6 +430,8 @@ var Features = {
                 var res=ch.effet(pet);
                 self.addJournal(pet,ev.emoji+' '+I18n.t(ev.titreKey)+' — '+res);
                 ov.classList.add('hidden');
+                // La bulle de Chantal ne s'affiche que pendant la phase 1 : on la retire dès le choix
+                var chb0=document.getElementById('evt-chantal-bubble');if(chb0)chb0.remove();
                 // Nettoyage post-choix
                 // (Chantal est retirée à la fin du compte à rebours dans _runHearts/_runEggCoins)
                 if(ev.id==='tempete'&&pet.estMort){

@@ -83,32 +83,40 @@ const Engine = {
     getFrancBalance(){ return this._franc.balance||0; },
 
     // Vérifie l'état $FRANC auprès du backend (POST check-franc)
-    // game_id 'tamagotchi' (sauvegarde 100% locale, backend uniquement pour la détection)
+    // Reproduit EXACTEMENT le comportement de FrancRun/Hormuz (jeux qui fonctionnent) :
+    // on envoie toujours la requête (initData même vide), et on lit d.hasFranc / d.walletLinked.
+    // Le wallet est lié au compte Telegram (par utilisateur), donc on tente d'abord
+    // game_id:'tamagotchi' puis on retombe sur 'francrun' (valeur confirmée côté serveur)
+    // si rien n'est détecté — ainsi un détenteur de $FRANC est toujours reconnu.
     checkFranc:function(cb){
         var self=this;
         var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
         try{if(tg){tg.ready();tg.expand();}}catch(e){}
-        var initData=tg&&tg.initData?tg.initData:'';
-        if(!initData){
-            try{console.log('[franc] initData empty yet — will retry on next visibility/interval');}catch(e){}
-            this._franc.checked=true;
-            if(cb)cb(this._franc);
-            return;
+        var initData=(tg&&tg.initData)?tg.initData:'';
+        var ids=['tamagotchi','francrun','hormuz']; // 1er = le nôtre, repli = jeux connus (user-scoped)
+        function query(i){
+            if(i>=ids.length){self._franc.checked=true;if(cb)cb(self._franc);return;}
+            fetch(self.SUPABASE+'/check-franc',{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({initData:initData,game_id:ids[i]})
+            }).then(function(r){return r.ok?r.json():null;}).then(function(d){
+                try{console.log('check-franc('+ids[i]+'):',JSON.stringify(d));}catch(e){}
+                if(d){
+                    if(d.walletLinked)self._franc.walletLinked=true;
+                    if(d.hasFranc){
+                        self._franc.hasFranc=true;
+                        self._franc.balance=d.balance||self._franc.balance||0;
+                        self._franc.address=d.walletAddress||self._franc.address||'';
+                    }else if(d.walletAddress&&!self._franc.address){
+                        self._franc.address=d.walletAddress;
+                    }
+                }
+                // Détecté → on s'arrête ; sinon on tente le game_id suivant
+                if(self._franc.hasFranc){self._franc.checked=true;if(cb)cb(self._franc);return;}
+                query(i+1);
+            }).catch(function(e){try{console.error('check-franc error:',e);}catch(_){}query(i+1);});
         }
-        fetch(this.SUPABASE+'/check-franc',{
-            method:'POST',headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({initData:initData,game_id:this.GAME_ID})
-        }).then(function(r){return r.ok?r.json():null;}).then(function(d){
-            try{console.log('check-franc:',JSON.stringify(d));}catch(e){}
-            if(d){
-                self._franc.hasFranc=!!d.hasFranc;
-                self._franc.walletLinked=!!d.walletLinked;
-                self._franc.balance=d.balance||0;
-                self._franc.address=d.walletAddress||'';
-            }
-            self._franc.checked=true;
-            if(cb)cb(self._franc);
-        }).catch(function(e){try{console.error('check-franc error:',e);}catch(_){}self._franc.checked=true;if(cb)cb(self._franc);});
+        query(0);
     },
 
     // Ouvre la Mini App wallet Telegram (repo dédié FrancLeCoq/Wallet).

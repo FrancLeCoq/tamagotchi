@@ -76,8 +76,12 @@ var App={
         if(this._detecting&&!force)return;
         this._detecting=true;
         var self=this;
+        // Sécurité : on relâche le verrou après 8s même si le fetch traîne (comme FrancRun)
+        clearTimeout(this._detectTimeout);
+        this._detectTimeout=setTimeout(function(){self._detecting=false;},8000);
         Engine.checkFranc(function(){
             self._detecting=false;
+            clearTimeout(self._detectTimeout);
             self.updateHolderBadge();
             // Si on était bloqué par la gate et que le $FRANC vient d'être détecté, on relance
             if(Engine.hasFranc()){
