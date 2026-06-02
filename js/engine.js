@@ -82,46 +82,34 @@ const Engine = {
     walletLinked(){ return !!this._franc.walletLinked; },
     getFrancBalance(){ return this._franc.balance||0; },
 
-    // Vérifie l'état $FRANC auprès du backend (POST check-franc)
-    // Reproduit EXACTEMENT le comportement de FrancRun/Hormuz (jeux qui fonctionnent) :
-    // on envoie toujours la requête (initData même vide), et on lit d.hasFranc / d.walletLinked.
-    // Le wallet est lié au compte Telegram (par utilisateur), donc on tente d'abord
-    // game_id:'tamagotchi' puis on retombe sur 'francrun' (valeur confirmée côté serveur)
-    // si rien n'est détecté — ainsi un détenteur de $FRANC est toujours reconnu.
+    // Vérifie l'état $FRANC auprès du backend (POST check-franc).
+    // Le jeu doit être lancé comme une Mini App Telegram (t.me/FrancisLeCoqBot/Tamagotchi)
+    // pour que initData soit fourni. Sauvegarde 100% locale ; backend = détection $FRANC.
     checkFranc:function(cb){
         var self=this;
         var tg=(typeof window!=='undefined')?(window.Telegram&&window.Telegram.WebApp):null;
         try{if(tg){tg.ready();tg.expand();}}catch(e){}
         var initData=(tg&&tg.initData)?tg.initData:'';
-        // Diagnostic visible en jeu
-        self._franc.debug=[];
-        self._franc.debug.push(tg?('Telegram: OK'):('Telegram: ABSENT (hors app)'));
-        self._franc.debug.push('initData: '+(initData?('présent ('+initData.length+' car.)'):'VIDE'));
-        var ids=['tamagotchi','francrun','hormuz']; // 1er = le nôtre, repli = jeux connus (user-scoped)
-        function query(i){
-            if(i>=ids.length){self._franc.checked=true;if(cb)cb(self._franc);return;}
-            fetch(self.SUPABASE+'/check-franc',{
-                method:'POST',headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({initData:initData,game_id:ids[i]})
-            }).then(function(r){return r.ok?r.json():null;}).then(function(d){
-                try{console.log('check-franc('+ids[i]+'):',JSON.stringify(d));}catch(e){}
-                self._franc.debug.push(ids[i]+' → '+(d?JSON.stringify(d):'(réponse vide / erreur HTTP)'));
-                if(d){
-                    if(d.walletLinked)self._franc.walletLinked=true;
-                    if(d.hasFranc){
-                        self._franc.hasFranc=true;
-                        self._franc.balance=d.balance||self._franc.balance||0;
-                        self._franc.address=d.walletAddress||self._franc.address||'';
-                    }else if(d.walletAddress&&!self._franc.address){
-                        self._franc.address=d.walletAddress;
-                    }
-                }
-                // Détecté → on s'arrête ; sinon on tente le game_id suivant
-                if(self._franc.hasFranc){self._franc.checked=true;if(cb)cb(self._franc);return;}
-                query(i+1);
-            }).catch(function(e){try{console.error('check-franc error:',e);}catch(_){}self._franc.debug.push(ids[i]+' → ERREUR: '+(e&&e.message?e.message:e));query(i+1);});
+        if(!initData){
+            // Pas d'initData : le jeu n'est pas lancé via la Mini App Telegram → pas de détection possible
+            this._franc.checked=true;
+            if(cb)cb(this._franc);
+            return;
         }
-        query(0);
+        fetch(this.SUPABASE+'/check-franc',{
+            method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({initData:initData,game_id:this.GAME_ID})
+        }).then(function(r){return r.ok?r.json():null;}).then(function(d){
+            try{console.log('check-franc:',JSON.stringify(d));}catch(e){}
+            if(d){
+                self._franc.hasFranc=!!d.hasFranc;
+                self._franc.walletLinked=!!d.walletLinked;
+                self._franc.balance=d.balance||0;
+                self._franc.address=d.walletAddress||'';
+            }
+            self._franc.checked=true;
+            if(cb)cb(self._franc);
+        }).catch(function(e){try{console.error('check-franc error:',e);}catch(_){}self._franc.checked=true;if(cb)cb(self._franc);});
     },
 
     // Ouvre la Mini App wallet Telegram (repo dédié FrancLeCoq/Wallet).
