@@ -44,9 +44,9 @@ var Renderer={
 
     updateHUD:function(pet){
         var stage=Engine.STAGES[pet.stade];
-        var el=document.getElementById('hud-stage');if(el)el.textContent=Engine.tName(stage);
+        // Statut texte retiré : on garde l'avatar + la jauge circulaire + uniquement le % d'avancement
         var lv=document.getElementById('hud-level');
-        if(lv){var stage=Engine.STAGES[pet.stade];var pct=stage.heures?Math.min(100,Math.round((Date.now()-pet.derniereEvolution)/3600000/stage.heures*100)):100;lv.textContent=Engine.tName(stage)+' '+pct+'%';}
+        if(lv){var pct=stage.heures?Math.min(100,Math.round((Date.now()-pet.derniereEvolution)/3600000/stage.heures*100)):100;lv.textContent=pct+'%';}
         var coins=document.getElementById('hud-coins');if(coins)coins.textContent='🪙 '+pet.coins;
         var dot=document.getElementById('alert-dot');if(dot)dot.classList.toggle('hidden',!Engine.hasAlerts(pet));
         var sprite=Engine.getSpriteForPet(pet);
@@ -457,7 +457,15 @@ var Renderer={
         document.body.appendChild(lbl);setTimeout(function(){lbl.remove();},1200);
     },
     showFloatingItem:function(e,x,y){var d=document.createElement('div');d.className='float-item';d.textContent=e;d.style.left=(x||50)+'%';d.style.top=(y||60)+'%';this.els.sceneItems.appendChild(d);setTimeout(function(){d.remove();},1500);},
-    showEvolution:function(o,n){document.getElementById('evo-old').textContent=o.emoji;document.getElementById('evo-new').textContent=n.emoji;document.getElementById('evo-desc').textContent=Engine.tName(n);document.getElementById('evolution-screen').classList.remove('hidden');this.launchFireworks();},
+    showEvolution:function(o,n){
+        var oldEl=document.getElementById('evo-old'),newEl=document.getElementById('evo-new');
+        // Vrais visuels des personnages (sprites) au lieu des emojis
+        if(oldEl)oldEl.innerHTML=o.sprite?'<img src="'+o.sprite+'" alt="">':o.emoji;
+        if(newEl)newEl.innerHTML=n.sprite?'<img src="'+n.sprite+'" alt="">':n.emoji;
+        document.getElementById('evo-desc').textContent=Engine.tName(n);
+        document.getElementById('evolution-screen').classList.remove('hidden');
+        this.launchFireworks();
+    },
     launchFireworks:function(){
         var host=document.getElementById('evolution-screen')||document.body;
         var colors=['#ff5252','#ffd740','#69f0ae','#40c4ff','#e040fb','#ffab40'];
