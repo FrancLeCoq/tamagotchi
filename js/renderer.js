@@ -177,9 +177,11 @@ var Renderer={
     },
 
     // ═══ COUNTDOWN — styled with label + timer ═══
-    _countdown:function(label,seconds,color,onEnd){
+    _countdown:function(label,seconds,color,onEnd,raisePct){
         if(typeof color==='function'){onEnd=color;color='#44cc66';}
         var cd=document.createElement('div');cd.className='countdown-display';
+        // Décale le bloc vers le haut de raisePct% de la hauteur de la scène (ex: 3)
+        if(raisePct){var sh=(this.els.scene&&this.els.scene.clientHeight)?this.els.scene.clientHeight:600;var nt=8-(sh*raisePct/100);cd.style.top=Math.max(2,nt)+'px';}
         cd.innerHTML='<div class="cd-label" style="color:'+color+'">'+label+'</div><div class="cd-ring"><svg viewBox="0 0 40 40"><circle class="cd-track" cx="20" cy="20" r="16"/><circle class="cd-fill" cx="20" cy="20" r="16" id="cd-arc-'+Date.now()+'"/></svg><span class="cd-num">'+seconds+'</span></div>';
         this.els.scene.appendChild(cd);
         var remaining=seconds;var total=seconds;
@@ -261,7 +263,7 @@ var Renderer={
         var feedLoop=setInterval(function(){self._flyItemToPet(emoji,false);},1500);
         var timer=this._countdown(I18n.t('lbl_eating'),seconds,'#44cc66',function(){
             clearInterval(feedLoop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
-        });
+        },3);
     },
 
     // ═══ LECTURE — book at pet HEIGHT, pet looks right at it ───
@@ -285,7 +287,7 @@ var Renderer={
         var loop=setInterval(function(){self._flyItemToPet('🧠',false);},1400);
         var timer=this._countdown(I18n.t('lbl_reading'),40,'#4a90d9',function(){
             clearInterval(loop);book.remove();self._actionLock=false;self._studyLock=false;self._forceAnim('idle');if(onEnd)onEnd();
-        });
+        },3);
     },
 
     // ═══ DOUCHE — 30s, showerhead above pet ═══
@@ -354,7 +356,7 @@ var Renderer={
         var loop=setInterval(function(){self._flyItemToPet('🪥',false,55);},1500);
         var timer=this._countdown(I18n.t('lbl_brushing'),20,'#3498db',function(){
             clearInterval(loop);big.remove();self._actionLock=false;self._forceAnim('idle');if(onEnd)onEnd();
-        });
+        },3);
     },
 
     // ═══ CALINER — hen static left, pet locked, countdown ═══

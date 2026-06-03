@@ -132,6 +132,10 @@ var App={
 
     bindEvents:function(){
         var self=this;
+        // Déverrouille l'audio dès la 1ère interaction (corrige l'alarme muette sur événement naturel)
+        var prime=function(){self._primeAudio();document.removeEventListener('touchstart',prime);document.removeEventListener('click',prime);};
+        document.addEventListener('touchstart',prime,{passive:true});
+        document.addEventListener('click',prime);
         // Sélecteur de langue : deux drapeaux cliquables
         var flagFr=document.getElementById('flag-fr'),flagEn=document.getElementById('flag-en');
         function setLang(l){
@@ -282,6 +286,17 @@ var App={
         this._alarmAudio.loop=false;this._alarmAudio.volume=0.6;
         this._audioReady=true;
     },
+    // Déverrouille l'audio au 1er geste utilisateur (sinon les sons déclenchés par un timer,
+    // comme l'alarme d'un événement NATUREL, sont bloqués par la politique autoplay du navigateur).
+    _primeAudio:function(){
+        if(this._audioPrimed)return;
+        this.initAudio();
+        var els=[this._ambientAudio,this._rainAudio,this._alarmAudio];
+        for(var i=0;i<els.length;i++){
+            (function(a){if(!a)return;var v=a.volume;a.muted=true;var p=a.play();if(p&&p.then){p.then(function(){a.pause();a.currentTime=0;a.muted=false;a.volume=v;}).catch(function(){a.muted=false;});}else{try{a.pause();a.currentTime=0;}catch(e){}a.muted=false;}})(els[i]);
+        }
+        this._audioPrimed=true;
+    },
     updateAudio:function(){
         this.initAudio();
         var self=this;
@@ -331,7 +346,7 @@ var App={
         var si=document.getElementById('sound-icon');if(si)si.textContent=self.soundOn?'🔊':'🔇';
         this.initAudio();this.updateAudio();
         Storage.save(this.pet);
-        requestAnimationFrame(function(){requestAnimationFrame(function(){Renderer.update(self.pet);Weather.init();self.startLoops();self.updateQuestDot();});});
+        requestAnimationFrame(function(){requestAnimationFrame(function(){Renderer.update(self.pet);Weather.init();self.startLoops();self.updateQuestDot();self.updateHolderBadge();self.detectFranc(true);});});
     },
     startLoops:function(){this.stopLoops();var self=this;
         this.gameLoop=setInterval(function(){self.gameTick();},5000);
@@ -449,9 +464,7 @@ var App={
                 this._lastAlertLevel=t.v;
                 var fullMsg=t.msg+(cause?' '+cause:'');
                 Renderer.sceneNotif(fullMsg);
-                // Try Telegram notification
-                try{if(window.Telegram&&Telegram.WebApp)Telegram.WebApp.showAlert(fullMsg);}catch(e){}
-                // Try browser notification (uniquement si activé dans l'app)
+                // Notification navigateur uniquement si activée dans l'app (pas de popup natif bloquant)
                 try{if(App.notifEnabled&&window.Notification&&Notification.permission==='granted')new Notification('🐓 Francis le Coq',{body:fullMsg,icon:'assets/sprites/francis.png'});}catch(e){}
                 break;
             }
