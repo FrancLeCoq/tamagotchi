@@ -661,3 +661,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 @keyframes hunterBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
 /* Le format smartphone sur PC est désormais imposé en JS (App.applyDesktopFrame),
    plus fiable que la cascade CSS. Voir js/app.js. */
+
+/* ═══════════════════════════════════════════════════════════════
+   PC UNIQUEMENT — dézoom des décors.
+   Sur PC, background-size:cover agrandit (zoome) l'image pour remplir le
+   cadre. On force "100% 100%" pour afficher le décor entier, dézoomé,
+   comme sur mobile. La classe is-desktop-frame est posée par applyDesktopFrame().
+   ═══════════════════════════════════════════════════════════════ */
+body.is-desktop-frame .layer-landscape{
+  background-size:contain!important;
+  background-position:center bottom!important;
+}
+body.is-desktop-frame .farm-scene{
+  background-size:contain,100% 100%!important;
+  background-position:center bottom,center center!important;
+}

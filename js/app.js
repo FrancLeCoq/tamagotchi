@@ -104,6 +104,7 @@ var App={
         // Heuristique "PC" : pointeur fin (souris) sans tactile, ou fenêtre nettement large/paysage.
         var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches; // tactile
         var isDesktop=(!coarse)&&(vw>520||vw>vh);
+        b.classList.toggle('is-desktop-frame',!!isDesktop);
         if(isDesktop){
             // Dimensions physiques cibles (cm) — CSS cm ≈ 37.8px @96dpi
             var CM=37.8;
