@@ -1,29 +1,6 @@
 :root{--bg:#0a0818;--border:rgba(130,80,255,.25);--glass:rgba(255,255,255,.06);--accent:#f0c040;--purple-accent:#9b59b6;--green:#44cc66;--blue:#4a90d9;--pink:#e84393;--purple:#8b5cf6;--orange:#f97316;--red:#e74c3c;--text:#f0f0f5;--dim:#8899bb;--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{margin:0;padding:0;box-sizing:border-box}
 html{width:100%;height:100%;background:#0a0a14;overflow:hidden}
-/* Sur grand écran (PC), on impose EXACTEMENT le format smartphone (ratio Galaxy S25 ~9:19.5).
-   Le cadre est dimensionné par la HAUTEUR de la fenêtre et garde le ratio téléphone,
-   pour que les décors et le ciel ne soient jamais écrasés verticalement. */
-@media (min-width:500px){
-  html{display:flex;align-items:center;justify-content:center;background:#05060d}
-  body{
-    height:100vh!important;
-    aspect-ratio:9 / 19.5;
-    width:auto!important;
-    max-width:100vw;
-    margin:0 auto;
-    box-shadow:0 0 70px rgba(0,0,0,.8);
-    overflow:hidden;
-    position:relative;
-    transform:translateZ(0);
-  }
-}
-/* Repli pour navigateurs sans support de aspect-ratio : largeur fixe proportionnelle */
-@supports not (aspect-ratio:1/1){
-  @media (min-width:500px){
-    body{width:calc(100vh * 0.4615)!important;height:100vh!important}
-  }
-}
 html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,system-ui,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .screen{display:none;width:100%;height:100%;flex-direction:column;position:relative}.screen.active{display:flex}
 
@@ -434,7 +411,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
 
 /* ═══ FARM SKY ═══ */
-.farm-scene{background-image:url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,#87CEEB 0%,#b8e4f0 50%,#3a6a28 50%,#3a6a28 100%)!important;background-size:cover,100% 100%;background-position:center bottom,center}
+.farm-scene{background-image:url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,#87CEEB 0%,#b8e4f0 48%,#3a6a28 48%,#3a6a28 100%);background-size:cover,100% 100%;background-position:center bottom,center}
 
 /* ═══ FARM CELESTIAL (small, top of enclos) ═══ */
 .farm-celestial{pointer-events:none}
@@ -499,7 +476,9 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 /* États du badge holder */
 .holder-disconnected{background:linear-gradient(135deg,rgba(217,119,6,.30),rgba(180,90,0,.24));border-color:rgba(230,150,40,.7);color:#fcd34d;box-shadow:0 0 22px rgba(220,140,20,.35)}
 .holder-connected{background:linear-gradient(135deg,rgba(34,197,94,.30),rgba(15,120,60,.24));border-color:rgba(163,230,53,.75);color:#bff39a;box-shadow:0 0 24px rgba(70,200,110,.5)}
-.eg-holder-lock{font-size:20px}
+.eg-holder-lock{font-size:20px;display:flex;align-items:center;justify-content:center}
+.eg-holder-lock svg,#game-wallet-lock-icon svg{display:block}
+#game-wallet-lock-icon{display:flex;align-items:center;justify-content:center}
 .eg-holder-mid{flex:1;font-size:11px;line-height:1.2}
 .eg-coin{color:#e8a020}
 .eg-holder-right{font-size:10.5px;font-weight:800;text-align:right;white-space:nowrap;opacity:.95}
@@ -680,3 +659,26 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .evt-countdown-pink .evt-cd-label{background:rgba(200,40,120,.6)}
 .evt-hunter{animation:hunterBob 1.2s ease-in-out infinite}
 @keyframes hunterBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORMAT SMARTPHONE IMPOSÉ SUR GRAND ÉCRAN (PC)
+   Placé en toute fin pour primer sur le reste de la cascade.
+   Cadre vertical centré au ratio Galaxy S25 (9:19.5), hauteur = 100vh,
+   largeur calculée depuis la hauteur (un body en bloc ignore aspect-ratio).
+   Toutes les unités vh internes correspondent ainsi exactement au cadre,
+   donc le ciel/enclos/effets gardent les proportions du mobile.
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width:500px){
+  html{display:flex!important;align-items:center!important;justify-content:center!important;background:#05060d!important}
+  body{
+    height:100vh!important;
+    width:calc(100vh * 9 / 19.5)!important;
+    max-width:100vw!important;
+    flex:0 0 auto!important;
+    margin:0 auto!important;
+    box-shadow:0 0 70px rgba(0,0,0,.85)!important;
+    overflow:hidden!important;
+    position:relative!important;
+    transform:translateZ(0)!important;
+  }
+}

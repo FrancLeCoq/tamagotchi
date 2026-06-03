@@ -92,6 +92,22 @@ var App={
     },
 
     // Badge holder : ORANGE si non connecté / VERT + cadenas ouvert si $FRANC détecté
+    // SVG cadenas — rendu identique sur tous les appareils (l'emoji 🔓 est ambigu sur Android)
+    _lockSVG:function(open){
+        var color=open?'#bdf36a':'#ffd27a';
+        if(open){
+            // Cadenas OUVERT : anse relevée sur le côté
+            return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">'+
+                '<path d="M7 10V7a5 5 0 0 1 9.5-2.2" stroke="'+color+'" stroke-width="2" stroke-linecap="round"/>'+
+                '<rect x="4" y="10" width="14" height="10" rx="2.5" fill="'+color+'"/>'+
+                '<circle cx="11" cy="14.5" r="1.6" fill="#1a2e10"/><rect x="10.2" y="15" width="1.6" height="3" rx=".8" fill="#1a2e10"/></svg>';
+        }
+        // Cadenas FERMÉ : anse centrée
+        return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">'+
+            '<path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="'+color+'" stroke-width="2" stroke-linecap="round"/>'+
+            '<rect x="5" y="10" width="14" height="10" rx="2.5" fill="'+color+'"/>'+
+            '<circle cx="12" cy="14.5" r="1.6" fill="#3a2a05"/><rect x="11.2" y="15" width="1.6" height="3" rx=".8" fill="#3a2a05"/></svg>';
+    },
     updateHolderBadge:function(){
         var connected=Engine.hasFranc();
         var linked=Engine.walletLinked();
@@ -104,7 +120,7 @@ var App={
             badge.classList.toggle('holder-connected',connected);
             badge.classList.toggle('holder-disconnected',!connected);
         }
-        if(lock)lock.textContent=connected?'🔓':'🔒';
+        if(lock)lock.innerHTML=this._lockSVG(connected);
         if(mid)mid.innerHTML='<span class="eg-coin">①</span> <b>'+I18n.t('holder_connected')+'</b>';
         if(right){
             if(connected)right.textContent=I18n.t('holder_connected_sub',{bal:Number(Engine.getFrancBalance()).toLocaleString()});
@@ -116,7 +132,7 @@ var App={
         if(gl){
             gl.classList.toggle('holder-connected',connected);
             gl.classList.toggle('holder-disconnected',!connected);
-            var gli=document.getElementById('game-wallet-lock-icon');if(gli)gli.textContent=connected?'🔓':'🔒';
+            var gli=document.getElementById('game-wallet-lock-icon');if(gli)gli.innerHTML=this._lockSVG(connected);
             var glt=document.getElementById('game-wallet-lock-txt');if(glt)glt.textContent=connected?I18n.t('wallet_btn_unlocked'):I18n.t('wallet_btn_locked');
         }
     },
