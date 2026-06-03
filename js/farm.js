@@ -251,6 +251,7 @@ var Farm = {
             var bobY=h.state==='pecking'?Math.sin(t*8+h.bob)*4:Math.sin(t*2+h.bob)*1.5;
             var walkBob=h.state==='walking'?Math.sin(t*6+h.bob)*2:0;
             var sz=52.5; // poules réduites de 25% (70 -> 52.5) ; ne concerne pas le coq principal
+            if(typeof App!=='undefined'&&App._isDesktop)sz=52.5*1.15; // +15% sur PC uniquement
             this.ctx.save();
             this.ctx.translate(h.x+sz/2,h.y+sz/2);
             if(h.flipX) this.ctx.scale(-1,1);

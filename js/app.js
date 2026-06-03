@@ -104,14 +104,42 @@ var App={
         // Heuristique "PC" : pointeur fin (souris) sans tactile, ou fenêtre nettement large/paysage.
         var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches; // tactile
         var isDesktop=(!coarse)&&(vw>520||vw>vh);
+        this._isDesktop=!!isDesktop;
         b.classList.toggle('is-desktop-frame',!!isDesktop);
         if(isDesktop){
-            // Dimensions physiques cibles (cm) — CSS cm ≈ 37.8px @96dpi
+            // Cadre au ratio EXACT du Galaxy S25 (9:19.5), occupant toute la hauteur dispo.
+            // La hauteur pilote tout → la scène garde les mêmes proportions que sur mobile.
+            var RATIO=9/19.5;
+            var frameH=vh;
+            var frameW=Math.round(frameH*RATIO);
+            if(frameW>vw){frameW=vw;frameH=Math.round(frameW/RATIO);}
+            h.style.background='#000';
+            h.style.display='flex';
+            h.style.alignItems='center';
+            h.style.justifyContent='center';
+            b.style.width=frameW+'px';
+            b.style.height=frameH+'px';
+            b.style.maxWidth='none';
+            b.style.margin='0 auto';
+            b.style.position='relative';
+            b.style.overflow='hidden';
+            b.style.borderRadius='0';
+            b.style.boxShadow='0 0 0 9999px #000'; // bandes noires tout autour
+            b.style.transform='translateZ(0)'; // piège les position:fixed dans le cadre
+        }else{
+            h.style.background='';h.style.display='';h.style.alignItems='';h.style.justifyContent='';
+            b.style.width='';b.style.height='';b.style.margin='';b.style.boxShadow='';b.style.transform='';b.style.borderRadius='';b.style.maxWidth='';
+        }
+    },
+    _unusedOldFrame:function(){
+        var b=document.body,h=document.documentElement;
+        var vw=window.innerWidth,vh=window.innerHeight;
+        var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
+        var isDesktop=(!coarse)&&(vw>520||vw>vh);
+        if(isDesktop){
             var CM=37.8;
-            var targetW=6.6*CM;   // ~249px
-            var targetH=14.3*CM;  // ~540px
-            // On agrandit proportionnellement pour occuper la hauteur dispo si l'écran est grand,
-            // tout en gardant le ratio physique du téléphone.
+            var targetW=6.6*CM;
+            var targetH=14.3*CM;
             var ratio=targetW/targetH;
             var frameH=Math.min(vh,Math.max(targetH,vh*0.96));
             var frameW=Math.round(frameH*ratio);
@@ -127,8 +155,8 @@ var App={
             b.style.position='relative';
             b.style.overflow='hidden';
             b.style.borderRadius='14px';
-            b.style.boxShadow='0 0 0 9999px #000, 0 0 60px rgba(0,0,0,.9)'; // bandes noires tout autour
-            b.style.transform='translateZ(0)'; // piège les position:fixed dans le cadre
+            b.style.boxShadow='0 0 0 9999px #000, 0 0 60px rgba(0,0,0,.9)';
+            b.style.transform='translateZ(0)';
         }else{
             h.style.background='';h.style.display='';h.style.alignItems='';h.style.justifyContent='';
             b.style.width='';b.style.height='';b.style.margin='';b.style.boxShadow='';b.style.transform='';b.style.borderRadius='';b.style.maxWidth='';

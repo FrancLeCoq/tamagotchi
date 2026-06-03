@@ -487,6 +487,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .lang-flags{display:flex;gap:14px;justify-content:center;margin:4px 0 14px}
 .flag-btn{font-size:30px;line-height:1;width:54px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:2px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);cursor:pointer;filter:grayscale(.7) opacity(.6);transition:all .18s;padding:0}
 .flag-btn:active{transform:scale(.94)}
+.flag-btn svg{display:block;border-radius:3px}
 .flag-btn.flag-active{filter:none;border-color:var(--accent,#ffd84d);background:rgba(255,216,77,.16);box-shadow:0 0 16px rgba(255,216,77,.4);transform:translateY(-1px)}
 
 /* Petit cadenas $FRANC dans la top-bar (entre pièces et statut) */
