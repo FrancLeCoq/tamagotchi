@@ -106,9 +106,12 @@ var Farm = {
             var d2=Math.min(farm.hens,Math.ceil(elapsed*0.3));
             farm.hens-=d2;farm.deadRecent+=d2;farm.cleanLevel=5;
         }
-        // 1 œuf / heure réelle / poule (si nourries & propres)
+        // 1 œuf / HEURE DE JEU / poule (si nourries & propres).
+        // 1 heure de jeu = HOUR_MS ms réelles (2 min) → on convertit le temps réel en heures de jeu.
         if(farm.feedLevel>20&&farm.cleanLevel>20&&farm.hens>0){
-            farm.eggAccum=(farm.eggAccum||0)+elapsed*farm.hens; // 1/h/hen
+            var hourMs=(typeof Weather!=='undefined'&&Weather.HOUR_MS)?Weather.HOUR_MS:3600000;
+            var gameHours=(now-farm.lastUpdate)/hourMs; // temps écoulé en heures de jeu
+            farm.eggAccum=(farm.eggAccum||0)+gameHours*farm.hens; // 1/h-jeu/poule
             var newEggs=Math.floor(farm.eggAccum);
             if(newEggs>0){farm.eggAccum-=newEggs;farm.pendingEggs=(farm.pendingEggs||0)+newEggs;farm.totalEggs+=newEggs;}
         }
@@ -144,10 +147,10 @@ var Farm = {
 
     cleanEnclosure:function(pet){
         var farm=this.ensureData(pet);
-        if(farm.hens<=0) return {ok:false,msg:I18n.t('f_no_hens')};
-        farm.cleanLevel=Math.min(100,farm.cleanLevel+20);pet.coins+=1;
-        // Remove poops proportionally
-        var removed=Math.floor((farm.farmPoops||0)*0.2);farm.farmPoops=Math.max(0,(farm.farmPoops||0)-removed-1);
+        // Nettoyage complet de l'enclos
+        farm.cleanLevel=100;pet.coins+=1;
+        // Les cacas suivent la propreté (1 caca = 10%) → enclos propre = 0 caca
+        farm.farmPoops=0;
         return {ok:true,msg:I18n.t('f_cleaned')};
     },
 
@@ -260,12 +263,11 @@ var Farm = {
         if(!this.isOpen||!this.canvas||!this.ctx) return;
         // Travail gauge ticks while in enclos
         if(typeof App!=='undefined'&&App.pet){App.pet.travail=Math.min(100,(App.pet.travail||0)+0.005);}
-        // Poop generation: 2 per 10% decay in cleanLevel
+        // 1 caca = 10% de saleté : nombre de cacas = (100 - cleanLevel) / 10, en correspondance directe
         var farm=(typeof App!=='undefined'&&App.pet)?App.pet.farm:null;
-        if(farm&&farm.hens>0){
-            var poopTarget=Math.floor((100-farm.cleanLevel)/10)*2;
-            farm.farmPoops=farm.farmPoops||0;
-            if(farm.cleanLevel<90&&farm.farmPoops<poopTarget&&Math.random()<0.002)farm.farmPoops=Math.min(poopTarget,farm.farmPoops+1);
+        if(farm){
+            var poopTarget=Math.max(0,Math.floor((100-(farm.cleanLevel||0))/10));
+            farm.farmPoops=poopTarget;
         }
         var isDay=Weather.getBri()>0.5;
         this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
@@ -354,39 +356,38 @@ var Farm = {
     showCleanAnimation:function(){
         var scene=document.getElementById('farm-scene');if(!scene)return;
         var self=this;
-        // Find poop elements on canvas (they are drawn, not DOM elements)
-        // We'll place visual broom near bottom and animate toward poop positions
         var farm=this.ensureData(typeof App!=='undefined'?App.pet:{farm:{}});
         var poopCount=farm.farmPoops||0;
-        if(poopCount<=0)return;
-        // Clean 20% at a time
-        var toClean=Math.max(1,Math.ceil(poopCount*0.2));
-        var broom=document.createElement('div');
-        broom.style.cssText='position:absolute;font-size:50px;z-index:10;pointer-events:none;bottom:15%;transition:left .8s ease';
-        broom.textContent='🧹';
-        broom.style.left='5%';
-        scene.appendChild(broom);
-        var idx=0;
-        var iv=setInterval(function(){
-            if(idx>=toClean){clearInterval(iv);broom.remove();return;}
-            // Move broom to poop position
-            var px=((idx*0.17+0.08)%0.85)*100;
-            broom.style.left=px+'%';
-            broom.style.bottom='15%';
-            // After reaching poop, shake and poop disappears
-            setTimeout(function(){
-                broom.style.transform='rotate(-15deg)';
-                setTimeout(function(){broom.style.transform='rotate(15deg)';
-                    setTimeout(function(){broom.style.transform='rotate(0)';},150);
-                },150);
-                idx++;
-            },900);
-        },1100);
+        if(!this.canvas)return;
+        // Un balai PAR caca, posé sur chaque caca, qui balance — identique à la scène principale.
+        // Les positions correspondent à celles dessinées dans drawFarmPoops().
+        var cw=this.canvas.width,chh=this.canvas.height;
+        var n=Math.max(1,poopCount);
+        var dur=Math.max(3,n*2); // ~2s par caca, comme la scène principale
+        var brooms=[];
+        for(var i=0;i<poopCount;i++){
+            var xPct=(((i*0.17+0.1)%0.9))*100;          // même formule que drawFarmPoops (en %)
+            var yFromBottomPct=100-(78+((i%3)*5));        // y dessiné à 78%/83%/88% du haut
+            var broom=document.createElement('div');
+            broom.className='farm-clean-broom';
+            broom.textContent='🧹';
+            broom.style.cssText='position:absolute;font-size:40px;z-index:12;pointer-events:none;left:'+xPct+'%;bottom:'+(yFromBottomPct+2)+'%;transform:translateX(-50%);animation:broomSwing .5s ease-in-out infinite';
+            scene.appendChild(broom);
+            brooms.push(broom);
+        }
+        // On masque les cacas du canvas pendant l'animation puis on les efface à la fin
+        this._cleaning=true;
+        // Estompage progressif simulé : on réduit farmPoops à 0 à la fin
+        setTimeout(function(){
+            for(var b=0;b<brooms.length;b++){if(brooms[b].parentNode)brooms[b].remove();}
+            self._cleaning=false;
+        },dur*1000);
     },
 
     drawFarmPoops:function(){
         if(!this.ctx||!this.canvas)return;
         if(typeof App==='undefined'||!App.pet||!App.pet.farm)return;
+        if(this._cleaning)return; // pendant le nettoyage, les balais gèrent l'affichage
         var farm=App.pet.farm;
         var count=farm.farmPoops||0;
         if(count<=0)return;

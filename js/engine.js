@@ -38,33 +38,6 @@ const Engine = {
     COOLDOWNS: { nourrir:3,jouer:3,dormir:3,soigner:3,toilette:3,douche:3,intellect:3,visite:3 },
     MAX_STAT:100, CRIT:15, POOP_INTERVAL:5400, PIPI_INTERVAL:3600,
 
-    // Cheat codes
-    CHEATS: {
-        'FRANCA': function(p){ p.coins+=50000; return '💰 +50000 pièces !' },
-        'FRANCB': function(p){ p.stade=1; p.derniereEvolution=Date.now(); return '🐤 Petit Coq !' },
-        'FRANCC': function(p){ p.stade=2; p.derniereEvolution=Date.now(); return '🐔 Coq Ado !' },
-        'FRANCD': function(p){ p.stade=3; p.derniereEvolution=Date.now(); return '🐓 Coq Adulte !' },
-        'FRANCE': function(p){ p.stade=4; p.derniereEvolution=Date.now(); return '👴 Coq Vieux !' },
-        'MORT': function(p){ p.sante=0; p.faim=0; p.bonheur=0; p.estMort=true; p.causeMort='Cheat MORT'; return '💀 La faucheuse arrive...' },
-        'JOUR': function(p){ if(typeof Weather!=='undefined')Weather.setHour(13); return '☀️ Jour (13h) !' },
-        'NUIT': function(p){ if(typeof Weather!=='undefined')Weather.setHour(1); return '🌙 Nuit (1h) !' },
-        'EVRENARD':  function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'renard');   return '🦊 Événement Renards' },
-        'EVTEMPETE': function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'tempete');  return '⛈️ Événement Tempête' },
-        'EVMALADE':  function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'malade');   return '🦠 Événement Pandémie' },
-        'EVAMI':     function(p){ if(typeof Features!=='undefined')Features.forceEvent(p,'ami');      return '👩‍🌾 Événement Chantal' },
-    },
-
-    applyCheat(pet, code) {
-        var buf=code.toUpperCase().trim();
-        // Match if buffer ENDS WITH any cheat code (handles accumulated keystrokes)
-        for(var key in this.CHEATS){
-            if(buf===key||buf.slice(-key.length)===key){
-                if(pet) return { ok:true, msg:this.CHEATS[key](pet) };
-            }
-        }
-        return { ok:false, msg:'Code inconnu' };
-    },
-
     // Wallet
     // ─── $FRANC wallet (backend Supabase, identique à FrancRun) ───
     SUPABASE:'https://mubqtnqulpyehkgubhnh.supabase.co/functions/v1',

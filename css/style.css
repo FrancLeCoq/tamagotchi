@@ -1,5 +1,11 @@
 :root{--bg:#0a0818;--border:rgba(130,80,255,.25);--glass:rgba(255,255,255,.06);--accent:#f0c040;--purple-accent:#9b59b6;--green:#44cc66;--blue:#4a90d9;--pink:#e84393;--purple:#8b5cf6;--orange:#f97316;--red:#e74c3c;--text:#f0f0f5;--dim:#8899bb;--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{margin:0;padding:0;box-sizing:border-box}
+html{width:100%;height:100%;background:#0a0a14;overflow:hidden}
+/* Sur grand écran (PC), on impose le format smartphone : cadre centré de largeur mobile */
+@media (min-width:500px){
+  html{display:flex;align-items:center;justify-content:center}
+  body{width:430px!important;height:100%!important;max-height:932px;margin:0 auto;box-shadow:0 0 60px rgba(0,0,0,.7);border-radius:18px;overflow:hidden;position:relative;transform:translateZ(0)}
+}
 html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,system-ui,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .screen{display:none;width:100%;height:100%;flex-direction:column;position:relative}.screen.active{display:flex}
 

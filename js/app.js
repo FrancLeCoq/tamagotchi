@@ -2,7 +2,7 @@ var App={
     pet:null,gameLoop:null,moveLoop:null,saveInterval:null,speechInterval:null,sleepZInterval:null,
     farmWalkLoop:null,soundOn:true,paused:false,notifEnabled:false,
     touchStartX:0,touchStartY:0,isSwiping:false,
-    _cheatBuffer:'',_cheatTimer:null,_visitTimer:null,
+    _visitTimer:null,
 
     init:function(){
         if(typeof I18n!=='undefined')I18n.init();
@@ -217,17 +217,6 @@ var App={
         document.getElementById('btn-play-roost').addEventListener('click',function(){self.doRoost();});
         document.getElementById('food-grid').addEventListener('click',function(e){var item=e.target.closest('[data-food]');if(item)self.doFeed(item.dataset.food);});
         document.getElementById('btn-reset').addEventListener('click',function(){document.getElementById('more-screen').classList.add('hidden');if(confirm(I18n.t('t_reset_confirm'))){Storage.clear();self.pet=null;document.getElementById('game-screen').classList.remove('active');document.getElementById('splash-screen').classList.add('active');self.showSplash();}});
-
-        // Cheats via keyboard
-        document.addEventListener('keyup',function(e){
-            if(!self.pet)return;var k=e.key.toUpperCase();
-            if(k.length===1&&k>='A'&&k<='Z'){
-                self._cheatBuffer+=k;clearTimeout(self._cheatTimer);
-                self._cheatTimer=setTimeout(function(){self._cheatBuffer='';},2000);
-                var r=Engine.applyCheat(self.pet,self._cheatBuffer);
-                if(r.ok){Renderer.toast(r.msg);Storage.save(self.pet);Renderer.update(self.pet);self._cheatBuffer='';if(self.pet.estMort){self.saveRecord();Renderer.showDeath(self.pet);}}
-            }
-        });
 
         // Touch
         var touch=document.getElementById('scene-touch');
