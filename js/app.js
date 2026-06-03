@@ -131,38 +131,6 @@ var App={
             b.style.width='';b.style.height='';b.style.margin='';b.style.boxShadow='';b.style.transform='';b.style.borderRadius='';b.style.maxWidth='';
         }
     },
-    _unusedOldFrame:function(){
-        var b=document.body,h=document.documentElement;
-        var vw=window.innerWidth,vh=window.innerHeight;
-        var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
-        var isDesktop=(!coarse)&&(vw>520||vw>vh);
-        if(isDesktop){
-            var CM=37.8;
-            var targetW=6.6*CM;
-            var targetH=14.3*CM;
-            var ratio=targetW/targetH;
-            var frameH=Math.min(vh,Math.max(targetH,vh*0.96));
-            var frameW=Math.round(frameH*ratio);
-            if(frameW>vw){frameW=vw;frameH=Math.round(frameW/ratio);}
-            h.style.background='#000';
-            h.style.display='flex';
-            h.style.alignItems='center';
-            h.style.justifyContent='center';
-            b.style.width=frameW+'px';
-            b.style.height=frameH+'px';
-            b.style.maxWidth='none';
-            b.style.margin='0 auto';
-            b.style.position='relative';
-            b.style.overflow='hidden';
-            b.style.borderRadius='14px';
-            b.style.boxShadow='0 0 0 9999px #000, 0 0 60px rgba(0,0,0,.9)';
-            b.style.transform='translateZ(0)';
-        }else{
-            h.style.background='';h.style.display='';h.style.alignItems='';h.style.justifyContent='';
-            b.style.width='';b.style.height='';b.style.margin='';b.style.boxShadow='';b.style.transform='';b.style.borderRadius='';b.style.maxWidth='';
-        }
-    },
-
     // SVG cadenas — rendu identique sur tous les appareils (l'emoji 🔓 est ambigu sur Android)
     _lockSVG:function(open){
         var color=open?'#bdf36a':'#ffd27a';
