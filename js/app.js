@@ -95,19 +95,27 @@ var App={
     },
 
     // Badge holder : ORANGE si non connecté / VERT + cadenas ouvert si $FRANC détecté
-    // Impose un cadre au format smartphone sur grand écran (PC / fenêtre large).
-    // En JS avec styles inline → priorité maximale, insensible à la cascade CSS.
+    // Impose un cadre au format smartphone sur grand écran (PC / fenêtre large),
+    // aux dimensions PHYSIQUES d'un Galaxy S25 (~6,6 × 14,3 cm), avec bandes noires autour.
+    // Détection PC : pas d'écran tactile fin OU fenêtre large/paysage.
     applyDesktopFrame:function(){
         var b=document.body,h=document.documentElement;
         var vw=window.innerWidth,vh=window.innerHeight;
-        var RATIO=9/19.5; // ratio largeur/hauteur d'un Galaxy S25
-        // "Grand écran" = fenêtre large (>520px) OU paysage (plus large que haute) → cas PC.
-        var isDesktop=vw>520||vw>vh;
+        // Heuristique "PC" : pointeur fin (souris) sans tactile, ou fenêtre nettement large/paysage.
+        var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches; // tactile
+        var isDesktop=(!coarse)&&(vw>520||vw>vh);
         if(isDesktop){
-            var frameH=vh;
-            var frameW=Math.round(frameH*RATIO);
-            if(frameW>vw){frameW=vw;frameH=Math.round(frameW/RATIO);}
-            h.style.background='#05060d';
+            // Dimensions physiques cibles (cm) — CSS cm ≈ 37.8px @96dpi
+            var CM=37.8;
+            var targetW=6.6*CM;   // ~249px
+            var targetH=14.3*CM;  // ~540px
+            // On agrandit proportionnellement pour occuper la hauteur dispo si l'écran est grand,
+            // tout en gardant le ratio physique du téléphone.
+            var ratio=targetW/targetH;
+            var frameH=Math.min(vh,Math.max(targetH,vh*0.96));
+            var frameW=Math.round(frameH*ratio);
+            if(frameW>vw){frameW=vw;frameH=Math.round(frameW/ratio);}
+            h.style.background='#000';
             h.style.display='flex';
             h.style.alignItems='center';
             h.style.justifyContent='center';
@@ -117,11 +125,12 @@ var App={
             b.style.margin='0 auto';
             b.style.position='relative';
             b.style.overflow='hidden';
-            b.style.boxShadow='0 0 70px rgba(0,0,0,.85)';
-            b.style.transform='translateZ(0)';
+            b.style.borderRadius='14px';
+            b.style.boxShadow='0 0 0 9999px #000, 0 0 60px rgba(0,0,0,.9)'; // bandes noires tout autour
+            b.style.transform='translateZ(0)'; // piège les position:fixed dans le cadre
         }else{
-            h.style.display='';h.style.alignItems='';h.style.justifyContent='';
-            b.style.width='';b.style.height='';b.style.margin='';b.style.boxShadow='';b.style.transform='';
+            h.style.background='';h.style.display='';h.style.alignItems='';h.style.justifyContent='';
+            b.style.width='';b.style.height='';b.style.margin='';b.style.boxShadow='';b.style.transform='';b.style.borderRadius='';b.style.maxWidth='';
         }
     },
 

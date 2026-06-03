@@ -250,7 +250,7 @@ var Farm = {
             var h=this.hens[i];
             var bobY=h.state==='pecking'?Math.sin(t*8+h.bob)*4:Math.sin(t*2+h.bob)*1.5;
             var walkBob=h.state==='walking'?Math.sin(t*6+h.bob)*2:0;
-            var sz=70;
+            var sz=52.5; // poules réduites de 25% (70 -> 52.5) ; ne concerne pas le coq principal
             this.ctx.save();
             this.ctx.translate(h.x+sz/2,h.y+sz/2);
             if(h.flipX) this.ctx.scale(-1,1);
@@ -356,52 +356,57 @@ var Farm = {
     showCleanAnimation:function(){
         var scene=document.getElementById('farm-scene');if(!scene)return;
         var self=this;
-        var farm=this.ensureData(typeof App!=='undefined'?App.pet:{farm:{}});
-        var poopCount=farm.farmPoops||0;
-        if(!this.canvas)return;
-        // Un balai PAR caca, posé sur chaque caca, qui balance — identique à la scène principale.
-        // Les positions correspondent à celles dessinées dans drawFarmPoops().
-        var cw=this.canvas.width,chh=this.canvas.height;
-        var n=Math.max(1,poopCount);
+        this._cleaning=true; // fige l'affichage : on balaie les cacas déjà présents à l'écran
+        var poops=Array.prototype.slice.call(scene.querySelectorAll('.farm-poop'));
+        if(poops.length===0){this._cleaning=false;return;}
+        var n=poops.length;
         var dur=Math.max(3,n*2); // ~2s par caca, comme la scène principale
         var brooms=[];
-        for(var i=0;i<poopCount;i++){
-            var xPct=(((i*0.17+0.1)%0.9))*100;          // même formule que drawFarmPoops (en %)
-            var yFromBottomPct=100-(78+((i%3)*5));        // y dessiné à 78%/83%/88% du haut
+        for(var i=0;i<poops.length;i++){
+            var poop=poops[i];
+            var left=parseFloat(poop.style.left)||(20+i*20);
+            var bottom=parseFloat(poop.style.bottom)||6;
             var broom=document.createElement('div');
-            broom.className='farm-clean-broom';
             broom.textContent='🧹';
-            broom.style.cssText='position:absolute;font-size:40px;z-index:12;pointer-events:none;left:'+xPct+'%;bottom:'+(yFromBottomPct+2)+'%;transform:translateX(-50%);animation:broomSwing .5s ease-in-out infinite';
+            broom.style.cssText='position:absolute;font-size:42px;z-index:12;pointer-events:none;left:'+left+'%;bottom:'+(bottom+2)+'%;transform:translateX(-50%);animation:broomSwing .5s ease-in-out infinite';
             scene.appendChild(broom);
             brooms.push(broom);
+            // Le caca s'estompe progressivement pendant le compte à rebours
+            (function(p){p.style.transition='opacity '+dur+'s linear';setTimeout(function(){p.style.opacity='0';},80);})(poop);
         }
-        // On masque les cacas du canvas pendant l'animation puis on les efface à la fin
-        this._cleaning=true;
-        // Estompage progressif simulé : on réduit farmPoops à 0 à la fin
         setTimeout(function(){
             for(var b=0;b<brooms.length;b++){if(brooms[b].parentNode)brooms[b].remove();}
+            for(var pp=0;pp<poops.length;pp++){if(poops[pp].parentNode)poops[pp].remove();}
             self._cleaning=false;
+            self.syncFarmPoops(); // reflète le nouvel état (0 caca après nettoyage)
         },dur*1000);
     },
 
-    drawFarmPoops:function(){
-        if(!this.ctx||!this.canvas)return;
-        if(typeof App==='undefined'||!App.pet||!App.pet.farm)return;
-        if(this._cleaning)return; // pendant le nettoyage, les balais gèrent l'affichage
-        var farm=App.pet.farm;
-        var count=farm.farmPoops||0;
-        if(count<=0)return;
-        // Draw poops spread across bottom of canvas
-        var ctx=this.ctx;
-        ctx.font=(this.canvas.width*0.05)+'px serif';
-        ctx.textAlign='center';
+    // Poops rendus en éléments DOM (comme la scène principale) pour permettre
+    // l'animation de balai + estompage identique.
+    syncFarmPoops:function(){
+        var scene=document.getElementById('farm-scene');if(!scene)return;
+        if(this._cleaning)return; // pendant le nettoyage, on ne re-synchronise pas
+        var farm=(typeof App!=='undefined'&&App.pet)?App.pet.farm:null;
+        var count=farm?(farm.farmPoops||0):0;
+        var existing=scene.querySelectorAll('.farm-poop');
+        if(existing.length===count)return; // rien à changer
+        // On reconstruit proprement
+        for(var e=0;e<existing.length;e++)existing[e].remove();
         for(var i=0;i<count;i++){
-            // Stable positions based on index
-            var x=((i*0.17+0.1)%0.9)*this.canvas.width;
-            var y=this.canvas.height*0.78+((i%3)*this.canvas.height*0.05);
-            ctx.fillText('💩',x,y);
+            var leftPct=((i*0.17+0.1)%0.9)*100;
+            var bottomPct=100-(78+((i%3)*5)); // 22% / 17% / 12% du bas
+            var p=document.createElement('div');
+            p.className='farm-poop';
+            p.textContent='💩';
+            p.style.cssText='position:absolute;font-size:'+(scene.clientWidth*0.06)+'px;z-index:6;pointer-events:none;left:'+leftPct+'%;bottom:'+bottomPct+'%;transform:translateX(-50%)';
+            scene.appendChild(p);
         }
-        ctx.textAlign='left';
+    },
+
+    drawFarmPoops:function(){
+        // Conservé pour compat : la synchro DOM gère désormais l'affichage des cacas
+        this.syncFarmPoops();
     }
 ,
 
