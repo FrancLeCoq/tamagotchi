@@ -9,6 +9,9 @@ var App={
         try{this.notifEnabled=(localStorage.getItem('francis_notif')==='on');}catch(e){}
         Storage.init();Renderer.init();this.showSplash();this.bindEvents();
         var self=this;
+        // Impose le format smartphone sur grand écran (PC) en JS — fiable, recalculé au resize
+        this.applyDesktopFrame();
+        window.addEventListener('resize',function(){self.applyDesktopFrame();});
         // Appelle ready() tôt pour que initData soit disponible
         try{var tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand();}}catch(e){}
         // Vérifie l'état $FRANC au démarrage, avec quelques retries (initData peut arriver avec un léger délai)
@@ -92,6 +95,36 @@ var App={
     },
 
     // Badge holder : ORANGE si non connecté / VERT + cadenas ouvert si $FRANC détecté
+    // Impose un cadre au format smartphone sur grand écran (PC / fenêtre large).
+    // En JS avec styles inline → priorité maximale, insensible à la cascade CSS.
+    applyDesktopFrame:function(){
+        var b=document.body,h=document.documentElement;
+        var vw=window.innerWidth,vh=window.innerHeight;
+        var RATIO=9/19.5; // ratio largeur/hauteur d'un Galaxy S25
+        // "Grand écran" = fenêtre large (>520px) OU paysage (plus large que haute) → cas PC.
+        var isDesktop=vw>520||vw>vh;
+        if(isDesktop){
+            var frameH=vh;
+            var frameW=Math.round(frameH*RATIO);
+            if(frameW>vw){frameW=vw;frameH=Math.round(frameW/RATIO);}
+            h.style.background='#05060d';
+            h.style.display='flex';
+            h.style.alignItems='center';
+            h.style.justifyContent='center';
+            b.style.width=frameW+'px';
+            b.style.height=frameH+'px';
+            b.style.maxWidth='none';
+            b.style.margin='0 auto';
+            b.style.position='relative';
+            b.style.overflow='hidden';
+            b.style.boxShadow='0 0 70px rgba(0,0,0,.85)';
+            b.style.transform='translateZ(0)';
+        }else{
+            h.style.display='';h.style.alignItems='';h.style.justifyContent='';
+            b.style.width='';b.style.height='';b.style.margin='';b.style.boxShadow='';b.style.transform='';
+        }
+    },
+
     // SVG cadenas — rendu identique sur tous les appareils (l'emoji 🔓 est ambigu sur Android)
     _lockSVG:function(open){
         var color=open?'#bdf36a':'#ffd27a';

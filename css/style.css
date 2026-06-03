@@ -411,7 +411,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .layer-celestial{position:absolute;inset:0;z-index:4;pointer-events:none}
 
 /* ═══ FARM SKY ═══ */
-.farm-scene{background-image:url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,#87CEEB 0%,#b8e4f0 48%,#3a6a28 48%,#3a6a28 100%);background-size:cover,100% 100%;background-position:center bottom,center}
+.farm-scene{background-image:url('../assets/backgrounds/enclos.png'),linear-gradient(180deg,#87CEEB 0%,#b8e4f0 50%,#3a6a28 50%,#3a6a28 100%)!important;background-size:cover,100% 100%;background-position:center bottom,center}
 
 /* ═══ FARM CELESTIAL (small, top of enclos) ═══ */
 .farm-celestial{pointer-events:none}
@@ -659,26 +659,5 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
 .evt-countdown-pink .evt-cd-label{background:rgba(200,40,120,.6)}
 .evt-hunter{animation:hunterBob 1.2s ease-in-out infinite}
 @keyframes hunterBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-6px)}}
-
-/* ═══════════════════════════════════════════════════════════════
-   FORMAT SMARTPHONE IMPOSÉ SUR GRAND ÉCRAN (PC)
-   Placé en toute fin pour primer sur le reste de la cascade.
-   Cadre vertical centré au ratio Galaxy S25 (9:19.5), hauteur = 100vh,
-   largeur calculée depuis la hauteur (un body en bloc ignore aspect-ratio).
-   Toutes les unités vh internes correspondent ainsi exactement au cadre,
-   donc le ciel/enclos/effets gardent les proportions du mobile.
-   ═══════════════════════════════════════════════════════════════ */
-@media (min-width:500px){
-  html{display:flex!important;align-items:center!important;justify-content:center!important;background:#05060d!important}
-  body{
-    height:100vh!important;
-    width:calc(100vh * 9 / 19.5)!important;
-    max-width:100vw!important;
-    flex:0 0 auto!important;
-    margin:0 auto!important;
-    box-shadow:0 0 70px rgba(0,0,0,.85)!important;
-    overflow:hidden!important;
-    position:relative!important;
-    transform:translateZ(0)!important;
-  }
-}
+/* Le format smartphone sur PC est désormais imposé en JS (App.applyDesktopFrame),
+   plus fiable que la cascade CSS. Voir js/app.js. */
