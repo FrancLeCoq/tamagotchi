@@ -101,11 +101,16 @@ var App={
     applyDesktopFrame:function(){
         var b=document.body,h=document.documentElement;
         var vw=window.innerWidth,vh=window.innerHeight;
-        // Heuristique "PC" : pointeur fin (souris) sans tactile, ou fenêtre nettement large/paysage.
-        var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches; // tactile
-        var isDesktop=(!coarse)&&(vw>520||vw>vh);
+        // Détection "PC" robuste : on considère PC dès que la fenêtre est assez large
+        // (>= 480px) OU plus large que haute. Telegram Desktop ouvre une fenêtre bien
+        // plus large qu'un téléphone (téléphone ≈ 360-430px de large en CSS px).
+        var isDesktop=(vw>=480)||(vw>vh);
         this._isDesktop=!!isDesktop;
         b.classList.toggle('is-desktop-frame',!!isDesktop);
+        // Témoin de diagnostic (temporaire) : confirme que le code tourne + ce qu'il détecte
+        var dbg=document.getElementById('pc-debug');
+        if(!dbg){dbg=document.createElement('div');dbg.id='pc-debug';dbg.style.cssText='position:fixed;top:2px;left:2px;z-index:99999;font:11px monospace;background:rgba(0,0,0,.75);color:#7fff7f;padding:2px 6px;border-radius:6px;pointer-events:none';document.documentElement.appendChild(dbg);}
+        dbg.textContent=(isDesktop?'PC':'MOBILE')+' '+vw+'x'+vh;
         if(isDesktop){
             // Cadre au ratio EXACT du Galaxy S25 (9:19.5), occupant toute la hauteur dispo.
             // La hauteur pilote tout → la scène garde les mêmes proportions que sur mobile.
