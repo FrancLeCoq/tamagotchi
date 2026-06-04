@@ -688,3 +688,9 @@ body.is-desktop-frame .layer-building{transform:translateX(-50%) scale(.6);trans
 
 /* PC : le paysage remplit la largeur ; tout espace résiduel en haut est couvert par
    .layer-sky (ciel dynamique jour/nuit, inset:0). Aucun liseré noir possible. */
+
+/* PC UNIQUEMENT — police légèrement réduite pour l'heure, le % d'avancement et le compteur
+   de pièces dans la barre du haut. La version mobile n'est pas affectée. */
+body.is-desktop-frame .tb-clock{font-size:12px}
+body.is-desktop-frame .tb-level{font-size:13px}
+body.is-desktop-frame .tb-coins{font-size:11px}
