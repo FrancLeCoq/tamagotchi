@@ -208,11 +208,18 @@ var Farm = {
     },
 
     updateHens:function(){
+        if(!this.canvas)return;
+        var sz=52.5;if(typeof App!=='undefined'&&App._isDesktop)sz=52.5*1.15;
+        // Bornes pour garder les poules ENTIÈREMENT visibles dans l'enclos (sur l'herbe)
+        var minX=4,maxX=this.canvas.width-sz-4;
+        var minY=this.canvas.height*0.50,maxY=this.canvas.height-sz-4;
+        // Distance mini adaptée au nombre de poules pour qu'elles tiennent toutes à l'écran
+        var minDist=this.hens.length>12?52:(this.hens.length>8?64:78);
         // Collision avoidance: keep minimum distance between hens
         for(var a=0;a<this.hens.length;a++){
             for(var b=a+1;b<this.hens.length;b++){
                 var dx=this.hens[a].x-this.hens[b].x,dy=this.hens[a].y-this.hens[b].y;
-                var dist=Math.sqrt(dx*dx+dy*dy),minDist=80;
+                var dist=Math.sqrt(dx*dx+dy*dy);
                 if(dist<minDist&&dist>0){
                     var push=(minDist-dist)/2;
                     var nx=dx/dist,ny=dy/dist;
@@ -235,11 +242,16 @@ var Farm = {
                 else {h.state='idle';h.stateTimer=50+Math.random()*150;}
             }
             if(h.state==='walking'){
-                var dx=h.targetX-h.x,dy=h.targetY-h.y;
-                var dist=Math.sqrt(dx*dx+dy*dy);
-                if(dist>2){h.x+=(dx/dist)*h.speed;h.y+=(dy/dist)*h.speed;h.flipX=dx<0;}
+                var dx2=h.targetX-h.x,dy2=h.targetY-h.y;
+                var dist2=Math.sqrt(dx2*dx2+dy2*dy2);
+                if(dist2>2){h.x+=(dx2/dist2)*h.speed;h.y+=(dy2/dist2)*h.speed;h.flipX=dx2<0;}
                 else {h.state='idle';h.stateTimer=50+Math.random()*100;}
             }
+            // Clamp : aucune poule ne sort de l'enclos (sinon elles deviennent invisibles).
+            // On autorise une entrée par la gauche (x négatif) tant que la poule "marche" vers sa cible.
+            var leftLimit=(h.state==='walking'&&h.x<minX&&h.targetX>h.x)?-60:minX;
+            if(h.x<leftLimit)h.x=leftLimit;if(h.x>maxX)h.x=maxX;
+            if(h.y<minY)h.y=minY;if(h.y>maxY)h.y=maxY;
         }
     },
 
