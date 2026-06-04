@@ -115,12 +115,14 @@ var App={
         this._isDesktop=!!isDesktop;
         b.classList.toggle('is-desktop-frame',!!isDesktop);
         if(isDesktop){
-            // Cadre au ratio EXACT du Galaxy S25 (9:19.5), occupant toute la hauteur dispo.
-            // La hauteur pilote tout → la scène garde les mêmes proportions que sur mobile.
+            // Cadre au ratio du Galaxy S25 (9:19.5), occupant toute la hauteur dispo.
             var RATIO=9/19.5;
             var frameH=vh;
-            var frameW=Math.round(frameH*RATIO);
-            if(frameW>vw){frameW=vw;frameH=Math.round(frameW/RATIO);}
+            var baseW=Math.round(frameH*RATIO);   // largeur "téléphone" stricte
+            // On réduit de moitié les bandes noires latérales : la largeur du cadre est
+            // la moyenne entre la largeur téléphone stricte et la pleine largeur fenêtre.
+            var frameW=Math.round((baseW+vw)/2);
+            if(frameW>vw)frameW=vw;
             h.style.background='#000';
             h.style.display='flex';
             h.style.alignItems='center';
