@@ -101,16 +101,23 @@ var App={
     applyDesktopFrame:function(){
         var b=document.body,h=document.documentElement;
         var vw=window.innerWidth,vh=window.innerHeight;
-        // Détection "PC" robuste : on considère PC dès que la fenêtre est assez large
-        // (>= 480px) OU plus large que haute. Telegram Desktop ouvre une fenêtre bien
-        // plus large qu'un téléphone (téléphone ≈ 360-430px de large en CSS px).
-        var isDesktop=(vw>=480)||(vw>vh);
+        // Détection "PC" FIABLE via la plateforme Telegram (doc officielle Mini Apps) :
+        // 'tdesktop' (Telegram Desktop), 'macos', 'weba', 'web' = ordinateur ;
+        // 'android', 'ios' = téléphone. Repli sur la largeur si la plateforme est inconnue.
+        var plat='';
+        try{var tgp=window.Telegram&&window.Telegram.WebApp;if(tgp&&tgp.platform)plat=(''+tgp.platform).toLowerCase();}catch(e){}
+        var desktopPlats={tdesktop:1,macos:1,weba:1,web:1,linux:1,windows:1};
+        var mobilePlats={android:1,ios:1};
+        var isDesktop;
+        if(desktopPlats[plat])isDesktop=true;
+        else if(mobilePlats[plat])isDesktop=false;
+        else isDesktop=(vw>=480)||(vw>vh); // repli si plateforme inconnue
         this._isDesktop=!!isDesktop;
         b.classList.toggle('is-desktop-frame',!!isDesktop);
         // Témoin de diagnostic (temporaire) : confirme que le code tourne + ce qu'il détecte
         var dbg=document.getElementById('pc-debug');
         if(!dbg){dbg=document.createElement('div');dbg.id='pc-debug';dbg.style.cssText='position:fixed;top:2px;left:2px;z-index:99999;font:11px monospace;background:rgba(0,0,0,.75);color:#7fff7f;padding:2px 6px;border-radius:6px;pointer-events:none';document.documentElement.appendChild(dbg);}
-        dbg.textContent=(isDesktop?'PC':'MOBILE')+' '+vw+'x'+vh;
+        dbg.textContent=(isDesktop?'PC':'MOBILE')+' '+vw+'x'+vh+' ['+(plat||'?')+']';
         if(isDesktop){
             // Cadre au ratio EXACT du Galaxy S25 (9:19.5), occupant toute la hauteur dispo.
             // La hauteur pilote tout → la scène garde les mêmes proportions que sur mobile.
