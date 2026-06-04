@@ -670,18 +670,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,syste
    comme sur mobile. La classe is-desktop-frame est posée par applyDesktopFrame().
    ═══════════════════════════════════════════════════════════════ */
 body.is-desktop-frame .layer-landscape{
-  background-size:contain!important;
+  background-size:auto 100%!important;
   background-position:center bottom!important;
 }
 body.is-desktop-frame .farm-scene{
-  background-size:contain,100% 100%!important;
+  background-size:auto 100%,100% 100%!important;
   background-position:center bottom,center center!important;
 }
 
 /* ═══ PC UNIQUEMENT — "reculer la caméra" : décor plus large + sprites plus petits ═══ */
 /* Décor affiché entier (plus large) au lieu de zoomé */
-body.is-desktop-frame .layer-landscape{background-size:contain!important;background-position:center bottom!important}
-body.is-desktop-frame .farm-scene{background-size:contain,100% 100%!important;background-position:center bottom,center center!important}
+body.is-desktop-frame .layer-landscape{background-size:auto 100%!important;background-position:center bottom!important}
+body.is-desktop-frame .farm-scene{background-size:auto 100%,100% 100%!important;background-position:center bottom,center center!important}
 /* Personnage principal et bâtiments rétrécis de 40% (le coq garde sa position basse) */
 body.is-desktop-frame .pet-wrapper{transform:translateX(-50%) scale(.6);transform-origin:bottom center}
 body.is-desktop-frame .layer-building{transform:translateX(-50%) scale(.6);transform-origin:bottom center}
