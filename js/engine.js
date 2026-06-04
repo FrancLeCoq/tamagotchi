@@ -73,7 +73,6 @@ const Engine = {
             method:'POST',headers:{'Content-Type':'application/json'},
             body:JSON.stringify({initData:initData,game_id:this.GAME_ID})
         }).then(function(r){return r.ok?r.json():null;}).then(function(d){
-            try{console.log('check-franc:',JSON.stringify(d));}catch(e){}
             if(d){
                 self._franc.hasFranc=!!d.hasFranc;
                 self._franc.walletLinked=!!d.walletLinked;
