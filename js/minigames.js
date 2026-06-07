@@ -72,9 +72,9 @@ const Minigames = {
         var items=[];
         this._spawnIv=setInterval(function(){
             if(!self.active)return;
-            var pool=['🌽','🌾','🥖','🧀','🍞','🐛','☠️'];
+            var pool=['🌽','🌾','🥖','🧀','🍞','💀','☠️'];
             var em=pool[Math.floor(Math.random()*pool.length)];
-            var bad=(em==='🐛');var poison=(em==='☠️');
+            var bad=(em==='💀');var poison=(em==='☠️');
             var it=document.createElement('div');
             it.className='catch-item';it.textContent=em;
             it.style.left=(8+Math.random()*84)+'%';it.style.top='-8%';
@@ -295,8 +295,8 @@ const Minigames = {
             if(!this.active) return;
             field.querySelectorAll('.mini-target').forEach(t=>t.remove());
             const t=document.createElement('div'); t.className='mini-target';
-            const emojis=['🌾','🌽','🥖','🧀','🐛'], emoji=emojis[Math.floor(Math.random()*emojis.length)];
-            const pts=emoji==='🐛'?-2:(emoji==='🌾'?1:2);
+            const emojis=['🌾','🌽','🥖','🧀','💀'], emoji=emojis[Math.floor(Math.random()*emojis.length)];
+            const pts=emoji==='💀'?-2:(emoji==='🌾'?1:2);
             t.textContent=emoji; t.style.left=(10+Math.random()*70)+'%'; t.style.top=(10+Math.random()*70)+'%';
             t.addEventListener('click',(e)=>{
                 e.stopPropagation(); this.score=Math.max(0,this.score+pts); scoreEl.textContent=this.score;

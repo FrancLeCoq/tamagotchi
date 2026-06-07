@@ -7,12 +7,12 @@ const Engine = {
         { id:4, nom:'Coq Vieux',  nk:'stage_old',    hnk:'stage_old_f',    emoji:'👴', heures:null,depletion:0.7, size:169, sprite:'assets/sprites/coq_vieux.png', spriteSad:'assets/sprites/coq_vieux_triste.png', hen:'assets/sprites/poule_vieille.png', henName:'Mamie Plume' },
     ],
     FOODS: [
-        { id:'grain',   nom:'Grain',    nk:'food_grain',    emoji:'🌾', faim:20, bonheur:5,  energie:5,  sante:0 },
-        { id:'mais',    nom:'Maïs',     nk:'food_mais',     emoji:'🌽', faim:30, bonheur:10, energie:5,  sante:5 },
-        { id:'baguette',nom:'Baguette', nk:'food_baguette', emoji:'🥖', faim:40, bonheur:15, energie:10, sante:-5 },
-        { id:'graines', nom:'Graines',  nk:'food_graines',  emoji:'🫘', faim:18, bonheur:8,  energie:8,  sante:10 },
-        { id:'gateau',  nom:'Gâteau',   nk:'food_gateau',   emoji:'🧁', faim:25, bonheur:30, energie:15, sante:-10 },
-        { id:'fromage', nom:'Fromage',  nk:'food_fromage',  emoji:'🧀', faim:35, bonheur:20, energie:10, sante:5 },
+        { id:'grain',   nom:'Grain',    nk:'food_grain',    emoji:'🌾', faim:20, bonheur:5,  energie:0,  sante:0 },
+        { id:'mais',    nom:'Maïs',     nk:'food_mais',     emoji:'🌽', faim:30, bonheur:10, energie:0,  sante:5 },
+        { id:'baguette',nom:'Baguette', nk:'food_baguette', emoji:'🥖', faim:40, bonheur:15, energie:0, sante:-5 },
+        { id:'graines', nom:'Graines',  nk:'food_graines',  emoji:'🫘', faim:18, bonheur:8,  energie:0,  sante:10 },
+        { id:'gateau',  nom:'Gâteau',   nk:'food_gateau',   emoji:'🧁', faim:25, bonheur:30, energie:0, sante:-10 },
+        { id:'fromage', nom:'Fromage',  nk:'food_fromage',  emoji:'🧀', faim:35, bonheur:20, energie:0, sante:5 },
     ],
     HOUSING: [
         { id:0, nom:'Poulailler',       nk:'house_poulailler', emoji:'🏚️', cost:0,     bg:'poulailler' },
@@ -157,14 +157,18 @@ const Engine = {
             pet.sante=this.cl(pet.sante+elapsed*2);
             pet.hygiene=this.cl(pet.hygiene-elapsed*0.5);
             pet.amour=this.cl(pet.amour-elapsed*0.3);
+            // Réveil automatique dès que l'énergie est pleine (corrige le coq qui restait
+            // endormi dans l'abri si on rouvrait l'app bien après la fin du sommeil)
+            if(pet.energie>=100){pet.energie=100;pet.isSleeping=false;pet.sleepStart=null;}
         } else {
-            pet.faim=this.cl(pet.faim-elapsed*4*m);
-            pet.bonheur=this.cl(pet.bonheur-elapsed*3*m);
-            pet.energie=this.cl(pet.energie-elapsed*2.5*m);
-            pet.sante=this.cl(pet.sante-elapsed*1.5*m);
-            pet.hygiene=this.cl(pet.hygiene-elapsed*2*m);
-            pet.intellect=this.cl(pet.intellect-elapsed*1*m);pet.jeu=this.cl((pet.jeu||0)-elapsed*2*m);pet.travail=this.cl((pet.travail||0)-elapsed*1.5*m);
-            pet.amour=this.cl(pet.amour-elapsed*1.5*m);
+            // Dégradation des jauges augmentée de 25% par rapport au calcul précédent (×1.25)
+            pet.faim=this.cl(pet.faim-elapsed*5*m);
+            pet.bonheur=this.cl(pet.bonheur-elapsed*3.75*m);
+            pet.energie=this.cl(pet.energie-elapsed*3.125*m);
+            pet.sante=this.cl(pet.sante-elapsed*1.875*m);
+            pet.hygiene=this.cl(pet.hygiene-elapsed*2.5*m);
+            pet.intellect=this.cl(pet.intellect-elapsed*1.25*m);pet.jeu=this.cl((pet.jeu||0)-elapsed*2.5*m);pet.travail=this.cl((pet.travail||0)-elapsed*1.875*m);
+            pet.amour=this.cl(pet.amour-elapsed*1.875*m);
         }
         var dirt=pet.poops+pet.pipis;
         if(dirt>=2){pet.bonheur=this.cl(pet.bonheur-elapsed*dirt*0.8);pet.hygiene=this.cl(pet.hygiene-elapsed*dirt*0.5);}

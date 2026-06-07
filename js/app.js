@@ -397,7 +397,19 @@ var App={
         var si=document.getElementById('sound-icon');if(si)si.textContent=self.soundOn?'🔊':'🔇';
         this.initAudio();this.updateAudio();
         Storage.save(this.pet);
-        requestAnimationFrame(function(){requestAnimationFrame(function(){Renderer.update(self.pet);Weather.init();self.startLoops();self.updateQuestDot();self.updateHolderBadge();self.detectFranc(true);});});
+        requestAnimationFrame(function(){requestAnimationFrame(function(){Renderer.update(self.pet);Weather.init();self.startLoops();self.updateQuestDot();self.updateHolderBadge();self.detectFranc(true);
+            // Si le coq dort encore en rouvrant l'app, on relance l'animation/compte à rebours
+            // du temps restant ; s'il a fini de dormir, updateStats l'a déjà réveillé.
+            if(self.pet&&self.pet.isSleeping&&!self.pet.estMort){
+                var oldEnergie=self.pet.energie||50;
+                var gameHoursNeeded=(100-oldEnergie)/10;
+                var seconds=Math.max(3,Math.round(gameHoursNeeded*120));
+                Renderer.showSleepAnimation(function(){
+                    self.pet.energie=100;self.pet.isSleeping=false;
+                    Renderer.update(self.pet);Storage.save(self.pet);
+                },seconds);
+            }
+        });});
     },
     startLoops:function(){this.stopLoops();var self=this;
         this.gameLoop=setInterval(function(){self.gameTick();},5000);
