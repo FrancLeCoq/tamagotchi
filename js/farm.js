@@ -106,14 +106,12 @@ var Farm = {
             var d2=Math.min(farm.hens,Math.ceil(elapsed*0.3));
             farm.hens-=d2;farm.deadRecent+=d2;farm.cleanLevel=5;
         }
-        // 1 œuf / HEURE DE JEU / poule, tant que mangeoire & propreté > 20%.
-        // CORRECTION : sur une longue absence, feedLevel/cleanLevel finissent bas, mais les
-        // poules ont pondu pendant la période où tout allait bien. On calcule donc la DURÉE
-        // réelle pendant laquelle feed ET clean sont restés > 20%, au lieu de tester l'état final.
+        // Production d'œufs basée sur le TEMPS DE JEU, calibrée pour 100 œufs / poule / jour réel
+        // (donc 20 poules → 2000 œufs/jour réel). Taux = 100 / (24h réelles × 30 h-jeu) ≈ 0.13889 /h-jeu/poule.
+        // Gating : ne pond que pendant la durée où mangeoire ET propreté sont restées > 20%.
         if(farm.hens>0){
             var hourMs=(typeof Weather!=='undefined'&&Weather.HOUR_MS)?Weather.HOUR_MS:3600000;
-            // feedLevel/cleanLevel ont chuté de (elapsed*rate) et (elapsed*rate*0.7) sur 'elapsed' heures réelles.
-            // Heures réelles avant que feed atteigne 20 :
+            var EGG_RATE=0.138889; // œufs par heure de jeu par poule
             var feedStart=farm.feedLevel+elapsed*rate; // niveau au début de la période
             var cleanStart=farm.cleanLevel+elapsed*rate*0.7;
             var hFeedOK=rate>0?Math.max(0,(feedStart-20)/rate):elapsed;
@@ -121,7 +119,7 @@ var Farm = {
             var hoursProductive=Math.max(0,Math.min(elapsed,hFeedOK,hCleanOK)); // heures réelles "OK"
             if(hoursProductive>0){
                 var gameHoursProd=(hoursProductive*3600000)/hourMs; // converties en heures de jeu
-                farm.eggAccum=(farm.eggAccum||0)+gameHoursProd*farm.hens;
+                farm.eggAccum=(farm.eggAccum||0)+gameHoursProd*farm.hens*EGG_RATE;
                 var newEggs=Math.floor(farm.eggAccum);
                 if(newEggs>0){farm.eggAccum-=newEggs;farm.pendingEggs=(farm.pendingEggs||0)+newEggs;farm.totalEggs+=newEggs;}
             }

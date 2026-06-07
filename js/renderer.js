@@ -57,8 +57,9 @@ var Renderer={
     updateXPRing:function(pet){var ring=document.getElementById('xp-ring');if(!ring)return;var s=Engine.STAGES[pet.stade];var pct=s.heures?Math.min(1,(Date.now()-pet.derniereEvolution)/3600000/s.heures):1;ring.style.strokeDashoffset=(132*(1-pct)).toFixed(1);},
 
     updateStats:function(pet){
-        // Bonheur = average of all gauges (displayed full width above)
-        var gauges=[pet.faim,pet.energie,pet.sante,pet.hygiene||50,pet.amour||30,(pet.jeu||0),(pet.travail||0)];
+        // Bonheur = moyenne des 6 jauges AFFICHÉES (faim, énergie, santé, hygiène, amour, jeu).
+        // (travail/intellect sont internes et ne comptent pas dans cette moyenne visible.)
+        var gauges=[pet.faim,pet.energie,pet.sante,pet.hygiene||50,pet.amour||30,(pet.jeu||0)];
         var avg=gauges.reduce(function(a,b){return a+b;},0)/gauges.length;
         pet.bonheur=Math.max(0,Math.min(100,avg));
 

@@ -1,10 +1,10 @@
 const Engine = {
     STAGES: [
         { id:0, nom:'Poussin',    nk:'stage_chick',  hnk:'stage_chick_f',  emoji:'🐣', heures:24,  depletion:1.6, size:104,  sprite:'assets/sprites/poussin.png', spriteSad:'assets/sprites/poussin_triste.png', hen:'assets/sprites/poule_poussin.png', henName:'Poussinette' },
-        { id:1, nom:'Petit Coq',  nk:'stage_little', hnk:'stage_little_f', emoji:'🐤', heures:48,  depletion:1.4, size:150, sprite:'assets/sprites/petit_coq.png', spriteSad:'assets/sprites/petit_coq_triste.png', hen:'assets/sprites/poule_petite.png',  henName:'Cocotte' },
-        { id:2, nom:'Coq Ado',    nk:'stage_teen',   hnk:'stage_teen_f',   emoji:'🐔', heures:72,  depletion:1.2, size:156, sprite:'assets/sprites/coq_ado.png', spriteSad:'assets/sprites/coq_ado_triste.png', hen:'assets/sprites/poule_ado.png',     henName:'Poulette' },
-        { id:3, nom:'Coq Adulte', nk:'stage_adult',  hnk:'stage_adult_f',  emoji:'🐓', heures:168, depletion:1.0, size:155, sprite:'assets/sprites/coq_adulte.png', spriteSad:'assets/sprites/coq_adulte_triste.png', hen:'assets/sprites/poule_adulte.png',  henName:'Françoise' },
-        { id:4, nom:'Coq Vieux',  nk:'stage_old',    hnk:'stage_old_f',    emoji:'👴', heures:null,depletion:0.7, size:169, sprite:'assets/sprites/coq_vieux.png', spriteSad:'assets/sprites/coq_vieux_triste.png', hen:'assets/sprites/poule_vieille.png', henName:'Mamie Plume' },
+        { id:1, nom:'Petit Coq',  nk:'stage_little', hnk:'stage_little_f', emoji:'🐤', heures:48,  depletion:1.512, size:150, sprite:'assets/sprites/petit_coq.png', spriteSad:'assets/sprites/petit_coq_triste.png', hen:'assets/sprites/poule_petite.png',  henName:'Cocotte' },
+        { id:2, nom:'Coq Ado',    nk:'stage_teen',   hnk:'stage_teen_f',   emoji:'🐔', heures:72,  depletion:1.296, size:156, sprite:'assets/sprites/coq_ado.png', spriteSad:'assets/sprites/coq_ado_triste.png', hen:'assets/sprites/poule_ado.png',     henName:'Poulette' },
+        { id:3, nom:'Coq Adulte', nk:'stage_adult',  hnk:'stage_adult_f',  emoji:'🐓', heures:168, depletion:1.08, size:155, sprite:'assets/sprites/coq_adulte.png', spriteSad:'assets/sprites/coq_adulte_triste.png', hen:'assets/sprites/poule_adulte.png',  henName:'Françoise' },
+        { id:4, nom:'Coq Vieux',  nk:'stage_old',    hnk:'stage_old_f',    emoji:'👴', heures:null,depletion:1.6, size:169, sprite:'assets/sprites/coq_vieux.png', spriteSad:'assets/sprites/coq_vieux_triste.png', hen:'assets/sprites/poule_vieille.png', henName:'Mamie Plume' },
     ],
     FOODS: [
         { id:'grain',   nom:'Grain',    nk:'food_grain',    emoji:'🌾', faim:20, bonheur:5,  energie:0,  sante:0 },
@@ -161,14 +161,15 @@ const Engine = {
             // endormi dans l'abri si on rouvrait l'app bien après la fin du sommeil)
             if(pet.energie>=100){pet.energie=100;pet.isSleeping=false;pet.sleepStart=null;}
         } else {
-            // Dégradation des jauges augmentée de 25% par rapport au calcul précédent (×1.25)
+            // Taux de déplétion par jauge (par heure réelle, ×m selon le stade).
+            // Réductions de temps 100%→0% demandées : énergie -25%, hygiène -35%, jeu -25%,
+            // santé -35%, amour -30% ; faim inchangée. (bonheur est recalculé en moyenne ailleurs)
             pet.faim=this.cl(pet.faim-elapsed*5*m);
-            pet.bonheur=this.cl(pet.bonheur-elapsed*3.75*m);
-            pet.energie=this.cl(pet.energie-elapsed*3.125*m);
-            pet.sante=this.cl(pet.sante-elapsed*1.875*m);
-            pet.hygiene=this.cl(pet.hygiene-elapsed*2.5*m);
-            pet.intellect=this.cl(pet.intellect-elapsed*1.25*m);pet.jeu=this.cl((pet.jeu||0)-elapsed*2.5*m);pet.travail=this.cl((pet.travail||0)-elapsed*1.875*m);
-            pet.amour=this.cl(pet.amour-elapsed*1.875*m);
+            pet.energie=this.cl(pet.energie-elapsed*4.1667*m);
+            pet.sante=this.cl(pet.sante-elapsed*2.8846*m);
+            pet.hygiene=this.cl(pet.hygiene-elapsed*3.8462*m);
+            pet.intellect=this.cl(pet.intellect-elapsed*1.25*m);pet.jeu=this.cl((pet.jeu||0)-elapsed*3.3333*m);pet.travail=this.cl((pet.travail||0)-elapsed*1.875*m);
+            pet.amour=this.cl(pet.amour-elapsed*2.6786*m);
         }
         var dirt=pet.poops+pet.pipis;
         if(dirt>=2){pet.bonheur=this.cl(pet.bonheur-elapsed*dirt*0.8);pet.hygiene=this.cl(pet.hygiene-elapsed*dirt*0.5);}
