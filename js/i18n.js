@@ -103,7 +103,7 @@ var I18n = {
 
         // ─── Toasts / dynamic (app.js) ───
         t_resume:              {en:'▶ Resumed!',                         fr:'▶ Reprise !'},
-        t_notif_unsupported:   {en:'🔔 Notifications not supported on this device', fr:'🔔 Notifications non supportées sur cet appareil'},
+        t_notif_unsupported:   {en:'🔔 Web notifications aren\'t available inside Telegram. Enable notifications for the Telegram app in your phone settings instead.', fr:'🔔 Les notifications web ne sont pas disponibles dans Telegram. Active plutôt les notifications de l\'app Telegram dans les réglages de ton téléphone.'},
         t_notif_already:       {en:'🔔 Notifications already enabled!',  fr:'🔔 Notifications déjà activées !'},
         t_notif_blocked:       {en:'🔕 Notifications blocked — allow them in your browser settings', fr:'🔕 Notifications bloquées — autorise-les dans les réglages du navigateur'},
         t_notif_on:            {en:'🔔 Notifications enabled!',          fr:'🔔 Notifications activées !'},

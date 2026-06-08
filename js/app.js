@@ -40,6 +40,17 @@ var App={
     suspendGame:function(){
         if(this._suspended)return;this._suspended=true;
         try{this.stopLoops();}catch(e){}
+        // Si le jeu était en pause manuelle, on solde la pause MAINTENANT (avant fermeture),
+        // pour ne pas "banker" tout le temps hors-ligne comme du temps de pause au retour.
+        // Ainsi, fermer l'app pendant la nuit fait bien baisser les jauges au prochain calcul.
+        try{
+            if(this.pet&&this.pet._pauseStart){
+                var pms=Date.now()-this.pet._pauseStart;
+                this.pet.derniereUpdate=(this.pet.derniereUpdate||Date.now())+pms;
+                if(this.pet.farm)this.pet.farm.lastUpdate=(this.pet.farm.lastUpdate||Date.now())+pms;
+                this.pet._pauseStart=null;
+            }
+        }catch(e){}
         // Sauvegarde l'état pour reprise propre selon l'horloge réelle du téléphone
         try{if(this.pet)Storage.save(this.pet);}catch(e){}
         // Coupe tous les sons
@@ -214,7 +225,7 @@ var App={
         if(flagEn)flagEn.classList.toggle('flag-active',I18n.lang==='en');
 
         document.getElementById('btn-resume').addEventListener('click',function(){
-            var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);Engine.updateStats(self.pet);self.showGame();Renderer.toast(I18n.t('t_resume'));}
+            var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);self.pet._pauseStart=null;self.pet.isPaused=false;Engine.updateStats(self.pet);self.showGame();Renderer.toast(I18n.t('t_resume'));}
         });
         document.getElementById('btn-new-game').addEventListener('click',function(){self.newGame();});
         var cw=document.getElementById('btn-connect-wallet');if(cw)cw.addEventListener('click',function(){self.openWallet();});
@@ -237,9 +248,8 @@ var App={
             document.getElementById('sound-icon').textContent=self.soundOn?'🔊':'🔇';
             self.updateAudio();
         });
-        document.getElementById('btn-pause').addEventListener('click',function(){self.togglePause();});
-        var pr=document.getElementById('btn-pause-resume');if(pr)pr.addEventListener('click',function(){self.setPause(false);});
         var be=document.getElementById('btn-envelope');if(be)be.addEventListener('click',function(){Features.renderQuests(self.pet);document.getElementById('quests-screen').classList.remove('hidden');self.markQuestsSeen();});
+        var bjn=document.getElementById('btn-journal-nav');if(bjn)bjn.addEventListener('click',function(){Features.renderJournal(self.pet);document.getElementById('journal-screen').classList.remove('hidden');});
         var bj=document.getElementById('btn-journal');if(bj)bj.addEventListener('click',function(){Features.renderJournal(self.pet);document.getElementById('more-screen').classList.add('hidden');document.getElementById('journal-screen').classList.remove('hidden');});
         document.getElementById('btn-nav-more').addEventListener('click',function(){document.getElementById('more-screen').classList.remove('hidden');});
         document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
@@ -387,7 +397,6 @@ var App={
     },
     showGame:function(){
         this.requestWakeLock();
-        if(this.pet&&this.pet.isPaused){var s=this;setTimeout(function(){s.setPause(true);},300);}
         try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission();}catch(e){}
         var self=this;
         if(!this._audioSyncIv)this._audioSyncIv=setInterval(function(){if(self.soundOn)self.updateAudio();},5000);

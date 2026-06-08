@@ -133,7 +133,7 @@
             <button class="nav-btn" id="btn-stats"><span class="nav-icon">📊</span><span class="nav-label" data-i18n="nav_stats">Stats</span></button>
             <button class="nav-btn" id="btn-housing"><span class="nav-icon">🏗️</span><span class="nav-label" data-i18n="nav_buildings">Buildings</span></button>
             <button class="nav-btn" id="btn-sound"><span class="nav-icon" id="sound-icon">🔇</span><span class="nav-label" data-i18n="nav_sound">Sound</span></button>
-            <button class="nav-btn" id="btn-pause"><span class="nav-icon" id="pause-icon">⏸️</span><span class="nav-label" data-i18n="nav_pause">Pause</span></button>
+            <button class="nav-btn" id="btn-journal-nav"><span class="nav-icon">📔</span><span class="nav-label" data-i18n="more_journal">Journal</span></button>
             <button class="nav-btn" id="btn-nav-more"><span class="nav-icon">⚙️</span><span class="nav-label" data-i18n="nav_more">More</span></button>
         </div>
     </div>
@@ -171,13 +171,6 @@
     </div>
     <div id="quests-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2 data-i18n="hdr_quests">🎯 Daily quests</h2><button class="close-btn" data-close="quests-screen">✕</button></div><div class="quests-list" id="quests-list"></div></div></div>
     <div id="journal-screen" class="overlay hidden"><div class="overlay-panel"><div class="overlay-header"><h2 data-i18n="hdr_journal">📔 Francis’ journal</h2><button class="close-btn" data-close="journal-screen">✕</button></div><div class="journal-list" id="journal-list"></div></div></div>
-    <div id="pause-overlay" class="pause-overlay hidden">
-        <div class="pause-box">
-            <div class="pause-big-icon">⏸️</div>
-            <div class="pause-text" data-i18n="pause_text">PAUSE</div>
-            <button class="pause-resume-btn" id="btn-pause-resume" data-i18n="pause_resume">▶ Resume</button>
-        </div>
-    </div>
     <div id="birth-video-overlay" class="birth-video-overlay hidden">
         <video id="birth-video" class="birth-video" playsinline muted>
             <source src="assets/video/naissance.mp4" type="video/mp4">
