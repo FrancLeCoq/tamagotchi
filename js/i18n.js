@@ -274,6 +274,8 @@ var I18n = {
         cause_famine:          {en:'Starvation',                        fr:'Famine'},
         cause_illness:         {en:'Illness',                           fr:'Maladie'},
         cause_depression:      {en:'Depression',                        fr:'Dépression'},
+        cause_exhaustion:      {en:'Exhaustion',                        fr:'Épuisement'},
+        cause_septicemia:      {en:'Immune collapse',                   fr:'Épuisement immunitaire'},
         cause_unknown:         {en:'unknown',                           fr:'inconnue'},
         m_gone:                {en:'Francis is no longer here...',       fr:'Francis n\u2019est plus là...'},
 
@@ -337,6 +339,7 @@ var I18n = {
         holder_checking:       {en:'Checking…',                          fr:'Vérification…'},
         holder_connected:      {en:'$FRANC HOLDER · UNLIMITED',          fr:'$FRANC HOLDER · ILLIMITÉ'},
         holder_connected_sub:  {en:'✅ {bal} $FRANC detected',           fr:'✅ {bal} $FRANC détecté'},
+        wConnected:            {en:'Connected',                         fr:'Connecté'},
         holder_nofranc:        {en:'No $FRANC found — tap to retry',     fr:'Aucun $FRANC — touchez pour réessayer'},
         holder_disconnected:   {en:'Tap to connect & unlock',            fr:'Touchez pour connecter & débloquer'},
         wallet_btn_unlocked:   {en:'$FRANC HOLDER · UNLIMITED ✅',        fr:'$FRANC HOLDER · ILLIMITÉ ✅'},

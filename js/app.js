@@ -180,7 +180,16 @@ var App={
         if(lock)lock.innerHTML=this._lockSVG(connected);
         if(mid)mid.innerHTML='<span class="eg-coin">①</span> <b>'+I18n.t('holder_connected')+'</b>';
         if(right){
-            if(connected)right.textContent=I18n.t('holder_connected_sub',{bal:Number(Engine.getFrancBalance()).toLocaleString()});
+            if(connected){
+                var reason=Engine.getUnlockReason();
+                if(reason==='stars'){
+                    right.textContent='Unlocked via ⭐';
+                } else {
+                    var sym=(reason==='ton')?'💎':'◎'; // 💎 TON · ◎ Solana
+                    var bal=Engine.getFrancBalance()?Number(Engine.getFrancBalance()).toLocaleString():'?';
+                    right.textContent=I18n.t('wConnected')+' '+sym+' · '+bal+' $FRANC';
+                }
+            }
             else if(linked)right.textContent=I18n.t('holder_nofranc');
             else right.textContent=I18n.t('holder_connect');
         }

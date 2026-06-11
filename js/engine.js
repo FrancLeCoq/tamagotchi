@@ -43,7 +43,7 @@ const Engine = {
     SUPABASE:'https://mubqtnqulpyehkgubhnh.supabase.co/functions/v1',
     WALLET_MINIAPP:'https://t.me/FrancisLeCoqBot/wallet',
     GAME_ID:'tamagotchi',
-    _franc:{hasFranc:false,walletLinked:false,balance:0,address:'',checked:false},
+    _franc:{hasFranc:false,walletLinked:false,balance:0,address:'',checked:false,reason:null},
 
     isWalletConnected() {
         // "Connecté & illimité" = détient du $FRANC (vérifié serveur)
@@ -54,6 +54,7 @@ const Engine = {
     hasFranc(){ return !!this._franc.hasFranc; },
     walletLinked(){ return !!this._franc.walletLinked; },
     getFrancBalance(){ return this._franc.balance||0; },
+    getUnlockReason(){ return this._franc.reason||null; }, // "solana" | "ton" | "stars" | null
 
     // Vérifie l'état $FRANC auprès du backend (POST check-franc).
     // Le jeu doit être lancé comme une Mini App Telegram (t.me/FrancisLeCoqBot/Tamagotchi)
@@ -74,9 +75,14 @@ const Engine = {
             body:JSON.stringify({initData:initData,game_id:this.GAME_ID})
         }).then(function(r){return r.ok?r.json():null;}).then(function(d){
             if(d){
-                self._franc.hasFranc=!!d.hasFranc;
                 self._franc.walletLinked=!!d.walletLinked;
-                self._franc.balance=d.balance||0;
+                // Verdict de déblocage : nouveau backend → d.unlocked,
+                // ancien backend → fallback (walletLinked && hasFranc). Les deux marchent.
+                self._franc.hasFranc=!!((d.unlocked!=null)?d.unlocked:(d.walletLinked&&d.hasFranc));
+                // Raison du déblocage : "solana" | "ton" | "stars" | null
+                self._franc.reason=d.reason||(self._franc.hasFranc?'solana':null);
+                // Solde réel (0 pour un déblocage via Stars)
+                self._franc.balance=self._franc.hasFranc?Number(d.balance||0):0;
                 self._franc.address=d.walletAddress||'';
             }
             self._franc.checked=true;
@@ -177,10 +183,14 @@ const Engine = {
         // Poop/pipi
         if(now-pet.dernierePoop>this.POOP_INTERVAL*1000){pet.poops=Math.min(12,pet.poops+3);pet.dernierePoop=now;pet.hygiene=this.cl(pet.hygiene-8);}
         if(now-pet.dernierePipi>this.PIPI_INTERVAL*1000){pet.pipis=Math.min(5,pet.pipis+1);pet.dernierePipi=now;}
-        // Starvation / death
-        if(pet.faim<=0&&pet.sante<=5){pet.estMort=true;pet.causeMortKey='cause_famine';pet.causeMort=I18n.t('cause_famine');}
-        if(pet.sante<=0){pet.estMort=true;pet.causeMortKey='cause_illness';pet.causeMort=I18n.t('cause_illness');}
-        if(pet.bonheur<=0&&pet.sante<=10){pet.estMort=true;pet.causeMortKey='cause_depression';pet.causeMort=I18n.t('cause_depression');}
+        // ── Conditions de décès (V73) ──
+        // Morts directes : une jauge vitale atteint 0%.
+        if(pet.faim<=0){pet.estMort=true;pet.causeMortKey='cause_famine';pet.causeMort=I18n.t('cause_famine');}
+        else if(pet.sante<=0){pet.estMort=true;pet.causeMortKey='cause_illness';pet.causeMort=I18n.t('cause_illness');}
+        else if(pet.energie<=0){pet.estMort=true;pet.causeMortKey='cause_exhaustion';pet.causeMort=I18n.t('cause_exhaustion');}
+        // Morts combinées : deux jauges sous 10%.
+        else if((pet.jeu||0)<10&&(pet.amour||0)<10){pet.estMort=true;pet.causeMortKey='cause_depression';pet.causeMort=I18n.t('cause_depression');}
+        else if(pet.sante<10&&(pet.hygiene||0)<10){pet.estMort=true;pet.causeMortKey='cause_septicemia';pet.causeMort=I18n.t('cause_septicemia');}
         pet.derniereUpdate=now;
         return pet;
     },
@@ -210,7 +220,7 @@ const Engine = {
         var pool=get(m)||get('faim');
         if((pet.jeu||0)<20&&Math.random()<.3)pool=get('jeu');
         return pool[Math.floor(Math.random()*pool.length)];},
-    hasAlerts(pet){return pet.faim<10||pet.bonheur<10||pet.energie<10||pet.sante<10||pet.hygiene<10||pet.amour<10;},
+    hasAlerts(pet){return pet.faim<25||pet.sante<25||pet.energie<25||(pet.jeu||0)<20||(pet.amour||0)<20||(pet.hygiene||0)<20;},
     getAge(pet){var ms=Date.now()-pet.neLe,totalMin=ms/60000;return{days:Math.floor(totalMin/1440),hours:Math.floor((totalMin%1440)/60),minutes:Math.floor(totalMin%60)};},
 
     checkEvolution(pet){
