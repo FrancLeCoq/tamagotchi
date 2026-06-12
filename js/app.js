@@ -36,6 +36,30 @@ var App={
     },
 
     _suspended:false,
+    // ── Synchronisation de l'état vers Supabase (save-pet-state) ──
+    // Envoie un instantané léger des jauges + la LANGUE du joueur + le consentement notifs.
+    // C'est ce qui permet au cron serveur (notify-pets) de recalculer les jauges et
+    // d'envoyer les messages du bot dans la bonne langue (FR/EN).
+    syncPetState:function(){
+        try{
+            var tg=window.Telegram&&window.Telegram.WebApp;
+            if(!tg||!tg.initData||!this.pet)return;
+            var p=this.pet;
+            fetch(Engine.SUPABASE+'/save-pet-state',{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({
+                    initData:tg.initData,
+                    notifs_on:!!this.notifEnabled,
+                    lang:(typeof I18n!=='undefined'&&I18n.lang)?I18n.lang:'en',
+                    state:{
+                        faim:p.faim,sante:p.sante,bonheur:p.bonheur,energie:p.energie,
+                        hygiene:p.hygiene,amour:p.amour,jeu:(p.jeu||0),stade:p.stade,
+                        estMort:!!p.estMort,derniereUpdate:p.derniereUpdate
+                    }
+                })
+            }).catch(function(){});
+        }catch(e){}
+    },
     // Arrière-plan : stoppe les boucles + coupe tout son (corrige le bruit de pluie qui continuait)
     suspendGame:function(){
         if(this._suspended)return;this._suspended=true;
@@ -53,6 +77,8 @@ var App={
         }catch(e){}
         // Sauvegarde l'état pour reprise propre selon l'horloge réelle du téléphone
         try{if(this.pet)Storage.save(this.pet);}catch(e){}
+        // Synchronise l'état vers Supabase pour les notifications du bot
+        try{this.syncPetState();}catch(e){}
         // Coupe tous les sons
         try{if(this._ambientAudio)this._ambientAudio.pause();}catch(e){}
         try{if(this._rainAudio)this._rainAudio.pause();}catch(e){}
@@ -234,7 +260,7 @@ var App={
         if(flagEn)flagEn.classList.toggle('flag-active',I18n.lang==='en');
 
         document.getElementById('btn-resume').addEventListener('click',function(){
-            var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);self.pet._pauseStart=null;self.pet.isPaused=false;Engine.updateStats(self.pet);self.showGame();Renderer.toast(I18n.t('t_resume'));}
+            var d=Storage.loadSync();if(d){self.pet=d;Engine.migrate(self.pet);self.pet._pauseStart=null;self.pet.isPaused=false;self._deathShown=false;Engine.updateStats(self.pet);self.showGame();Renderer.toast(I18n.t('t_resume'));self.syncPetState();}
         });
         document.getElementById('btn-new-game').addEventListener('click',function(){self.newGame();});
         var cw=document.getElementById('btn-connect-wallet');if(cw)cw.addEventListener('click',function(){self.openWallet();});
@@ -258,7 +284,6 @@ var App={
             self.updateAudio();
         });
         var be=document.getElementById('btn-envelope');if(be)be.addEventListener('click',function(){Features.renderQuests(self.pet);document.getElementById('quests-screen').classList.remove('hidden');self.markQuestsSeen();});
-        var bjn=document.getElementById('btn-journal-nav');if(bjn)bjn.addEventListener('click',function(){Features.renderJournal(self.pet);document.getElementById('journal-screen').classList.remove('hidden');});
         var bj=document.getElementById('btn-journal');if(bj)bj.addEventListener('click',function(){Features.renderJournal(self.pet);document.getElementById('more-screen').classList.add('hidden');document.getElementById('journal-screen').classList.remove('hidden');});
         document.getElementById('btn-nav-more').addEventListener('click',function(){document.getElementById('more-screen').classList.remove('hidden');});
         document.getElementById('btn-heal-direct').addEventListener('click',function(){self.doHeal();});
@@ -266,27 +291,14 @@ var App={
         document.getElementById('btn-douche').addEventListener('click',function(){self.doShower();});
         document.getElementById('btn-brossage').addEventListener('click',function(){self.doBrossage();});
         document.getElementById('btn-enclos-badge').addEventListener('click',function(e){e.stopPropagation();self.openFarm();});
-        document.getElementById('btn-notif').addEventListener('click',function(){
-            document.getElementById('more-screen').classList.add('hidden');
-            if(!('Notification' in window)){Renderer.toast(I18n.t('t_notif_unsupported'));return;}
-            // Si déjà activé dans l'app → on désactive (bascule)
-            if(self.notifEnabled){
-                self.notifEnabled=false;
-                try{localStorage.setItem('francis_notif','off');}catch(e){}
-                Renderer.toast(I18n.t('t_notif_off'));
-                return;
-            }
-            // Activation : demande la permission si besoin
-            if(Notification.permission==='denied'){Renderer.toast(I18n.t('t_notif_blocked'));return;}
-            if(Notification.permission==='granted'){
-                self.notifEnabled=true;try{localStorage.setItem('francis_notif','on');}catch(e){}
-                Renderer.toast(I18n.t('t_notif_on'));try{new Notification('🐓 Francis le Coq',{body:I18n.t('t_notif_test')});}catch(e){}
-                return;
-            }
-            Notification.requestPermission().then(function(p){
-                if(p==='granted'){self.notifEnabled=true;try{localStorage.setItem('francis_notif','on');}catch(e){}Renderer.toast(I18n.t('t_notif_on'));try{new Notification('🐓 Francis le Coq',{body:I18n.t('t_notif_test')});}catch(e){}}
-                else Renderer.toast(I18n.t('t_notif_refused'));
-            });
+        // ── Notifications via le BOT TELEGRAM (barre du bas) ──
+        // Simple bascule ON/OFF (OFF par défaut). L'état est synchronisé vers Supabase
+        // (save-pet-state) ; c'est le cron serveur qui envoie les messages via le bot.
+        var bnn=document.getElementById('btn-notif-nav');if(bnn)bnn.addEventListener('click',function(){
+            self.notifEnabled=!self.notifEnabled;
+            try{localStorage.setItem('francis_notif',self.notifEnabled?'on':'off');}catch(e){}
+            Renderer.toast(I18n.t(self.notifEnabled?'t_notif_on':'t_notif_off'));
+            self.syncPetState(); // informe le serveur (notifs_on + état + langue)
         });
         document.getElementById('btn-evo-ok').addEventListener('click',function(){Renderer.hideEvolution();});
         document.getElementById('btn-restart').addEventListener('click',function(){Renderer.hideDeath();self.newGame();});
@@ -341,7 +353,7 @@ var App={
         var self=this;
         if(typeof Features!=='undefined'&&Features._clearTmp)Features._clearTmp();
         if(typeof Renderer!=='undefined'&&Renderer.clearEventArtifacts)Renderer.clearEventArtifacts();
-        this.pet=Engine.createPet('Francis');Storage.save(this.pet);
+        this.pet=Engine.createPet('Francis');this._deathShown=false;Storage.save(this.pet);
         this.playBirthVideo(function(){
             self.showGame();Renderer.sceneNotif(I18n.t('born_notif'));
         });
@@ -406,7 +418,6 @@ var App={
     },
     showGame:function(){
         this.requestWakeLock();
-        try{if(window.Notification&&Notification.permission==='default')Notification.requestPermission();}catch(e){}
         var self=this;
         if(!this._audioSyncIv)this._audioSyncIv=setInterval(function(){if(self.soundOn)self.updateAudio();},5000);
         document.getElementById('splash-screen').classList.remove('active');
@@ -475,13 +486,19 @@ var App={
         try{return parseFloat(localStorage.getItem('francis_record')||'0');}catch(e){return 0;}
     },
     gameTick:function(){
-        if(!this.pet||this.pet.estMort||this.paused)return;
+        if(!this.pet||this.paused)return;
+        // Si la mort a été détectée (y compris au CHARGEMENT après une longue absence),
+        // on affiche l'écran de mort + faucheuse UNE fois, au lieu de sortir silencieusement.
+        if(this.pet.estMort){
+            if(!this._deathShown){this._deathShown=true;this.saveRecord();Renderer.showDeath(this.pet);Storage.save(this.pet);}
+            return;
+        }
         Engine.updateStats(this.pet);Renderer.update(this.pet);this.updateCooldowns();
         this.checkAlerts();
         if(Engine.needsWalletGate(this.pet)){document.getElementById('wallet-gate').classList.remove('hidden');return;}
         if(this.pet.farm&&this.pet.farm.hens>0){Farm.update(this.pet);Farm.checkBonheurDeaths(this.pet);}
         if(Engine.checkEvolution(this.pet)){var old=Engine.STAGES[this.pet.stade];Engine.evolve(this.pet);Renderer.showEvolution(old,Engine.STAGES[this.pet.stade]);Storage.save(this.pet);}
-        if(this.pet.estMort){this.saveRecord();Renderer.showDeath(this.pet);Storage.save(this.pet);}
+        if(this.pet.estMort){this._deathShown=true;this.saveRecord();Renderer.showDeath(this.pet);Storage.save(this.pet);return;}
         // ── FEATURES ──
         Features.applyWeatherImpact(this.pet);
         Features.autoJournal(this.pet);
@@ -546,7 +563,6 @@ var App={
                 var fullMsg=t.msg+(cause?' '+cause:'');
                 Renderer.sceneNotif(fullMsg);
                 // Notification navigateur uniquement si activée dans l'app (pas de popup natif bloquant)
-                try{if(App.notifEnabled&&window.Notification&&Notification.permission==='granted')new Notification('🐓 Francis le Coq',{body:fullMsg,icon:'assets/sprites/francis.png'});}catch(e){}
                 break;
             }
         }

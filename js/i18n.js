@@ -106,7 +106,7 @@ var I18n = {
         t_notif_unsupported:   {en:'🔔 Web notifications aren\'t available inside Telegram. Enable notifications for the Telegram app in your phone settings instead.', fr:'🔔 Les notifications web ne sont pas disponibles dans Telegram. Active plutôt les notifications de l\'app Telegram dans les réglages de ton téléphone.'},
         t_notif_already:       {en:'🔔 Notifications already enabled!',  fr:'🔔 Notifications déjà activées !'},
         t_notif_blocked:       {en:'🔕 Notifications blocked — allow them in your browser settings', fr:'🔕 Notifications bloquées — autorise-les dans les réglages du navigateur'},
-        t_notif_on:            {en:'🔔 Notifications enabled!',          fr:'🔔 Notifications activées !'},
+        t_notif_on:            {en:'🔔 Notifications on! Francis will message you via @FrancisLeCoqBot', fr:'🔔 Notifications activées ! Francis t\'écrira via @FrancisLeCoqBot'},
         t_notif_off:           {en:'🔕 Notifications disabled',           fr:'🔕 Notifications désactivées'},
         t_notif_test:          {en:'Francis says hello! 🐓',             fr:'Francis te dit bonjour ! 🐓'},
         t_notif_refused:       {en:'🔕 Notifications declined',          fr:'🔕 Notifications refusées'},
