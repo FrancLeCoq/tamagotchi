@@ -88,17 +88,19 @@ var App={
     },
     // Retour au premier plan : recalcule l'heure/les jauges et relance le jeu
     resumeGame:function(){
-        if(!this._suspended){ // 1er retour éventuel sans suspension préalable
-            this.detectFranc(true);
-            return;
-        }
+        var hadSuspend=this._suspended;
         this._suspended=false;
-        // Recalcule l'horloge de jeu et les jauges depuis l'heure réelle du téléphone
+        // Recalcule l'horloge de jeu et les jauges depuis l'heure réelle du téléphone.
+        // IMPORTANT : on recalcule TOUJOURS, même si suspendGame n'a pas été déclenché à la
+        // fermeture (Telegram ne lance pas toujours visibilitychange/blur de façon fiable).
+        // Sinon, après une nuit l'app gelée rouvrait sans faire baisser les jauges.
         try{if(typeof Weather!=='undefined'&&Weather._resume)Weather._resume();}catch(e){}
         if(this.pet&&!this.pet.estMort){
             try{Engine.updateStats(this.pet);}catch(e){}
             try{if(typeof Renderer!=='undefined')Renderer.update(this.pet);}catch(e){}
+            try{Storage.save(this.pet);}catch(e){}
         }
+        this.detectFranc(true);
         // Ne relance les boucles que si on est bien en jeu
         var gameVisible=document.getElementById('game-screen')&&document.getElementById('game-screen').classList.contains('active');
         if(gameVisible&&this.pet&&!this.pet.estMort){
