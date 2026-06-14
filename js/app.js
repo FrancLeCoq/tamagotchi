@@ -40,6 +40,11 @@ var App={
     // Envoie un instantané léger des jauges + la LANGUE du joueur + le consentement notifs.
     // C'est ce qui permet au cron serveur (notify-pets) de recalculer les jauges et
     // d'envoyer les messages du bot dans la bonne langue (FR/EN).
+    // Met à jour l'icône cloche : 🔔 si notifs activées, 🔕 (barrée) si désactivées.
+    _updateNotifIcon:function(){
+        var ic=document.getElementById('notif-icon');
+        if(ic)ic.textContent=this.notifEnabled?'🔔':'🔕';
+    },
     syncPetState:function(){
         try{
             var tg=window.Telegram&&window.Telegram.WebApp;
@@ -299,6 +304,7 @@ var App={
         var bnn=document.getElementById('btn-notif-nav');if(bnn)bnn.addEventListener('click',function(){
             self.notifEnabled=!self.notifEnabled;
             try{localStorage.setItem('francis_notif',self.notifEnabled?'on':'off');}catch(e){}
+            self._updateNotifIcon();
             Renderer.toast(I18n.t(self.notifEnabled?'t_notif_on':'t_notif_off'));
             self.syncPetState(); // informe le serveur (notifs_on + état + langue)
         });
@@ -421,6 +427,7 @@ var App={
     showGame:function(){
         this.requestWakeLock();
         var self=this;
+        this._updateNotifIcon();
         if(!this._audioSyncIv)this._audioSyncIv=setInterval(function(){if(self.soundOn)self.updateAudio();},5000);
         document.getElementById('splash-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
