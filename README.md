@@ -139,15 +139,13 @@ francis-le-coq/
 
 ## 📜 Copyright & License
 
-© 2026 Francis Le Coq — All rights reserved.
+© 2026 [$FRANC by FRANCIS LE COQ]. Tous droits réservés. Ce jeu et son code source sont une création originale dans le cadre du projet $FRANC. Le code est fourni à titre de consultation. Toute reproduction, redistribution, modification ou réutilisation, totale ou partielle, sans autorisation écrite préalable de l'auteur est interdite. $FRANC / Le Coq Francis et leurs visuels sont des marques du projet.
 
-This project, its source code, its visuals (sprites, buildings, characters), its sounds and its game concept are the exclusive property of their author. Any reproduction, distribution, modification or commercial use, in whole or in part, without prior written permission is prohibited.
 
-The character **Francis le Coq**, the game universe and the associated **$FRANC** token are protected creations and trademarks.
-
-**License: proprietary (all rights reserved).** For any usage, partnership or licensing request, contact the author.
-
-Game mechanics originally inspired by [Tamaweb](https://github.com/autosam/Tamaweb) (CC BY-NC-SA 4.0 by SamanDev).
+© 2026 [$FRANC by FRANCIS LE COQ]. All rights reserved.
+This game and its source code are proprietary works created for the $FRANC project.
+The source code is made available for inspection purposes only. No part of this game, its source code, assets, or related materials may be copied, reproduced, distributed, modified, published, or otherwise reused without the prior written consent of the copyright holder.
+$FRANC, Francis Le Coq, and all related names, logos, characters, and visual identities are trademarks and intellectual property of the project.
 
 ---
 
